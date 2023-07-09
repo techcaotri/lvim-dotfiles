@@ -1,14 +1,16 @@
 -- See: https://github.com/hoob3rt/lualine.nvim
 
--- Configuration {{{1
-
--- Settings {{{2
--- Eviline config for lualine
--- Author: shadmansaleh
--- Credit: glepnir
+local components = require("lvim.core.lualine.components")
 
 lvim.builtin.lualine.style = "lvim"
 lvim.builtin.lualine.sections.lualine_a = { "mode" }
+lvim.builtin.lualine.sections.lualine_x = {
+  components.diagnostics,
+  components.lsp,
+  components.spaces,
+  components.encoding,
+  components.filetype,
+}
 
 vim.api.nvim_create_autocmd({ 'User' }, {
   pattern = 'visual_multi_start',
