@@ -6,3 +6,4 @@
 
 require("custom.plugins")
 require("custom.config.lualine")
+require("custom.config.nvim-tree")
