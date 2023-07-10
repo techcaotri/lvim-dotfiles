@@ -7,3 +7,13 @@
 require("custom.plugins")
 require("custom.config.lualine")
 require("custom.config.nvim-tree")
+
+-- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
+local notify = vim.notify
+vim.notify = function(msg, ...)
+  if msg:match("warning: multiple different client offset_encodings") then
+    return
+  end
+
+  notify(msg, ...)
+end
