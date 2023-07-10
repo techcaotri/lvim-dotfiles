@@ -7,6 +7,7 @@
 require("custom.plugins")
 require("custom.config.lualine")
 require("custom.config.nvim-tree")
+require("custom.config.telescope")
 
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 local notify = vim.notify
