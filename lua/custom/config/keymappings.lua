@@ -1,4 +1,3 @@
-lvim.keys.normal_mode["<C-Left>"] = false
 local opts = {
       mode = "n", -- NORMAL mode
       buffer = nil, -- Global mappings. Specify a buffer number for buffer local mappings
@@ -27,6 +26,17 @@ local mappings = {
     ["]q"] = { ":cnext<CR>", "QuickFix Next" },
     ["[q"] = { ":cprev<CR>", "QuickFix Prev" },
     ["<C-q>"] = { ":call QuickFixToggle()<CR>", "QuickFix Toggle" },
+
+    -- save
+    ["<C-s>"] = { "<cmd> w <CR>", "Save file" },
+
+    -- Copy all
+    ["<C-c>"] = { "<cmd> %y+ <CR>", "Copy whole file" },
+
+    -- cycle through buffers
+    ["<tab>"] = { "<cmd> BufferLineCycleNext <CR>", "Goto next buffer" },
+
+    ["<S-tab>"] = { "<cmd> BufferLineCyclePrev <CR>", "Goto prev buffer"},
 
 }
 
