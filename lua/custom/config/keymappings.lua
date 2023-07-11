@@ -38,6 +38,9 @@ local mappings = {
 
     ["<S-tab>"] = { "<cmd> BufferLineCyclePrev <CR>", "Goto prev buffer"},
 
+    -- Add descriptions for empty shortcuts
+    ["p"] = { "p", "Paste"},
+    ["P"] = { "P", "Paste"},
 }
 
 local leader_mappings_opts = {
@@ -61,3 +64,9 @@ local leader_mappings = {
 local which_key = require "which-key"
 which_key.register(mappings, opts)
 which_key.register(leader_mappings, leader_mappings_opts)
+which_key.register({ 
+  ["="] = {
+    name = "+Yanky"
+  }
+})
+
