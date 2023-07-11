@@ -4,12 +4,15 @@
 -- Forum: https://www.reddit.com/r/lunarvim/
 -- Discord: https://discord.com/invite/Xb9B4Ny
 
+-- lvim.log.level="debug"
+
 require("custom.plugins")
 require("custom.config.lualine")
 require("custom.config.nvim-tree")
 require("custom.config.telescope")
 require("custom.config.which-key")
 require("custom.config.keymappings")
+require("custom.config.toggleterm")
 
 vim.opt.relativenumber = true
 
