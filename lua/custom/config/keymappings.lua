@@ -69,4 +69,28 @@ which_key.register({
     name = "+Yanky"
   }
 })
-
+which_key.register({ 
+  ["["] = {
+    name = "+Previous motion"
+  }
+})
+which_key.register({ 
+  ["]"] = {
+    name = "+Next motion"
+  }
+})
+which_key.register({ 
+  ["\\"] = {
+    name = "+VM-*"
+  }
+})
+which_key.register({ 
+  ["g"] = {
+    name = "+Go to"
+  }
+})
+which_key.register({ 
+  ["z"] = {
+    name = "+Fold"
+  }
+})
