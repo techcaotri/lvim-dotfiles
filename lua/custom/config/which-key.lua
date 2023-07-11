@@ -14,9 +14,9 @@ vim.o.timeout = true
 vim.o.timeoutlen = 250
 
 
-lvim.builtin.which_key.on_config_done = function ()
-  local keymaps = vim.api.nvim_get_keymap("n")
-  local Log = require "lvim.core.log"
+-- lvim.builtin.which_key.on_config_done = function ()
+  -- local keymaps = vim.api.nvim_get_keymap("n")
+  -- local Log = require "lvim.core.log"
   -- Log:debug "abcd"
   -- print(vim.inspect(keymaps))
   -- Log:debug(vim.inspect(keymaps))
@@ -25,4 +25,4 @@ lvim.builtin.which_key.on_config_done = function ()
   --     Log:debug(keymap.lhs)
   --   end
   -- end
-end
+-- end
