@@ -9,6 +9,7 @@ require("custom.config.lualine")
 require("custom.config.nvim-tree")
 require("custom.config.telescope")
 require("custom.config.keymappings")
+require("custom.config.which-key")
 
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 local notify = vim.notify

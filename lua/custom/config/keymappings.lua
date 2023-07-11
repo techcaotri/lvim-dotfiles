@@ -7,7 +7,26 @@ local opts = {
       nowait = true, -- use `nowait` when creating keymaps
     }
 local mappings = {
-      ["<C-Left>"] = { ":vertical resize -2<CR>", "Resize with arrow left" }
+    -- Better window movement
+    ["<C-h>"] = { "<C-w>h", "Window move Left" },
+    ["<C-j>"] = { "<C-w>j", "Window move Down" },
+    ["<C-k>"] = { "<C-w>k", "Window move Up" },
+    ["<C-l>"] = { "<C-w>l", "Window move Right" },
+
+    -- Resize with arrows
+    ["<C-Up>"] = { ":resize -2<CR>", "Window resize Horizontal Decrease " },
+    ["<C-Down>"] = { ":resize +2<CR>", "Window resize Horizontal Increase" },
+    ["<C-Left>"] = { ":vertical resize -2<CR>", "Window resize Vertical Decrease" },
+    ["<C-Right>"] = { ":vertical resize +2<CR>", "Window resize Vertical Increase" } ,
+
+    -- Move current line / block with Alt-j/k a la vscode.
+    ["<A-j>"] = { ":m .+1<CR>==", "Move current line/block Up" },
+    ["<A-k>"] = { ":m .-2<CR>==", "Move current line/block Down" },
+
+    -- QuickFix
+    ["]q"] = { ":cnext<CR>", "QuickFix Next" },
+    ["[q"] = { ":cprev<CR>", "QuickFix Prev" },
+    ["<C-q>"] = { ":call QuickFixToggle()<CR>", "QuickFix Toggle" },
 }
 
 local which_key = require "which-key"
