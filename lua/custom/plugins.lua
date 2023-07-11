@@ -148,4 +148,8 @@ lvim.plugins = {
       require('telescope').load_extension('possession')
     end,
   },
+  {
+    "sitiom/nvim-numbertoggle",
+    lazy = false,
+  },
 }
