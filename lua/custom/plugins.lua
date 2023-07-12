@@ -152,4 +152,8 @@ lvim.plugins = {
     "sitiom/nvim-numbertoggle",
     lazy = false,
   },
+  {
+    "gbprod/cutlass.nvim",
+    opts = { cut_key = "m" },
+  }
 }
