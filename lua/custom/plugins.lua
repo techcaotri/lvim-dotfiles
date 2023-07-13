@@ -232,8 +232,6 @@ lvim.plugins = {
   --         dark_grey = '#282C34',
   --         dim_grey = '#606570',
   --         mid_grey = '#4C515D',
-  --       },
-  --       highlights = {
   --         -- ExampleNC = {fg = '#0000ff', bg = '#00ff00', sp = '$cyan', fmt = 'underline,italic'},
   --         NormalNC = { bg = '$mid_grey' },
   --         EndOfBuffer = { bg = 'NONE' },
@@ -264,5 +262,22 @@ lvim.plugins = {
         end,
         { desc = 'Reverse [j]oin (trevJ)) at cursor' })
     end,
-  }
+  },
+	{
+  
+    "iamcco/markdown-preview.nvim",
+    build = "cd app && npm install",
+    ft = "markdown",
+    lazy = true,
+    keys = { { "<leader>m", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview" } },
+    config = function()
+      vim.g.mkdp_auto_close = true
+      vim.g.mkdp_open_to_the_world = false
+      vim.g.mkdp_open_ip = "127.0.0.1"
+      vim.g.mkdp_port = "8888"
+      vim.g.mkdp_browser = ""
+      vim.g.mkdp_echo_preview_url = true
+      vim.g.mkdp_page_title = "${name}"
+    end,
+  },
 }
