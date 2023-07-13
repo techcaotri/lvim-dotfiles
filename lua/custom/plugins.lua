@@ -114,40 +114,40 @@ lvim.plugins = {
     "fedepujol/move.nvim",
     lazy = false,
   },
-  -- {
-  --   'jedrzejboczar/possession.nvim',
-  --   lazy = false,
-  --   dependencies = { 'nvim-lua/plenary.nvim' },
-  --   config = function()
-  --     require("possession").setup {
-  --       autosave = {
-  --         current = true,   -- or fun(name): boolean
-  --         tmp = true,       -- or fun(): boolean
-  --         tmp_name = 'tmp', -- or fun(): string
-  --         on_load = true,
-  --         on_quit = true,
-  --       },
-  --       plugins = {
-  --         close_windows = {
-  --           preserve_layout = true, -- or fun(win): boolean
-  --           match = {
-  --             floating = true,
-  --             buftype = {
-  --               'terminal',
-  --             },
-  --             filetype = {},
-  --             custom = false, -- or fun(win): boolean
-  --           },
-  --         },
-  --         delete_hidden_buffers = false,
-  --         nvim_tree = true,
-  --         -- tabby = true,
-  --         delete_buffers = false,
-  --       },
-  --     }
-  --     require('telescope').load_extension('possession')
-  --   end,
-  -- },
+  {
+    'jedrzejboczar/possession.nvim',
+    lazy = false,
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require("possession").setup {
+        autosave = {
+          current = true,   -- or fun(name): boolean
+          tmp = true,       -- or fun(): boolean
+          tmp_name = 'tmp', -- or fun(): string
+          on_load = true,
+          on_quit = true,
+        },
+        plugins = {
+          close_windows = {
+            preserve_layout = true, -- or fun(win): boolean
+            match = {
+              floating = true,
+              buftype = {
+                'terminal',
+              },
+              filetype = {},
+              custom = false, -- or fun(win): boolean
+            },
+          },
+          delete_hidden_buffers = false,
+          nvim_tree = true,
+          -- tabby = true,
+          delete_buffers = false,
+        },
+      }
+      require('telescope').load_extension('possession')
+    end,
+  },
   {
     "sitiom/nvim-numbertoggle",
     lazy = false,

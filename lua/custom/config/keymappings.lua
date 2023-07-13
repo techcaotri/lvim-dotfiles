@@ -62,7 +62,25 @@ local leader_mappings = {
 
   s = {
    ["F"] = { "<cmd> Telescope current_buffer_fuzzy_find <CR>", "Find in current [F]ile" }
-  }
+  },
+
+  b = {
+    ["N"] = { ":enew<CR>", "New buffer"}
+  },
+
+  P = {
+    name = "Possession",
+    ["s"] = {
+      function()
+        local possession_name = vim.fn.input("PossessionSave name, use 'tmp' if empty: ")
+        local possession = require("possession")
+        if possession_name == nil or possession_name == "" then
+          possession_name = "tmp"
+        end
+        possession.save(possession_name)
+      end,
+      "[P]ossession: [s]ave session with prompt" }
+  },
 }
 
 local which_key = require "which-key"

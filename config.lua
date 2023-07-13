@@ -14,6 +14,7 @@ require("custom.config.which-key")
 require("custom.config.keymappings")
 require("custom.config.toggleterm")
 require("custom.config.syntax")
+require("custom.config.alpha")
 
 vim.opt.relativenumber = true
 
