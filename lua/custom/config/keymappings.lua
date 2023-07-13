@@ -81,6 +81,11 @@ local leader_mappings = {
       end,
       "[P]ossession: [s]ave session with prompt" }
   },
+  v = {
+    name = "Python [v]env",
+    ["s"] = {"<cmd>:VenvSelect<cr>", "Venv [S]elect"},
+    ["c"] = {"<cmd>:VenvSelectCached<cr>", "Venv [S]elect cached"},
+  }
 }
 
 local which_key = require "which-key"
