@@ -16,6 +16,7 @@ require("custom.config.toggleterm")
 require("custom.config.syntax")
 require("custom.config.alpha")
 require("custom.config.lsp")
+require("custom.config.project")
 
 vim.opt.relativenumber = true
 
