@@ -13,6 +13,7 @@ require("custom.config.telescope")
 require("custom.config.which-key")
 require("custom.config.keymappings")
 require("custom.config.toggleterm")
+require("custom.config.syntax")
 
 vim.opt.relativenumber = true
 
