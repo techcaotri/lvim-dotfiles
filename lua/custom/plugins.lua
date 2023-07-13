@@ -260,7 +260,7 @@ lvim.plugins = {
       vim.keymap.set('n', '<leader>j', function()
           require('trevj').format_at_cursor()
         end,
-        { desc = 'Reverse [j]oin (trevJ)) at cursor' })
+        { desc = 'Reverse [j]oin (trevJ) at cursor' })
     end,
   },
 	{
