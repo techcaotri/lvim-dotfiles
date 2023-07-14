@@ -143,7 +143,7 @@ lvim.plugins = {
     end,
   },
 
-  -- Toggle number and relative number 
+  -- Toggle number and relative number
   {
     "sitiom/nvim-numbertoggle",
     lazy = false,
@@ -309,4 +309,25 @@ lvim.plugins = {
       },
     }
   },
+
+  -- Bookmark places and navigate between them
+  {
+    'chentoast/marks.nvim',
+    lazy = false,
+    config = function()
+      require 'marks'.setup {
+        mappings = {
+          set_next = "B,",
+          toggle = "B;",
+          next = "B]",
+          preview = "B:",
+          set_bookmark0 = "B0",
+          prev = "B[",
+          delete_line = "Bdl",
+          delete_buf = "Bdb",
+          delete_bookmark = "Bdc",
+        }
+      }
+    end
+  }
 }
