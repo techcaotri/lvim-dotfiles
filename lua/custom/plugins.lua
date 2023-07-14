@@ -310,7 +310,7 @@ lvim.plugins = {
     }
   },
 
-  -- Bookmark places and navigate between them
+  -- Bookmark places and quickly navigate between them
   {
     'chentoast/marks.nvim',
     lazy = false,
