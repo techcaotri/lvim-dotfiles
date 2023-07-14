@@ -74,7 +74,9 @@ local leader_mappings = {
       function()
         require("custom.config.possession").possession_save()
       end,
-      "[P]ossession: [s]ave session with prompt" }
+      "[P]ossession: [s]ave session with prompt" },
+    ["f"] = { "<cmd> Telescope possession list<CR>", "[P]ossession: Telescope/[f]ind sessions" },
+    ["i"] = { "<cmd> PossessionShow<CR>", "[P]ossession: Show session [i]nformation" }
   },
   v = {
     name = "Python [v]env",
