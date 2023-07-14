@@ -209,7 +209,7 @@ lvim.plugins = {
         parents = 2,
 
         -- name (default: venv) - The name of the venv directories to look for.
-        name = { "venv", ".venv" }, -- NOTE: You can also use a lua table here for multiple names: {"venv", ".venv"}`
+        name = { "venv", ".venv", ".linux-venv" }, -- NOTE: You can also use a lua table here for multiple names: {"venv", ".venv"}`
 
         -- fd_binary_name (default: fd) - The name of the fd binary on your system. Some Debian based Linux Distributions like Ubuntu use ´fdfind´.
         fd_binary_name = "fd",
@@ -263,8 +263,7 @@ lvim.plugins = {
         { desc = 'Reverse [j]oin (trevJ) at cursor' })
     end,
   },
-	{
-  
+  {
     "iamcco/markdown-preview.nvim",
     build = "cd app && npm install",
     ft = "markdown",
@@ -279,5 +278,25 @@ lvim.plugins = {
       vim.g.mkdp_echo_preview_url = true
       vim.g.mkdp_page_title = "${name}"
     end,
+  },
+  {
+    'stevearc/dressing.nvim',
+    opts = {
+      select = {
+        backend = { "fzf_lua", "nui", "fzf", "builtin" },
+        fzf_lua = {
+          winopts = {
+            width = 0.5,
+            height = 0.5,
+          },
+        },
+        fzf = {
+          window = {
+            width = 0.5,
+            height = 0.5,
+          },
+        },
+      },
+    }
   },
 }
