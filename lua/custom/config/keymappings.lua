@@ -1,9 +1,9 @@
 local opts = {
-  mode = "n",         -- NORMAL mode
-  buffer = nil,       -- Global mappings. Specify a buffer number for buffer local mappings
-  silent = true,      -- use `silent` when creating keymaps
-  noremap = true,     -- use `noremap` when creating keymaps
-  nowait = true,      -- use `nowait` when creating keymaps
+  mode = "n",     -- NORMAL mode
+  buffer = nil,   -- Global mappings. Specify a buffer number for buffer local mappings
+  silent = true,  -- use `silent` when creating keymaps
+  noremap = true, -- use `noremap` when creating keymaps
+  nowait = true,  -- use `nowait` when creating keymaps
 }
 local mappings = {
   -- Better window movement
@@ -44,12 +44,12 @@ local mappings = {
 }
 
 local leader_mappings_opts = {
-  mode = "n",         -- NORMAL mode
+  mode = "n",     -- NORMAL mode
   prefix = "<leader>",
-  buffer = nil,       -- Global mappings. Specify a buffer number for buffer local mappings
-  silent = true,      -- use `silent` when creating keymaps
-  noremap = true,     -- use `noremap` when creating keymaps
-  nowait = true,      -- use `nowait` when creating keymaps
+  buffer = nil,   -- Global mappings. Specify a buffer number for buffer local mappings
+  silent = true,  -- use `silent` when creating keymaps
+  noremap = true, -- use `noremap` when creating keymaps
+  nowait = true,  -- use `nowait` when creating keymaps
 }
 
 local leader_mappings = {
@@ -61,23 +61,18 @@ local leader_mappings = {
   },
 
   s = {
-   ["F"] = { "<cmd> Telescope current_buffer_fuzzy_find <CR>", "Find in current [F]ile" }
+    ["F"] = { "<cmd> Telescope current_buffer_fuzzy_find <CR>", "Find in current [F]ile" }
   },
 
   b = {
-    ["N"] = { ":enew<CR>", "New buffer"}
+    ["N"] = { ":enew<CR>", "New buffer" }
   },
 
   P = {
     name = "Possession",
     ["s"] = {
       function()
-        local possession_name = vim.fn.input("PossessionSave name, use 'tmp' if empty: ")
-        local possession = require("possession")
-        if possession_name == nil or possession_name == "" then
-          possession_name = "tmp"
-        end
-        possession.save(possession_name)
+        require("custom.config.possession").possession_save()
       end,
       "[P]ossession: [s]ave session with prompt" }
   },

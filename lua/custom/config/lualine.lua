@@ -2,8 +2,17 @@
 
 local components = require("lvim.core.lualine.components")
 
+local function possession_session()
+  return require('possession.session').session_name or 'tmp'
+end
+
 lvim.builtin.lualine.style = "lvim"
-lvim.builtin.lualine.sections.lualine_a = { "mode" }
+lvim.builtin.lualine.sections.lualine_a = { "mode", }
+lvim.builtin.lualine.sections.lualine_c = {
+  components.diff,
+  components.python_env,
+  possession_session
+}
 lvim.builtin.lualine.sections.lualine_x = {
   components.diagnostics,
   components.lsp,
