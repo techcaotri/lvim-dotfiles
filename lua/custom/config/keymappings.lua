@@ -78,8 +78,8 @@ local leader_mappings = {
   },
   v = {
     name = "Python [v]env",
-    ["s"] = {"<cmd>:VenvSelect<cr>", "Venv [S]elect"},
-    ["c"] = {"<cmd>:VenvSelectCached<cr>", "Venv [S]elect cached"},
+    ["s"] = { "<cmd>:VenvSelect<cr>", "Venv [S]elect" },
+    ["c"] = { "<cmd>:VenvSelectCached<cr>", "Venv [S]elect cached" },
   }
 }
 
