@@ -72,19 +72,9 @@ lvim.plugins = {
   {
     "Pocco81/auto-save.nvim",
     lazy = false,
+    branch = "main",
     config = function()
-      require("auto-save").setup {
-        trigger_events = { "InsertLeave", "TextChanged" }, -- vim events that trigger auto-save. See :h events
-        -- your config goes here
-        debounce_delay = 1000,
-        condition = function(buf)
-          local fn = vim.fn
-          local undotree = vim.fn.undotree()
-          if undotree.seq_last ~= undotree.seq_cur then
-            return false -- don't try to save again if I tried to undo. k thanks
-          end
-        end
-      }
+      require('custom.config.auto-save').config()
     end,
   },
   {
@@ -110,10 +100,14 @@ lvim.plugins = {
       })
     end
   },
+
+  -- Vertical movement of lines and blocks of code
   {
     "fedepujol/move.nvim",
     lazy = false,
   },
+
+  -- Session management
   {
     'jedrzejboczar/possession.nvim',
     lazy = false,
@@ -148,18 +142,26 @@ lvim.plugins = {
       require('telescope').load_extension('possession')
     end,
   },
+
+  -- Toggle number and relative number 
   {
     "sitiom/nvim-numbertoggle",
     lazy = false,
   },
+
+  -- delete, change, etc. without copying/yanking
   {
     "gbprod/cutlass.nvim",
     opts = { cut_key = "m" },
   },
+
+  -- Telescope find emoji and symbols
   {
     'nvim-telescope/telescope-symbols.nvim',
     event = "VeryLazy",
   },
+
+  -- Python venv selector
   {
     "linux-cultist/venv-selector.nvim",
     dependencies = { "neovim/nvim-lspconfig", "nvim-telescope/telescope.nvim" },
@@ -245,6 +247,8 @@ lvim.plugins = {
   --     }
   --   end
   -- },
+
+  -- Colorschemes and themes
   {
     'techcaotri/Colorschemes',
     lazy = false,
@@ -253,6 +257,8 @@ lvim.plugins = {
     'loctvl842/monokai-pro.nvim',
     lazy = false,
   },
+
+  -- Reverse join lines
   {
     'AckslD/nvim-trevJ.lua',
     config = 'require("trevj").setup()',
@@ -263,6 +269,8 @@ lvim.plugins = {
         { desc = 'Reverse [j]oin (trevJ) at cursor' })
     end,
   },
+
+  -- latex and markdown
   {
     "iamcco/markdown-preview.nvim",
     build = "cd app && npm install",
@@ -279,6 +287,8 @@ lvim.plugins = {
       vim.g.mkdp_page_title = "${name}"
     end,
   },
+
+  -- revamp menu ui for vim.ui.select and vim.ui.input
   {
     'stevearc/dressing.nvim',
     opts = {
@@ -286,13 +296,13 @@ lvim.plugins = {
         backend = { "fzf_lua", "nui", "fzf", "builtin" },
         fzf_lua = {
           winopts = {
-            width = 0.5,
+            width = 0.7,
             height = 0.5,
           },
         },
         fzf = {
           window = {
-            width = 0.5,
+            width = 0.7,
             height = 0.5,
           },
         },
