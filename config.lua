@@ -19,6 +19,7 @@ require("custom.config.lsp")
 require("custom.config.project")
 
 vim.opt.relativenumber = true
+lvim.colorscheme =  "newpaper"
 
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 local notify = vim.notify

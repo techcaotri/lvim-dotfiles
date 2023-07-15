@@ -261,14 +261,24 @@ lvim.plugins = {
     'marko-cerovac/material.nvim',
     lazy = false,
   },
+  -- {
+  --   "yorik1984/newpaper.nvim",
+  --   lazy = false,
+  --   config = function()
+  --     require("newpaper").setup({
+  --       style = "dark",
+  --     })
+  --   end
+  -- },
   {
-    "yorik1984/newpaper.nvim",
-    lazy = false,
+    'techcaotri-newpaper',
+    dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
     config = function()
       require("newpaper").setup({
         style = "dark",
       })
     end
+
   },
 
   -- Reverse join lines
