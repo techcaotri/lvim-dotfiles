@@ -335,33 +335,23 @@ lvim.plugins = {
 
   -- Bookmark places and quickly navigate between them
   {
-    'chentoast/marks.nvim',
-    lazy = false,
+    "ThePrimeagen/harpoon",
+    event = "VimEnter",
     config = function()
-      require 'marks'.setup {
-        mappings = {
-          set_next = "B,",
-          toggle = "B;",
-          next = "B]",
-          preview = "B:",
-          set_bookmark0 = "B0",
-          prev = "B[",
-          delete_line = "Bdl",
-          delete_buf = "Bdb",
-          delete_bookmark = "Bdc",
-        }
-      }
-    end
+      require("harpoon").setup {}
+      require("telescope").load_extension "harpoon"
+    end,
   },
+
   -- LSP enhancements
   {
     'nvimdev/lspsaga.nvim',
     config = function()
-        require('lspsaga').setup({})
+      require('lspsaga').setup({})
     end,
     dependencies = {
-        'nvim-treesitter/nvim-treesitter', -- optional
-        'nvim-tree/nvim-web-devicons'     -- optional
+      'nvim-treesitter/nvim-treesitter', -- optional
+      'nvim-tree/nvim-web-devicons'      -- optional
     }
   },
 }

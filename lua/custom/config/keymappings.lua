@@ -41,6 +41,17 @@ local mappings = {
   -- Add descriptions for empty shortcuts
   ["p"] = { "p", "Paste" },
   ["P"] = { "P", "Paste" },
+
+  -- Harpoon bookmarks management
+  B = {
+    name = "Harpoon bookmarks",
+    a = { "<Cmd>lua require('harpoon.mark').add_file()<Cr>", "Add" },
+    m = { "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<Cr>", "Menu" },
+    f = { "<Cmd>Telescope harpoon marks<CR>", "Telescope [f]ind marks"},
+    ["1"] = { "<Cmd>lua require('harpoon.ui').nav_file(1) <Cr>", "Jump 1" },
+    ["2"] = { "<Cmd>lua require('harpoon.ui').nav_file(2) <Cr>", "Jump 2" },
+    ["3"] = { "<Cmd>lua require('harpoon.ui').nav_file(3) <Cr>", "Jump 3" },
+  },
 }
 
 local leader_mappings_opts = {
@@ -68,6 +79,7 @@ local leader_mappings = {
     ["N"] = { ":enew<CR>", "New buffer" }
   },
 
+  -- Possession session management
   P = {
     name = "Possession",
     ["s"] = {
@@ -78,6 +90,8 @@ local leader_mappings = {
     ["f"] = { "<cmd> Telescope possession list<CR>", "[P]ossession: Telescope/[f]ind sessions" },
     ["i"] = { "<cmd> PossessionShow<CR>", "[P]ossession: Show session [i]nformation" }
   },
+
+  -- Python venv management
   v = {
     name = "Python [v]env",
     ["s"] = { "<cmd>:VenvSelect<cr>", "Venv [S]elect" },
