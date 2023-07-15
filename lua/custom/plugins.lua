@@ -257,6 +257,19 @@ lvim.plugins = {
     'loctvl842/monokai-pro.nvim',
     lazy = false,
   },
+  {
+    'marko-cerovac/material.nvim',
+    lazy = false,
+  },
+  {
+    "yorik1984/newpaper.nvim",
+    lazy = false,
+    config = function()
+      require("newpaper").setup({
+        style = "dark",
+      })
+    end
+  },
 
   -- Reverse join lines
   {
@@ -329,5 +342,16 @@ lvim.plugins = {
         }
       }
     end
-  }
+  },
+  -- LSP enhancements
+  {
+    'nvimdev/lspsaga.nvim',
+    config = function()
+        require('lspsaga').setup({})
+    end,
+    dependencies = {
+        'nvim-treesitter/nvim-treesitter', -- optional
+        'nvim-tree/nvim-web-devicons'     -- optional
+    }
+  },
 }
