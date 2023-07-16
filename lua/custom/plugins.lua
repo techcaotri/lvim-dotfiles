@@ -161,6 +161,20 @@ lvim.plugins = {
     event = "VeryLazy",
   },
 
+  -- Python debug adapter
+  {
+    "mfussenegger/nvim-dap-python",
+    config = function()
+      require("dap-python").setup()
+    end,
+  },
+  {
+    "nvim-neotest/neotest",
+  },
+  {
+    "nvim-neotest/neotest-python",
+  },
+
   -- Python venv selector
   {
     "linux-cultist/venv-selector.nvim",
