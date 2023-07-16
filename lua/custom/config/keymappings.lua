@@ -51,6 +51,8 @@ local mappings = {
     ["1"] = { "<Cmd>lua require('harpoon.ui').nav_file(1) <Cr>", "Jump 1" },
     ["2"] = { "<Cmd>lua require('harpoon.ui').nav_file(2) <Cr>", "Jump 2" },
     ["3"] = { "<Cmd>lua require('harpoon.ui').nav_file(3) <Cr>", "Jump 3" },
+    ["4"] = { "<Cmd>lua require('harpoon.ui').nav_file(4) <Cr>", "Jump 4" },
+    ["5"] = { "<Cmd>lua require('harpoon.ui').nav_file(5) <Cr>", "Jump 5" },
   },
 }
 
