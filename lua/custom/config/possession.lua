@@ -7,12 +7,16 @@ function M.possession_save()
       if selected then
         local new_name = selected
         if selected == "Enter new name..." then
-          new_name = vim.fn.input("Enter new name: ")
-          if new_name == "" then
-            return
-          end
+          vim.ui.input({ prompt = "Enter new name: " }, function(text)
+            new_name = text
+            if new_name == "" then
+              return
+            end
+            require("possession").save(new_name)
+          end)
+        else
+          require("possession").save(new_name)
         end
-        require("possession").save(new_name)
       end
     end)
 end
