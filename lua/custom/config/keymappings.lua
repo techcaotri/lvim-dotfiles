@@ -1,3 +1,12 @@
+-- Disable some debug keymaps
+lvim.builtin.which_key.mappings.d.b = {}
+lvim.builtin.which_key.mappings.d.c = {}
+lvim.builtin.which_key.mappings.d.C = {}
+lvim.builtin.which_key.mappings.d.i = {}
+lvim.builtin.which_key.mappings.d.o = {}
+lvim.builtin.which_key.mappings.d.u = {}
+lvim.builtin.which_key.mappings.d.p = {}
+
 local opts = {
   mode = "n",     -- NORMAL mode
   buffer = nil,   -- Global mappings. Specify a buffer number for buffer local mappings
@@ -47,7 +56,7 @@ local mappings = {
     name = "Harpoon bookmarks",
     a = { "<Cmd>lua require('harpoon.mark').add_file()<Cr>", "Add" },
     m = { "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<Cr>", "Menu" },
-    f = { "<Cmd>Telescope harpoon marks<CR>", "Telescope [f]ind marks"},
+    f = { "<Cmd>Telescope harpoon marks<CR>", "Telescope [f]ind marks" },
     ["1"] = { "<Cmd>lua require('harpoon.ui').nav_file(1) <Cr>", "Jump 1" },
     ["2"] = { "<Cmd>lua require('harpoon.ui').nav_file(2) <Cr>", "Jump 2" },
     ["3"] = { "<Cmd>lua require('harpoon.ui').nav_file(3) <Cr>", "Jump 3" },
@@ -98,6 +107,17 @@ local leader_mappings = {
     name = "Python [v]env",
     ["s"] = { "<cmd>:VenvSelect<cr>", "Venv [S]elect" },
     ["c"] = { "<cmd>:VenvSelectCached<cr>", "Venv [S]elect cached" },
+  },
+
+  -- Debug keymaps
+  d = {
+    ['c'] = { "<cmd>lua require('dap.ext.vscode').load_launchjs()<CR>", "Reload '.vscode/launch.json'" },
+    ['l'] = { "<cmd>lua require('dap').run_last()<CR>", "Run last session" },
+    b = {
+      name = "Breakpoints",
+      ['l'] = { "<cmd>lua require('dap').list_breakpoints()<CR>", "List Breakpoints" },
+      ['c'] = { "<cmd>lua require('dap').clear_breakpoints()<CR>", "Clear Breakpoints" },
+    }
   }
 }
 
