@@ -267,14 +267,6 @@ lvim.plugins = {
     'techcaotri/Colorschemes',
     lazy = false,
   },
-  {
-    'loctvl842/monokai-pro.nvim',
-    lazy = false,
-  },
-  {
-    'marko-cerovac/material.nvim',
-    lazy = false,
-  },
   -- {
   --   "yorik1984/newpaper.nvim",
   --   lazy = false,
