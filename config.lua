@@ -17,6 +17,7 @@ require("custom.config.syntax")
 require("custom.config.alpha")
 require("custom.config.lsp")
 require("custom.config.project")
+require("custom.config.dap")
 
 vim.opt.relativenumber = true
 lvim.colorscheme =  "newpaper"

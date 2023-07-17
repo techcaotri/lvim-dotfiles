@@ -7,7 +7,7 @@ M.dependencies = {
 function M.config()
   require("copilot").setup({
     suggestion = {
-      enable = false,
+      enable = true,
     },
     panel = {
       enable = false,
