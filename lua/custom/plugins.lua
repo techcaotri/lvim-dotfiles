@@ -152,7 +152,10 @@ lvim.plugins = {
   -- delete, change, etc. without copying/yanking
   {
     "gbprod/cutlass.nvim",
-    opts = { cut_key = "m" },
+    opts = {
+      cut_key = "m",
+      exclude = { "s<space>" },
+    },
   },
 
   -- Telescope find emoji and symbols
@@ -238,44 +241,12 @@ lvim.plugins = {
     end,
     event = "VeryLazy", -- Optional: needed only if you want to type `:VenvSelect` without a keymapping
   },
-  -- {
-  --   'navarasu/onedark.nvim',
-  --   config = function()
-  --     require('onedark').setup {
-  --       style = 'darker',
-  --       ending_tildes = false,
-  --       colors = {
-  --         dark_grey = '#282C34',
-  --         dim_grey = '#606570',
-  --         mid_grey = '#4C515D',
-  --         -- ExampleNC = {fg = '#0000ff', bg = '#00ff00', sp = '$cyan', fmt = 'underline,italic'},
-  --         NormalNC = { bg = '$mid_grey' },
-  --         EndOfBuffer = { bg = 'NONE' },
-  --         SignColumn = { bg = 'NONE' },
-  --         VertSplit = { bg = '$dark_grey' },
-  --         StatusLine = { bg = '$dark_grey' },
-  --         IndentlineOne = { fg = '$mid_grey' },
-  --         IndentlineTwo = { fg = '$dim_grey' },
-  --         NavicSeparator = { fg = '$mid_grey' },
-  --       }
-  --     }
-  --   end
-  -- },
 
   -- Colorschemes and themes
   {
     'techcaotri/Colorschemes',
     lazy = false,
   },
-  -- {
-  --   "yorik1984/newpaper.nvim",
-  --   lazy = false,
-  --   config = function()
-  --     require("newpaper").setup({
-  --       style = "dark",
-  --     })
-  --   end
-  -- },
   {
     'techcaotri-newpaper',
     dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
