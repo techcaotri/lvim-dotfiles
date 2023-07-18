@@ -1,5 +1,4 @@
 local filetypes = { "c", "cpp", "objc", "objcpp", "opencl" }
-local navic = require("nvim-navic")
 local server_config = {
   filetypes = filetypes,
   init_options = {
@@ -13,9 +12,6 @@ local server_config = {
   root_dir = vim.fs.dirname(
     vim.fs.find({ "compile_commands.json", "compile_flags.txt", ".git" }, { upward = true })[1]
   ),
-  -- on_attach = function(client, bufnr)
-  --   navic.attach(client, bufnr)
-  -- end
 }
 
 -- Use clangd as the default language server for cpp types. Since ccls doesn't support inlayhints -> https://github.com/MaskRay/ccls/issues/932

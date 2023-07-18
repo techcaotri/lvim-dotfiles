@@ -332,6 +332,9 @@ lvim.plugins = {
     after = 'nvim-lspconfig',
     config = function()
       require('lspsaga').setup({
+        symbol_in_winbar = {
+          enable = true,
+        },
         finder = {
           max_height = 0.7,
           max_width = 0.7,
@@ -341,7 +344,6 @@ lvim.plugins = {
           win_width = 70,
         }
       })
-      -- require('lspsaga.symbol.winbar').get_bar()
     end,
     dependencies = {
       'nvim-treesitter/nvim-treesitter', -- optional
@@ -378,5 +380,5 @@ lvim.plugins = {
         "Toggle Flash Search"
       },
     },
-  }
+  },
 }
