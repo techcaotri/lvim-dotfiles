@@ -25,6 +25,7 @@ lvim.colorscheme =  "newpaper"
 lvim.builtin.mason.ensure_installed = {
   "bashls",
   "clangd",
+  "cmake-language-server",
   "cssls",
   "flake8",
   "html",
