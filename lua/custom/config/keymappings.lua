@@ -7,6 +7,9 @@ lvim.builtin.which_key.mappings.d.o = {}
 lvim.builtin.which_key.mappings.d.u = {}
 lvim.builtin.which_key.mappings.d.p = {}
 
+-- Disable <leader>ls for using it with LspSaga submenu
+lvim.builtin.which_key.mappings.l.s = {}
+
 local opts = {
   mode = "n",     -- NORMAL mode
   buffer = nil,   -- Global mappings. Specify a buffer number for buffer local mappings
@@ -123,10 +126,20 @@ local leader_mappings = {
   -- LSP keymaps
   l = {
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "Document Symbols" },
-    -- ['s'] = {
-    --   name = "LspSaga",
-    --   -- ['']
-    -- },
+    ['s'] = {
+      name = "LspSaga",
+      ['o'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [o]utgoing Calls"},
+      ['i'] = { "<cmd>Lspsaga incoming_calls<CR>", "LspSaga: [i]ncoming Calls"},
+      ['a'] = { "<cmd>Lspsaga code_action<CR>", "LspSaga: Code [a]ction"},
+      ['d'] = { "<cmd>Lspsaga peek_definition<CR>", "LspSaga: Peek [d]efinition"},
+      ['t'] = { "<cmd>Lspsaga peek_type_definition<CR>", "LspSaga: Peek [t]ype Definition"},
+      ['D'] = { "<cmd>Lspsaga diangostic_jump_next<CR>", "LspSaga: [D]]iagnostic Jump Next"},
+      ['f'] = { "<cmd>Lspsaga finder<CR>", "LspSaga: [f]inder"},
+      ['K'] = { "<cmd>Lspsaga hover_doc<CR>", "LspSaga: Documentation Hover"},
+      ['I'] = { "<cmd>Lspsaga finder imp<CR>", "LspSaga: Finder [I]mplement"},
+      ['O'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [O]utline"},
+      ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename"},
+    },
   }
 }
 
