@@ -263,7 +263,7 @@ lvim.plugins = {
     'AckslD/nvim-trevJ.lua',
     config = 'require("trevj").setup()',
     init = function()
-      vim.keymap.set('n', '<leader>j', function()
+      vim.keymap.set({ 'n', 'v' }, '<leader>j', function()
           require('trevj').format_at_cursor()
         end,
         { desc = 'Reverse [j]oin (trevJ) at cursor' })
@@ -341,6 +341,7 @@ lvim.plugins = {
           win_width = 70,
         }
       })
+      -- require('lspsaga.symbol.winbar').get_bar()
     end,
     dependencies = {
       'nvim-treesitter/nvim-treesitter', -- optional
