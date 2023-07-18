@@ -118,6 +118,15 @@ local leader_mappings = {
       ['l'] = { "<cmd>lua require('dap').list_breakpoints()<CR>", "List Breakpoints" },
       ['c'] = { "<cmd>lua require('dap').clear_breakpoints()<CR>", "Clear Breakpoints" },
     }
+  },
+
+  -- LSP keymaps
+  l = {
+    ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "Document Symbols" },
+    -- ['s'] = {
+    --   name = "LspSaga",
+    --   -- ['']
+    -- },
   }
 }
 
