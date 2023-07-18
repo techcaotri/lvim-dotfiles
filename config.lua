@@ -22,6 +22,29 @@ require("custom.config.dap")
 vim.opt.relativenumber = true
 lvim.colorscheme =  "newpaper"
 
+lvim.builtin.mason.ensure_installed = {
+  "bashls",
+  "clangd",
+  "cssls",
+  "flake8",
+  "html",
+  "isort",
+  "jsonls",
+  "prettierd",
+  "pyright",
+  "shellcheck",
+  "shfmt",
+  "stylua",
+  "sumneko_lua",
+  "tsserver",
+  "yamlls",
+}
+
+-- require("lspconfig").ccls.setup({
+-- 	cmd = { "ccls" },
+-- 	filetypes = { "c", "cc", "cpp", "objc", "objcpp" },
+-- })
+
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 local notify = vim.notify
 vim.notify = function(msg, ...)

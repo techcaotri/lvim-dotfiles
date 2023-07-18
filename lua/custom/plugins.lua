@@ -322,9 +322,25 @@ lvim.plugins = {
 
   -- LSP enhancements
   {
-    'nvimdev/lspsaga.nvim',
+    'ranjithshegde/ccls.nvim',
+    event = "VeryLazy",
+  },
+  {
+    -- 'nvimdev/lspsaga.nvim',
+    'lspsaga.nvim',
+    dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/lspsaga.nvim',
+    after = 'nvim-lspconfig',
     config = function()
-      require('lspsaga').setup({})
+      require('lspsaga').setup({
+        finder = {
+          max_height = 0.7,
+          max_width = 0.7,
+        },
+        outline = {
+          layout = 'float',
+          win_width = 70,
+        }
+      })
     end,
     dependencies = {
       'nvim-treesitter/nvim-treesitter', -- optional
@@ -337,11 +353,29 @@ lvim.plugins = {
     'folke/flash.nvim',
     opts = {},
     keys = {
-      { "<leader>F", mode = { "n", "x", "o" }, function() require("flash").jump() end,              desc = "Flash" },
-      { "<leader>S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end,        desc = "Flash Treesitter" },
-      { "r",         mode = "o",               function() require("flash").remote() end,            desc = "Remote Flash" },
-      { "R",         mode = { "o", "x" },      function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-      { "<c-s>",     mode = { "c" },           function() require("flash").toggle() end,            desc = "Toggle Flash Search" },
+      { "<leader>F", mode = { "n", "x", "o" }, function() require("flash").jump() end,   desc = "Flash" },
+      {
+        "<leader>S",
+        mode = { "n", "o", "x" },
+        function() require("flash").treesitter() end,
+        desc =
+        "Flash Treesitter"
+      },
+      { "r",         mode = "o",               function() require("flash").remote() end, desc = "Remote Flash" },
+      {
+        "R",
+        mode = { "o", "x" },
+        function() require("flash").treesitter_search() end,
+        desc =
+        "Treesitter Search"
+      },
+      {
+        "<c-s>",
+        mode = { "c" },
+        function() require("flash").toggle() end,
+        desc =
+        "Toggle Flash Search"
+      },
     },
   }
 }
