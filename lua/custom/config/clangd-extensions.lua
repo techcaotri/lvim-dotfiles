@@ -14,7 +14,7 @@ M.dependencies = {
 function M.config(client, bufnr)
   -- Disable clangd by default to run it concurrently with ccls
   require("clangd_extensions").setup {
-    server = { autostart = false },
+    server = { autostart = true },
   }
 end
 
