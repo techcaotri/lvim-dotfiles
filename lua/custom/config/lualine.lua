@@ -21,7 +21,7 @@ lvim.builtin.lualine.sections.lualine_x = {
   components.filetype,
 }
 
-vim.api.nvim_create_autocmd({ 'User' }, {
+require('custom.config.autocmd').autocmd({ 'User' }, {
   pattern = 'visual_multi_start',
   callback = function()
     vim.g.VM_set_statusline = 2
@@ -29,7 +29,7 @@ vim.api.nvim_create_autocmd({ 'User' }, {
   end
 })
 
-vim.api.nvim_create_autocmd({ 'User' }, {
+require('custom.config.autocmd').autocmd({ 'User' }, {
   pattern = 'visual_multi_exit',
   callback = function()
     vim.opt.laststatus = 2
