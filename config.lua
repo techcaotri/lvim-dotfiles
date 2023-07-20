@@ -19,8 +19,10 @@ require("custom.config.lsp")
 require("custom.config.project")
 require("custom.config.dap")
 
+-- require("custom.config.lspsaga-settings.test")
+
 vim.opt.relativenumber = true
-lvim.colorscheme =  "newpaper"
+lvim.colorscheme = "newpaper"
 
 lvim.builtin.mason.ensure_installed = {
   "bashls",
