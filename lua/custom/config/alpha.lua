@@ -1,4 +1,8 @@
 -- Dashboard configurations
+
+local lazy_entry = { "l", "  Lazy", ":Lazy<CR>"}
+table.insert(lvim.builtin.alpha.dashboard.section.buttons.entries, lazy_entry)
+
 local new_entries =
     (function()
       local group = {}
