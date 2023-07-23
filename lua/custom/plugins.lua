@@ -381,4 +381,8 @@ lvim.plugins = {
       },
     },
   },
+  {
+    'terryma/vim-expand-region',
+    lazy = false,
+  }
 }
