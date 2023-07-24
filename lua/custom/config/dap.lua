@@ -31,8 +31,10 @@ local new_keymaps = {
   ['<F8>'] = { func = function() require('dap').step_over() end, desc = "DAP: Step over" },
   ['<S-F8>'] = { func = function() require('dap').step_out() end, desc = "DAP: Step out" },
   ['<F6>'] = { func = function() require('dap').toggle_breakpoint() end, desc = "DAP: Toggle breakpoints" },
-  ['<C-F6>'] = { func = function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end, desc = "DAP: Breakpoints with message" },
-  ['<A-F6>'] = { func = function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "DAP: Breakpoints with condition" },
+  ['<C-F6>'] = { func = function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end, desc =
+  "DAP: Breakpoints with message" },
+  ['<A-F6>'] = { func = function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc =
+  "DAP: Breakpoints with condition" },
   ['<S-F7>'] = { func = function() require('dap').step_back() end, desc = "DAP: Step back" },
   ['<F10>'] = { func = function() require('dap').run_last() end, desc = "DAP: Run last session" },
   ['<C-F10>'] = { func = function() require('dap').focus_frame() end, desc = "DAP: Focus frame (Stack traverse)" },
@@ -45,7 +47,7 @@ function M.register_dap_keymaps()
       for _, cur_keymap in pairs(keymaps) do
         if cur_keymap.lhs == k then
           Log:debug("Found -> Save and replace: keymap.lhs: " ..
-          k .. ", cur_keymap.rhs: " .. cur_keymap.rhs .. ", keymap.desc: " .. keymap.desc)
+            k .. ", cur_keymap.rhs: " .. cur_keymap.rhs .. ", keymap.desc: " .. keymap.desc)
           table.insert(keymap_restore, cur_keymap)
           api.nvim_buf_del_keymap(buf, 'n', cur_keymap)
         end
@@ -112,6 +114,57 @@ function M.config()
     dapui.close()
     M.unregister_dap_keymaps()
   end
+
+  dap.adapters.cppdbg = {
+    id = 'cppdbg',
+    type = 'executable',
+    command = '/home/tripham/.local/share/lvim/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7',
+  }
+
+  dap.configurations.cpp = {
+    {
+      name = "Launch file",
+      type = "cppdbg",
+      request = "launch",
+      program = function()
+        return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+      end,
+      cwd = "${workspaceFolder}",
+      stopOnEntry = false,
+      setupCommands = {
+        {
+          text = '-enable-pretty-printing',
+          description = 'enable pretty printing',
+          ignoreFailures = true
+        },
+      },
+    },
+    {
+        name = 'Attach to gdbserver :1234',
+        type = 'cppdbg',
+        request = 'launch',
+        MIMode = 'gdb',
+        miDebuggerServerAddress = 'localhost:1234',
+        miDebuggerPath = '/usr/bin/gdb',
+        cwd = '${workspaceFolder}',
+        program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+        end,
+    },
+  }
+  dap.configurations.c = dap.configurations.cpp
+
+  -- auto reload .vscode/launch.json
+  local type_to_filetypes = { codelldb = { "rust" }, delve = { "go" } }
+  require("dap.ext.vscode").load_launchjs(nil, type_to_filetypes)
+
+  local pattern = "*/.vscode/launch.json"
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    pattern = pattern,
+    callback = function(args)
+      require("dap.ext.vscode").load_launchjs(args.file, type_to_filetypes)
+    end
+  })
 end
 
 M.config()
