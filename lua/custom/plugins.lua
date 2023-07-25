@@ -37,11 +37,27 @@ lvim.plugins = {
     "nvim-treesitter/playground",
     lazy = false,
   },
+
+  -- Copilot
   {
     "zbirenbaum/copilot.lua",
     config = require("custom.config.copilot").config,
     dependencies = require("custom.config.copilot").dependencies,
   },
+  {
+    "hrsh7th/cmp-vsnip",
+    after = "nvim-cmp",
+  },
+  {
+    "hrsh7th/vim-vsnip",
+    after = "nvim-cmp",
+  },
+  {
+    "hrsh7th/vim-vsnip-integ",
+    after = "nvim-cmp",
+  },
+
+  -- Multiple cursors support
   {
     "mg979/vim-visual-multi",
     lazy = false,
@@ -384,5 +400,5 @@ lvim.plugins = {
   {
     'terryma/vim-expand-region',
     lazy = false,
-  }
+  },
 }

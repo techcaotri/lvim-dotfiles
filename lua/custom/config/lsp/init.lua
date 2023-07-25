@@ -17,3 +17,7 @@ require('custom.config.autocmd').autocmd('LspAttach', {
     nmap('<leader>lh', vim.lsp.buf.signature_help, 'Signature Documentation')
   end,
 })
+
+table.insert(lvim.builtin.cmp.sources, 
+  { name = "vsnip" }
+)
