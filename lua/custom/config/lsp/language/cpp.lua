@@ -2,6 +2,7 @@ local filetypes = { "c", "cpp", "objc", "objcpp", "opencl" }
 local server_config = {
   filetypes = filetypes,
   init_options = {
+    compilationDatabaseDirectory = "./build/",
     cache = {
       directory = vim.fs.normalize "~/.cache/ccls/",
     }

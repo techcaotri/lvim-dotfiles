@@ -43,11 +43,6 @@ lvim.builtin.mason.ensure_installed = {
   "yamlls",
 }
 
--- require("lspconfig").ccls.setup({
--- 	cmd = { "ccls" },
--- 	filetypes = { "c", "cc", "cpp", "objc", "objcpp" },
--- })
-
 vim.b.navic_lazy_update_context = true
 -- Disable default breadcrumbs and use the one from LspSaga instead.
 lvim.builtin.breadcrumbs.active = false

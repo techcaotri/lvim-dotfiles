@@ -1,7 +1,9 @@
 local M = {}
 
 M.dependencies = {
-  "zbirenbaum/copilot-cmp",
+  -- "zbirenbaum/copilot-cmp",
+  "copilot-cmp",
+  dir = "/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/copilot-cmp",
 }
 
 function M.config()
