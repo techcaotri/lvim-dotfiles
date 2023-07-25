@@ -125,7 +125,8 @@ local leader_mappings = {
 
   -- LSP keymaps
   l = {
-    ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "Document Symbols" },
+    ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
+    ['R'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [R]eferences" },
     ['s'] = {
       name = "LspSaga",
       ['o'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [o]utgoing Calls" },
