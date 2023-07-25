@@ -128,19 +128,22 @@ local leader_mappings = {
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "Document Symbols" },
     ['s'] = {
       name = "LspSaga",
-      ['o'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [o]utgoing Calls"},
-      ['i'] = { "<cmd>Lspsaga incoming_calls<CR>", "LspSaga: [i]ncoming Calls"},
-      ['a'] = { "<cmd>Lspsaga code_action<CR>", "LspSaga: Code [a]ction"},
-      ['d'] = { "<cmd>Lspsaga peek_definition<CR>", "LspSaga: Peek [d]efinition"},
-      ['t'] = { "<cmd>Lspsaga peek_type_definition<CR>", "LspSaga: Peek [t]ype Definition"},
-      ['D'] = { "<cmd>Lspsaga diangostic_jump_next<CR>", "LspSaga: [D]]iagnostic Jump Next"},
-      ['f'] = { "<cmd>Lspsaga finder<CR>", "LspSaga: [f]inder"},
-      ['K'] = { "<cmd>Lspsaga hover_doc<CR>", "LspSaga: Documentation Hover"},
-      ['I'] = { "<cmd>Lspsaga finder imp<CR>", "LspSaga: Finder [I]mplement"},
-      ['O'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [O]utline"},
-      ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename"},
+      ['o'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [o]utgoing Calls" },
+      ['i'] = { "<cmd>Lspsaga incoming_calls<CR>", "LspSaga: [i]ncoming Calls" },
+      ['a'] = { "<cmd>Lspsaga code_action<CR>", "LspSaga: Code [a]ction" },
+      ['d'] = { "<cmd>Lspsaga peek_definition<CR>", "LspSaga: Peek [d]efinition" },
+      ['t'] = { "<cmd>Lspsaga peek_type_definition<CR>", "LspSaga: Peek [t]ype Definition" },
+      ['D'] = { "<cmd>Lspsaga diangostic_jump_next<CR>", "LspSaga: [D]]iagnostic Jump Next" },
+      ['f'] = { "<cmd>Lspsaga finder<CR>", "LspSaga: [f]inder" },
+      ['K'] = { "<cmd>Lspsaga hover_doc<CR>", "LspSaga: Documentation Hover" },
+      ['I'] = { "<cmd>Lspsaga finder imp<CR>", "LspSaga: Finder [I]mplement" },
+      ['O'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [O]utline" },
+      ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename" },
     },
-  }
+  },
+
+  -- F5: Delete trailing spaces
+  ["<F5>"] = { "<cmd>:let _s=@/<Bar>:%s/\\s\\+$//e<Bar>:let @/=_s<Bar><CR>", "Delete all trailing spaces" },
 }
 
 local which_key = require "which-key"
