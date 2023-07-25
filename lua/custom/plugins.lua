@@ -44,18 +44,6 @@ lvim.plugins = {
     config = require("custom.config.copilot").config,
     dependencies = require("custom.config.copilot").dependencies,
   },
-  {
-    "hrsh7th/cmp-vsnip",
-    after = "nvim-cmp",
-  },
-  {
-    "hrsh7th/vim-vsnip",
-    after = "nvim-cmp",
-  },
-  {
-    "hrsh7th/vim-vsnip-integ",
-    after = "nvim-cmp",
-  },
 
   -- Multiple cursors support
   {
