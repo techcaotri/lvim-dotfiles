@@ -66,6 +66,7 @@ local mappings = {
     ["4"] = { "<Cmd>lua require('harpoon.ui').nav_file(4) <Cr>", "Jump 4" },
     ["5"] = { "<Cmd>lua require('harpoon.ui').nav_file(5) <Cr>", "Jump 5" },
   },
+
 }
 
 local leader_mappings_opts = {
@@ -145,6 +146,9 @@ local leader_mappings = {
 
   -- F5: Delete trailing spaces
   ["<F5>"] = { "<cmd>:let _s=@/<Bar>:%s/\\s\\+$//e<Bar>:let @/=_s<Bar><CR>", "Delete all trailing spaces" },
+
+  -- [Do]cumentation [Ge]nerator
+  ["<C-d>"] = { "<Cmd>:DogeGenerate<Cr>", "Doge: [D]ocumentation Generator" },
 }
 
 local which_key = require "which-key"

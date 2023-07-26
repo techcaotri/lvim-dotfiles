@@ -389,4 +389,8 @@ lvim.plugins = {
     'terryma/vim-expand-region',
     lazy = false,
   },
+  {
+    'kkoomen/vim-doge',
+    build = ':call doge#install()'
+  },
 }
