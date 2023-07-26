@@ -47,6 +47,12 @@ vim.b.navic_lazy_update_context = true
 -- Disable default breadcrumbs and use the one from LspSaga instead.
 lvim.builtin.breadcrumbs.active = false
 
+require('custom.config.autocmd').autocmd({ "BufNewFile", "BufRead" }, {
+  callback = function()
+    require("flash").toggle(true)
+  end
+})
+
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 local notify = vim.notify
 vim.notify = function(msg, ...)
