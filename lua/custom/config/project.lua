@@ -10,4 +10,6 @@ lvim.builtin.project.patterns = {
   "package-lock.json",
   "yarn.lock",
   "requirements.txt",
+  "pyproject.toml",
+  ".vscode",
 }
