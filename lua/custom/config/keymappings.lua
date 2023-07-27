@@ -130,7 +130,7 @@ local leader_mappings = {
     ['R'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [R]eferences" },
     ['s'] = {
       name = "LspSaga",
-      ['o'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [o]utgoing Calls" },
+      ['O'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [O]utgoing Calls" },
       ['i'] = { "<cmd>Lspsaga incoming_calls<CR>", "LspSaga: [i]ncoming Calls" },
       ['a'] = { "<cmd>Lspsaga code_action<CR>", "LspSaga: Code [a]ction" },
       ['d'] = { "<cmd>Lspsaga peek_definition<CR>", "LspSaga: Peek [d]efinition" },
@@ -139,7 +139,7 @@ local leader_mappings = {
       ['f'] = { "<cmd>Lspsaga finder<CR>", "LspSaga: [f]inder" },
       ['K'] = { "<cmd>Lspsaga hover_doc<CR>", "LspSaga: Documentation Hover" },
       ['I'] = { "<cmd>Lspsaga finder imp<CR>", "LspSaga: Finder [I]mplement" },
-      ['O'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [O]utline" },
+      ['o'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [o]utline" },
       ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename" },
     },
   },
