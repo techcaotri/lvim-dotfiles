@@ -165,6 +165,13 @@ function M.config()
       require("dap.ext.vscode").load_launchjs(args.file, type_to_filetypes)
     end
   })
+
+  -- Auto load .vscode/launch.json
+  require('custom.config.autocmd').autocmd("SessionLoadPost", {
+    callback = function ()
+      require("dap.ext.vscode").load_launchjs()
+    end
+  })
 end
 
 M.config()
