@@ -47,6 +47,7 @@ vim.b.navic_lazy_update_context = true
 -- Disable default breadcrumbs and use the one from LspSaga instead.
 lvim.builtin.breadcrumbs.active = false
 
+-- Always start 'flash.nvim' when opening file
 require('custom.config.autocmd').autocmd({ "BufNewFile", "BufRead" }, {
   callback = function()
     require("flash").toggle(true)
