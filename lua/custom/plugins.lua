@@ -347,4 +347,7 @@ lvim.plugins = {
     'kkoomen/vim-doge',
     build = ':call doge#install()'
   },
+  {
+    'HiPhish/rainbow-delimiters.nvim',
+  },
 }
