@@ -184,3 +184,7 @@ which_key.register({
     name = "+Fold"
   }
 })
+
+-- Add smart semicolon ';' keymap (<C-S-;>) in insert mode
+vim.api.nvim_set_keymap('i', '<M-j>', '<Esc><Esc>A;<ESC>a', { noremap = true, silent = true, desc='Smart semicolon' })
+vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>', { noremap = true, silent = true, desc='Smart semicolon with Enter' })
