@@ -6,7 +6,6 @@
 
 -- lvim.log.level="debug"
 
-require("custom.config.chatgpt")
 require("custom.plugins")
 require("custom.config.lualine")
 require("custom.config.nvim-tree")
