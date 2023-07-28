@@ -100,8 +100,8 @@ function M.possession_after_load(name, user_data)
     local venv_path = user_data['venv-selector']['cached_venv']
     Log:debug("Loading venv_path: " .. vim.inspect(venv_path))
     venv.set_venv_and_system_paths(venv_path)
-    -- This empty command is to prevent the asking for 'Enter' input
-    vim.cmd("")
+    -- Prevent the asking for 'Enter' input
+    vim.api.nvim_feedkeys("<CR>",'m',false)
   end
 end
 
