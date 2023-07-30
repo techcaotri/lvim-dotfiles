@@ -63,3 +63,33 @@ vim.notify = function(msg, ...)
 
   notify(msg, ...)
 end
+
+local rainbow_delimiters = require 'rainbow-delimiters'
+vim.g.rainbow_delimiters = {
+  ---Query names by file type
+  query = {
+    ['']       = 'rainbow-delimiters',
+    javascript = 'rainbow-delimiters-react'
+  },
+  ---Highlight strategies by file type
+  strategy = {
+    [''] = require 'rainbow-delimiters.strategy.global',
+  },
+  ---Event logging settings
+  log = {
+    ---Log level of the module, see `:h log_levels`.
+    level = vim.log.levels.WARN,
+    ---File name of the log file
+    file  = vim.fn.stdpath('log') .. '/rainbow-delimiters.log',
+  },
+  -- Highlight groups in order of display
+  highlight = {
+    -- The colours are intentionally not in the usual order to make
+    -- the contrast between them stronger
+    'RainbowDelimiterYellow',
+    'RainbowDelimiterBlue',
+    'RainbowDelimiterGreen',
+    'RainbowDelimiterViolet',
+    'RainbowDelimiterCyan',
+  }
+}
