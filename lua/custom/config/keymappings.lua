@@ -91,7 +91,8 @@ local leader_mappings = {
   },
 
   b = {
-    ["N"] = { ":enew<CR>", "New buffer" }
+    ["N"] = { ":enew<CR>", "New buffer" },
+    ["c"] = { ":let @+=expand('%:p')<CR>", "[c]opy absolute path to clipboard"},
   },
 
   -- Possession session management
