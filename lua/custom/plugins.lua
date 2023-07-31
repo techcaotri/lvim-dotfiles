@@ -360,5 +360,8 @@ lvim.plugins = {
       --   { 'n', '<c-r>', 'redo', {} },
       -- }
     })
+  },
+  {
+    "lambdalisue/suda.vim",
   }
 }
