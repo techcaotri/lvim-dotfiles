@@ -38,6 +38,12 @@ lvim.plugins = {
     lazy = false,
   },
 
+  -- Context treesitter for showing offset line number
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    lazy = false,
+  },
+
   -- Copilot
   {
     "zbirenbaum/copilot.lua",
