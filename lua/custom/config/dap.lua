@@ -156,20 +156,21 @@ function M.config()
 
   -- auto reload .vscode/launch.json
   local type_to_filetypes = { codelldb = { "rust" }, delve = { "go" } }
-  require("dap.ext.vscode").load_launchjs(nil, type_to_filetypes)
+  local dap_vscode = require("dap.ext.vscode")
+  pcall(dap_vscode.load_launchjs, nil, type_to_filetypes)
 
   local pattern = "*/.vscode/launch.json"
   vim.api.nvim_create_autocmd("BufWritePost", {
     pattern = pattern,
     callback = function(args)
-      require("dap.ext.vscode").load_launchjs(args.file, type_to_filetypes)
+      pcall(dap_vscode.load_launchjs, args.file, type_to_filetypes)
     end
   })
 
   -- Auto load .vscode/launch.json
   require('custom.config.autocmd').autocmd("SessionLoadPost", {
-    callback = function ()
-      require("dap.ext.vscode").load_launchjs()
+    callback = function()
+      pcall(dap_vscode.load_launchjs)
     end
   })
 end
