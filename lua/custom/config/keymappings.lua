@@ -67,6 +67,10 @@ local mappings = {
     ["5"] = { "<Cmd>lua require('harpoon.ui').nav_file(5) <Cr>", "Jump 5" },
   },
 
+  -- nvim-treesitter-context shortcuts
+  ["[c"] = { function()
+    require("treesitter-context").go_to_context()
+  end, "Goto treesitter context" }
 }
 
 local leader_mappings_opts = {
@@ -92,7 +96,7 @@ local leader_mappings = {
 
   b = {
     ["N"] = { ":enew<CR>", "New buffer" },
-    ["c"] = { ":let @+=expand('%:p')<CR>", "[c]opy absolute path to clipboard"},
+    ["c"] = { ":let @+=expand('%:p')<CR>", "[c]opy absolute path to clipboard" },
   },
 
   -- Possession session management
@@ -187,5 +191,6 @@ which_key.register({
 })
 
 -- Add smart semicolon ';' keymap (<C-S-;>) in insert mode
-vim.api.nvim_set_keymap('i', '<M-j>', '<Esc><Esc>A;<ESC>a', { noremap = true, silent = true, desc='Smart semicolon' })
-vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>', { noremap = true, silent = true, desc='Smart semicolon with Enter' })
+vim.api.nvim_set_keymap('i', '<M-j>', '<Esc><Esc>A;<ESC>a', { noremap = true, silent = true, desc = 'Smart semicolon' })
+vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>',
+  { noremap = true, silent = true, desc = 'Smart semicolon with Enter' })
