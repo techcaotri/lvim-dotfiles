@@ -133,6 +133,12 @@ local leader_mappings = {
   l = {
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
     ['R'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [R]eferences" },
+    ['H'] = {
+      function()
+        -- show inlay hints for current buffer
+        require('custom.config.lsp').show_inlay_hints(0)
+      end,
+      "LSP: Show inlay [H]ints" },
     ['s'] = {
       name = "LspSaga",
       ['O'] = { "<cmd>Lspsaga outgoing_calls<CR>", "LspSaga: [O]utgoing Calls" },

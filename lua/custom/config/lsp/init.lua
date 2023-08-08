@@ -1,6 +1,25 @@
 require('custom.config.lsp.language.sh')
 require('custom.config.lsp.language.cpp')
 
+local M = {}
+function M.show_inlay_hints(buf)
+  local clients = vim.lsp.get_active_clients({ bufnr = buf })
+  if #clients > 0 then
+    for _, client in ipairs(clients) do
+      if client.server_capabilities.inlayHintProvider then
+        -- vim.notify(vim.inspect(client))
+        if client.name == 'clangd' then
+          -- Show inlay hints using clangd_extensions
+          require("clangd_extensions.inlay_hints").set_inlay_hints()
+        else
+          -- Show inlay_hints using the new 0.10 nvim's lsp feature
+          vim.lsp.inlay_hint(buf, true)
+        end
+      end
+    end
+  end
+end
+
 require('custom.config.autocmd').autocmd('LspAttach', {
   callback = function(ev)
     local nmap = function(keys, func, desc)
@@ -16,20 +35,8 @@ require('custom.config.autocmd').autocmd('LspAttach', {
     nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
     nmap('<leader>lh', vim.lsp.buf.signature_help, 'Signature Documentation')
 
-    local clients = vim.lsp.get_active_clients({ bufnr = ev.buf })
-    if #clients > 0 then
-      for _, client in ipairs(clients) do
-        if client.server_capabilities.inlayHintProvider then
-          -- vim.notify(vim.inspect(client))
-          if client.name == 'clangd' then
-            -- Show inlay hints using clangd_extensions
-            require("clangd_extensions.inlay_hints").set_inlay_hints()
-          else
-            -- Show inlay_hints using the new 0.10 nvim's lsp feature
-            vim.lsp.inlay_hint(ev.buf, true)
-          end
-        end
-      end
-    end
+    M.show_inlay_hints(ev.buf)
   end,
 })
+
+return M;
