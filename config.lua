@@ -93,3 +93,7 @@ vim.g.rainbow_delimiters = {
     'RainbowDelimiterCyan',
   }
 }
+
+-- Prevent auto add // comment after adding newline at the statement with comment at the end
+-- vim.opt_local.formatoptions:remove({ 'r', 'o' })
+vim.opt.formatoptions:append('/')
