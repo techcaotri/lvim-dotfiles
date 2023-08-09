@@ -222,6 +222,17 @@ lvim.plugins = {
 
   },
 
+  -- Tabularize source code
+  {
+    'junegunn/vim-easy-align',
+    config = function()
+      vim.cmd [[
+          nmap ga <Plug>(EasyAlign)
+          xmap ga <Plug>(EasyAlign)
+        ]]
+    end
+  },
+
   -- Reverse join lines
   {
     'AckslD/nvim-trevJ.lua',
