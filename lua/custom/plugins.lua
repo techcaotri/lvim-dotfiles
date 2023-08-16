@@ -380,5 +380,11 @@ lvim.plugins = {
   },
   {
     "lambdalisue/suda.vim",
-  }
+  },
+
+  -- Colorize ANSI escape codes
+  {
+    'powerman/vim-plugin-AnsiEsc',
+    lazy = false,
+  },
 }
