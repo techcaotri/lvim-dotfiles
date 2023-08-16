@@ -200,3 +200,6 @@ which_key.register({
 vim.api.nvim_set_keymap('i', '<M-j>', '<Esc><Esc>A;<ESC>a', { noremap = true, silent = true, desc = 'Smart semicolon' })
 vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>',
   { noremap = true, silent = true, desc = 'Smart semicolon with Enter' })
+
+-- Add LSP format in visual mode
+vim.api.nvim_set_keymap('v', '<space>lf', "<cmd>lua vim.lsp.buf.format()<CR>", { noremap = true, silent = true, desc = 'Format selection' })
