@@ -13,7 +13,9 @@ M.dependencies = {
 
 function M.config(client, bufnr)
   require("clangd_extensions").setup {
-    server = { autostart = true },
+    server = {
+      autostart = true,
+    },
   }
 end
 
