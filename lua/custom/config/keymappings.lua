@@ -70,7 +70,10 @@ local mappings = {
   -- nvim-treesitter-context shortcuts
   ["[c"] = { function()
     require("treesitter-context").go_to_context()
-  end, "Goto treesitter context" }
+  end, "Goto treesitter context" },
+
+  -- duplicate line without touching " register
+  ["yyp"] = { ":co.<CR>", "Duplicate line" },
 }
 
 local leader_mappings_opts = {
@@ -202,4 +205,5 @@ vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>',
   { noremap = true, silent = true, desc = 'Smart semicolon with Enter' })
 
 -- Add LSP format in visual mode
-vim.api.nvim_set_keymap('v', '<space>lf', "<cmd>lua vim.lsp.buf.format()<CR>", { noremap = true, silent = true, desc = 'Format selection' })
+vim.api.nvim_set_keymap('v', '<space>lf', "<cmd>lua vim.lsp.buf.format()<CR>",
+  { noremap = true, silent = true, desc = 'Format selection' })
