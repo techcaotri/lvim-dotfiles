@@ -251,7 +251,7 @@ lvim.plugins = {
     build = "cd app && npm install",
     ft = "markdown",
     lazy = true,
-    keys = { { "<leader>m", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview" } },
+    keys = { { "<leader>M", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview" } },
     config = function()
       vim.g.mkdp_auto_close = true
       vim.g.mkdp_open_to_the_world = false
@@ -386,5 +386,31 @@ lvim.plugins = {
   {
     'powerman/vim-plugin-AnsiEsc',
     lazy = false,
+  },
+
+  -- Cppman cli interface
+  {
+    'madskjeldgaard/cppman.nvim',
+    requires = {
+      { 'MunifTanjim/nui.nvim' }
+    },
+    config = function()
+      local cppman = require "cppman"
+      cppman.setup()
+
+      -- Make a keymap to open the word under cursor in CPPman
+      vim.keymap.set("n", "<leader>mc", function()
+          cppman.open_cppman_for(vim.fn.expand("<cword>"))
+        end,
+        { desc = 'CPP[m]an word under [c]ursor' }
+      )
+
+      -- Open search box
+      vim.keymap.set("n", "<leader>ms", function()
+          cppman.input()
+        end,
+        { desc = 'CPP[m]an open [s]earchbox' }
+      )
+    end
   },
 }
