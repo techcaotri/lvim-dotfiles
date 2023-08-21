@@ -391,8 +391,7 @@ lvim.plugins = {
   -- Cppman cli interface
   {
     'madskjeldgaard/cppman.nvim',
-    requires = {
-      { 'MunifTanjim/nui.nvim' }
+    dependencies = { { 'MunifTanjim/nui.nvim' }
     },
     config = function()
       local cppman = require "cppman"
@@ -412,5 +411,10 @@ lvim.plugins = {
         { desc = 'CPP[m]an open [s]earchbox' }
       )
     end
+  },
+
+  -- C++ header guard generator
+  {
+    'drmikehenry/vim-headerguard',
   },
 }
