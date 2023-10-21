@@ -417,4 +417,9 @@ lvim.plugins = {
   {
     'drmikehenry/vim-headerguard',
   },
+
+  -- Add header description
+  {
+    'alpertuna/vim-header',
+  },
 }

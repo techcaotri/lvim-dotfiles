@@ -97,3 +97,7 @@ vim.g.rainbow_delimiters = {
 -- Prevent auto add // comment after adding newline at the statement with comment at the end
 -- vim.opt_local.formatoptions:remove({ 'r', 'o' })
 vim.opt.formatoptions:append('/')
+
+-- Add header author's name and email
+vim.g.header_field_author = 'Tri Pham'
+vim.g.header_field_author_email = 'techcaotri@gmail.com'
