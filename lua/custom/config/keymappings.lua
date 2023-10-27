@@ -149,13 +149,14 @@ local leader_mappings = {
       ['a'] = { "<cmd>Lspsaga code_action<CR>", "LspSaga: Code [a]ction" },
       ['d'] = { "<cmd>Lspsaga peek_definition<CR>", "LspSaga: Peek [d]efinition" },
       ['t'] = { "<cmd>Lspsaga peek_type_definition<CR>", "LspSaga: Peek [t]ype Definition" },
-      ['D'] = { "<cmd>Lspsaga diangostic_jump_next<CR>", "LspSaga: [D]]iagnostic Jump Next" },
+      ['D'] = { "<cmd>Lspsaga diangostic_jump_next<CR>", "LspSaga: [D]iagnostic Jump Next" },
       ['f'] = { "<cmd>Lspsaga finder<CR>", "LspSaga: [f]inder" },
       ['K'] = { "<cmd>Lspsaga hover_doc<CR>", "LspSaga: Documentation Hover" },
       ['I'] = { "<cmd>Lspsaga finder imp<CR>", "LspSaga: Finder [I]mplement" },
       ['o'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [o]utline" },
       ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename" },
     },
+    ['W'] = { "<cmd>ClangdSwitchSourceHeader<CR>", "LSP: S[W]itch header/source" }
   },
 
   -- F5: Delete trailing spaces
