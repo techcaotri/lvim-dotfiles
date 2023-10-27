@@ -163,6 +163,11 @@ local leader_mappings = {
 
   -- [Do]cumentation [Ge]nerator
   ["<C-d>"] = { "<Cmd>:DogeGenerate<Cr>", "Doge: [D]ocumentation Generator" },
+
+  -- Cppman submenu
+  m = {
+    name = "Cppman",
+  }
 }
 
 local which_key = require "which-key"
