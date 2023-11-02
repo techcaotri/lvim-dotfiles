@@ -168,7 +168,14 @@ local leader_mappings = {
   -- Cppman submenu
   m = {
     name = "Cppman",
-  }
+  },
+
+  -- Wrapping submenu
+  W = {
+    ['t'] = { "<cmd>ToggleWrapMode<CR>", "Wrapping: [t]oggle Wrap"},
+    ['s'] = { "<cmd>SoftWrapMode<CR>", "Wrapping: [s]oft Wrap"},
+    ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap"},
+  },
 }
 
 local which_key = require "which-key"
