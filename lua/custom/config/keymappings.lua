@@ -125,7 +125,14 @@ local leader_mappings = {
 
   -- Debug keymaps
   d = {
-    ['c'] = { "<cmd>lua require('dap.ext.vscode').load_launchjs()<CR>", "Reload '.vscode/launch.json'" },
+    ['c'] = {
+      function()
+        local pattern = vim.fn.getcwd() .. '/.vscode/launch.json'
+        local type_to_filetypes = { cppdbg = { "c", "cpp" }, codelldb = { "rust" }, delve = { "go" } }
+        vim.print("load_launchjs pattern" .. pattern)
+        require('dap.ext.vscode').load_launchjs(pattern, type_to_filetypes)
+      end,
+      "Reload '.vscode/launch.json'" },
     ['l'] = { "<cmd>lua require('dap').run_last()<CR>", "Run last session" },
     b = {
       name = "Breakpoints",
