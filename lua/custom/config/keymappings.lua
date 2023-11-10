@@ -9,6 +9,8 @@ lvim.builtin.which_key.mappings.d.p = {}
 
 -- Disable <leader>ls for using it with LspSaga submenu
 lvim.builtin.which_key.mappings.l.s = {}
+-- Disable <leader>lr for using it with LspSaga submenu
+lvim.builtin.which_key.mappings.l.r = {}
 
 local opts = {
   mode = "n",     -- NORMAL mode
@@ -135,7 +137,8 @@ local leader_mappings = {
   -- LSP keymaps
   l = {
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
-    ['R'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [R]eferences" },
+    ['R'] = { "<cmd>lua vim.lsp.buf.rename()<cr>", "LSP: [R]ename" },
+    ['r'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [r]eferences" },
     ['H'] = {
       function()
         -- show inlay hints for current buffer
