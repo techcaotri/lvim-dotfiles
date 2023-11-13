@@ -173,7 +173,7 @@ local leader_mappings = {
   ["<F5>"] = { "<cmd>:let _s=@/<Bar>:%s/\\s\\+$//e<Bar>:let @/=_s<Bar><CR>", "Delete all trailing spaces" },
 
   -- [Do]cumentation [Ge]nerator
-  ["<C-d>"] = { "<Cmd>:DogeGenerate<Cr>", "Doge: [D]ocumentation Generator" },
+  ["D"] = { "<Cmd>:DogeGenerate doxygen_javadoc<Cr>", "Doge: [D]ocumentation Generator" },
 
   -- Cppman submenu
   m = {
