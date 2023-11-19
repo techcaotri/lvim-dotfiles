@@ -461,5 +461,10 @@ lvim.plugins = {
         create_keymaps = false,
       })
     end
+  },
+
+  -- Match quote
+  {
+    'airblade/vim-matchquote'
   }
 }
