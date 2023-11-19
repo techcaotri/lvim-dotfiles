@@ -7,11 +7,6 @@ lvim.builtin.which_key.mappings.d.o = {}
 lvim.builtin.which_key.mappings.d.u = {}
 lvim.builtin.which_key.mappings.d.p = {}
 
--- Disable <leader>ls for using it with LspSaga submenu
-lvim.builtin.which_key.mappings.l.s = {}
--- Disable <leader>lr for using it with LspSaga submenu
-lvim.builtin.which_key.mappings.l.r = {}
-
 local opts = {
   mode = "n",     -- NORMAL mode
   buffer = nil,   -- Global mappings. Specify a buffer number for buffer local mappings
@@ -78,6 +73,13 @@ local mappings = {
   ["yyp"] = { ":co.<CR>", "Duplicate line" },
 }
 
+-- Disable <leader>ls for using it with LspSaga submenu
+lvim.builtin.which_key.mappings.l.s = {}
+-- Disable <leader>lr for using it with LspSaga submenu
+lvim.builtin.which_key.mappings.l.r = {}
+-- Disable <leader>d for remapping it to diagnostic floating window
+lvim.builtin.which_key.mappings.l.d = {}
+
 local leader_mappings_opts = {
   mode = "n",     -- NORMAL mode
   prefix = "<leader>",
@@ -143,6 +145,10 @@ local leader_mappings = {
 
   -- LSP keymaps
   l = {
+    -- Diagnostic related keymaps
+    ['<M-d>'] = { "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", "Buffer Diagnostics" },
+    ['d'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
+
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
     ['R'] = { "<cmd>lua vim.lsp.buf.rename()<cr>", "LSP: [R]ename" },
     ['r'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [r]eferences" },
@@ -182,9 +188,9 @@ local leader_mappings = {
 
   -- Wrapping submenu
   W = {
-    ['t'] = { "<cmd>ToggleWrapMode<CR>", "Wrapping: [t]oggle Wrap"},
-    ['s'] = { "<cmd>SoftWrapMode<CR>", "Wrapping: [s]oft Wrap"},
-    ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap"},
+    ['t'] = { "<cmd>ToggleWrapMode<CR>", "Wrapping: [t]oggle Wrap" },
+    ['s'] = { "<cmd>SoftWrapMode<CR>", "Wrapping: [s]oft Wrap" },
+    ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap" },
   },
 }
 
