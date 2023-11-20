@@ -151,7 +151,11 @@ local leader_mappings = {
 
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
     ['R'] = { "<cmd>lua vim.lsp.buf.rename()<cr>", "LSP: [R]ename" },
-    ['r'] = { "<cmd>Telescope lsp_references<CR>", "LSP: All [r]eferences" },
+    ['r'] = {
+      function()
+        require("telescope.builtin").lsp_references({ fname_width = 65, trim_text = true, })
+      end,
+      "LSP: All [r]eferences" },
     ['H'] = {
       function()
         -- show inlay hints for current buffer
