@@ -108,3 +108,17 @@ vim.g.header_field_author_email = 'techcaotri@gmail.com'
 
 -- vim.cmd('autocmd CursorHold * lua vim.diagnostic.open_float({scope="line"})')
 -- vim.o.updatetime = 300
+
+-- Replace xsel with xclip for clipboard handling
+vim.g.clipboard = {
+  name = "xclip",
+  copy = {
+    ["+"] = "xclip -i -selection clipboard",
+    ["*"] = "xclip -i -selection clipboard"
+  },
+  paste = {
+    ["+"] = "xclip -o -selection clipboard",
+    ["*"] = "xclip -o -selection clipboard"
+  },
+  cache_enabled = true
+}
