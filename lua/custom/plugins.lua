@@ -329,7 +329,17 @@ lvim.plugins = {
   -- Motion plugins
   {
     'folke/flash.nvim',
-    opts = {},
+    opts = {
+      modes = {
+        -- options used when flash is activated through
+        -- a regular search with `/` or `?`
+        search = {
+          -- when `true`, flash will be activated during regular search by default.
+          -- You can always toggle when searching with `require("flash").toggle()`
+          enabled = false,
+        },
+      },
+    },
     keys = {
       { "<leader>F", mode = { "n", "x", "o" }, function() require("flash").jump() end,   desc = "Flash" },
       {
@@ -425,10 +435,10 @@ lvim.plugins = {
     opts = function()
       local options = {
         preview = {
-          quit = "q",                                 -- optional keymapping for quit preview
-          accept = "<tab>",                           -- optional keymapping for accept preview
+          quit = "q",                             -- optional keymapping for quit preview
+          accept = "<tab>",                       -- optional keymapping for accept preview
         },
-        custom_define_class_function_commands = {     -- optional
+        custom_define_class_function_commands = { -- optional
           TSCppImplWrite = {
             output_handle = require("nt-cpp-tools.output_handlers").get_add_to_cpp(),
           },
