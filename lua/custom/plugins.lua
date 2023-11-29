@@ -29,10 +29,74 @@ lvim.plugins = {
   {
     "rafamadriz/friendly-snippets"
   },
+  { "kkharji/sqlite.lua" },
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = {
+      { "nvim-lua/plenary.nvim" },
+      { "nvim-telescope/telescope-smart-history.nvim" },
+      { "nvim-telescope/telescope-frecency.nvim" },
+      { "kkharji/sqlite.lua" },
+    },
+    config = function()
+      local ts_actions = require('telescope.actions')
+      local lga_actions = require('telescope-live-grep-args.actions')
+      require('telescope').setup({
+        defaults = {
+          cache_picker = false,
+          mappings = {
+            i = {
+              ['<C-Down>'] = ts_actions.cycle_history_next,
+              ['<C-Up>'] = ts_actions.cycle_history_prev,
+            },
+          },
+          history = {
+            path = '~/.local/share/nvim/databases/telescope_history.sqlite3',
+            limit = 100,
+          }
+        },
+        extensions = {
+          ['ui-select'] = {
+            require('telescope.themes').get_dropdown {
+            }
+          },
+          live_grep_args = {
+            auto_quoting = true,
+            mappings = {
+              i = {
+                ['<C-k>'] = lga_actions.quote_prompt(),
+              },
+            },
+          },
+        }
+      })
+
+      require('telescope').load_extension('ui-select')
+      require('telescope').load_extension('smart_history')
+    end
+  },
   {
     "nvim-telescope/telescope-file-browser.nvim",
     dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
   },
+  {
+    'nvim-telescope/telescope-ui-select.nvim',
+    lazy = true,
+    dependencies = 'nvim-telescope/telescope.nvim',
+  },
+
+  {
+    'nvim-telescope/telescope-smart-history.nvim',
+    lazy = true,
+    dependencies = { 'nvim-telescope/telescope.nvim', 'kkharji/sqlite.lua' },
+  },
+
+  {
+    'nvim-telescope/telescope-live-grep-args.nvim',
+    lazy = true,
+    dependencies = 'nvim-telescope/telescope.nvim'
+  },
+
   {
     "nvim-treesitter/playground",
     lazy = false,
