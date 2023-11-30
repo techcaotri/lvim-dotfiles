@@ -77,8 +77,10 @@ local mappings = {
 lvim.builtin.which_key.mappings.l.s = {}
 -- Disable <leader>lr for using it with LspSaga submenu
 lvim.builtin.which_key.mappings.l.r = {}
--- Disable <leader>d for remapping it to diagnostic floating window
+-- Disable <leader>ld for remapping it to diagnostic floating window
 lvim.builtin.which_key.mappings.l.d = {}
+-- Disable <leader>sl for remapping it to diagnostic floating window
+lvim.builtin.which_key.mappings.s.l = {}
 
 local leader_mappings_opts = {
   mode = "n",     -- NORMAL mode
@@ -97,8 +99,15 @@ local leader_mappings = {
     ["n"] = { ":set number!<CR>", "Toggle number" },
   },
 
+  -- Search submenu
   s = {
-    ["F"] = { "<cmd> Telescope current_buffer_fuzzy_find <CR>", "Find in current [F]ile" }
+    ["F"] = { "<cmd> Telescope current_buffer_fuzzy_find <CR>", "Find in current [F]ile" },
+    ["L"] = { "<cmd>Telescope resume<cr>", "Resume last search" },
+    ["l"] = {
+      function()
+        require("telescope-live-grep-args.shortcuts").grep_word_under_cursor()
+      end,
+      "[l]ive grep word under cursor" },
   },
 
   b = {
@@ -196,6 +205,7 @@ local leader_mappings = {
     ['s'] = { "<cmd>SoftWrapMode<CR>", "Wrapping: [s]oft Wrap" },
     ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap" },
   },
+
 }
 
 local which_key = require "which-key"
