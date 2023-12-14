@@ -71,6 +71,27 @@ local mappings = {
 
   -- duplicate line without touching " register
   ["yyp"] = { ":co.<CR>", "Duplicate line" },
+
+  -- nvim-treesitter-context shortcuts
+  ["gvd"] = { function()
+    local current_full_path = vim.api.nvim_buf_get_name(0)
+    local current_cursor_pos = vim.api.nvim_win_get_cursor(0)
+
+    local original_window = vim.api.nvim_get_current_win()
+    local buffer_name
+    repeat
+      vim.cmd(vim.api.nvim_replace_termcodes('normal <C-l>', true, true, true))
+      local current_buf = vim.api.nvim_get_current_buf()
+      buffer_name = vim.api.nvim_buf_get_name(current_buf)
+    until (not string.find(buffer_name, 'NvimTree')) or vim.api.nvim_get_current_win() == original_window
+
+    vim.cmd("e " .. current_full_path)
+    vim.api.nvim_win_set_cursor(0, current_cursor_pos)
+
+    vim.lsp.buf.definition()
+
+  end, "Goto Definition in next window" },
+
 }
 
 -- Disable <leader>ls for using it with LspSaga submenu
