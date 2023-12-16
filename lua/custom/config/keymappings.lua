@@ -89,7 +89,6 @@ local mappings = {
     vim.api.nvim_win_set_cursor(0, current_cursor_pos)
 
     vim.lsp.buf.definition()
-
   end, "Goto Definition in next window" },
 
 }
@@ -206,7 +205,12 @@ local leader_mappings = {
       ['o'] = { "<cmd>Lspsaga outline<CR>", "LspSaga: Finder [o]utline" },
       ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename" },
     },
-    ['W'] = { "<cmd>ClangdSwitchSourceHeader<CR>", "LSP: S[W]itch header/source" }
+    ['W'] = { "<cmd>ClangdSwitchSourceHeader<CR>", "LSP: S[W]itch header/source" },
+    ["nr"] = {
+      function()
+        -- require("custom.config.lsp.rename").rename_empty()
+        require('custom.config.lsp.rename')({}, {})
+      end, "LSP: New Refactor" }
   },
 
   -- F5: Delete trailing spaces

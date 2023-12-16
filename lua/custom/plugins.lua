@@ -625,4 +625,8 @@ lvim.plugins = {
       })
     end,
   },
+
+  {
+    'rcarriga/nvim-notify'
+  },
 }
