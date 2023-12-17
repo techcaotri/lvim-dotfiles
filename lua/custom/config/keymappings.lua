@@ -179,7 +179,10 @@ local leader_mappings = {
     ['d'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
 
     ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
-    ['R'] = { "<cmd>lua vim.lsp.buf.rename()<cr>", "LSP: [R]ename" },
+    ['R'] = {
+      function()
+        require('custom.config.lsp.rename')({}, {})
+      end, "LSP: Custom [R]ename" },
     ['r'] = {
       function()
         require("telescope.builtin").lsp_references({ fname_width = 65, trim_text = true, })
@@ -206,11 +209,10 @@ local leader_mappings = {
       ['r'] = { "<cmd>Lspsaga rename<CR>", "LspSaga: [r]ename" },
     },
     ['W'] = { "<cmd>ClangdSwitchSourceHeader<CR>", "LSP: S[W]itch header/source" },
-    ["nr"] = {
-      function()
-        -- require("custom.config.lsp.rename").rename_empty()
-        require('custom.config.lsp.rename')({}, {})
-      end, "LSP: New Refactor" }
+    o = {
+      name = "OriginalLSP",
+      ["r"] = { "<cmd>lua vim.lsp.buf.rename()<cr>", "LSP: [o]riginal [r]efactor" },
+    }
   },
 
   -- F5: Delete trailing spaces
