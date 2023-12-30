@@ -233,6 +233,8 @@ local leader_mappings = {
     ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap" },
   },
 
+  -- Split window
+  ['|'] = { "<cmd>:vsplit<CR>", "Split window vertically"},
 }
 
 local which_key = require "which-key"
