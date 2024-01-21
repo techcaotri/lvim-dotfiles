@@ -18,6 +18,7 @@ require("custom.config.alpha")
 require("custom.config.lsp")
 require("custom.config.project")
 require("custom.config.dap")
+require("custom.config.treesitter")
 
 -- require("custom.config.lspsaga-settings.test")
 
@@ -122,3 +123,22 @@ vim.g.clipboard = {
   },
   cache_enabled = true
 }
+
+-- Auto reload file when it's changed on disk
+local autoread = vim.api.nvim_create_augroup('ar_autoread', { clear = true })
+vim.api.nvim_create_autocmd('FileChangedShellPost', {
+  pattern = '*',
+  group = autoread,
+  callback = function()
+    vim.notify('File changed on disk. Buffer reloaded.')
+  end,
+})
+vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold' }, {
+  pattern = '*',
+  group = autoread,
+  callback = function()
+    if vim.fn.getcmdwintype() == '' then
+      vim.cmd('checktime')
+    end
+  end,
+})

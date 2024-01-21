@@ -12,4 +12,5 @@ lvim.builtin.project.patterns = {
   "requirements.txt",
   "pyproject.toml",
   ".vscode",
+  "pubspec.yaml",
 }
