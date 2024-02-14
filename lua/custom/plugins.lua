@@ -562,16 +562,31 @@ lvim.plugins = {
       { "<leader>qra",  ":QuartoSendAll<cr>",                            desc = "quarto run all" },
       { "<leader><cr>", ":SlimeSend<cr>",                                desc = "send code chunk" },
       { "<c-cr>",       ":SlimeSend<cr>",                                desc = "send code chunk" },
-      { "<c-cr>",       "<esc>:SlimeSend<cr>i",                          mode = "i",                      desc =
-      "send code chunk" },
-      { "<c-cr>",       "<Plug>SlimeRegionSend<cr>",                     mode = "v",                      desc =
-      "send code chunk" },
-      { "<cr>",         "<Plug>SlimeRegionSend<cr>",                     mode = "v",                      desc =
-      "send code chunk" },
-      { "<leader>ctr",  ":split term://R<cr>",                           desc = "terminal: R" },
-      { "<leader>cti",  ":split term://ipython<cr>",                     desc = "terminal: ipython" },
-      { "<leader>ctp",  ":split term://python<cr>",                      desc = "terminal: python" },
-      { "<leader>ctj",  ":split term://julia<cr>",                       desc = "terminal: julia" },
+      {
+        "<c-cr>",
+        "<esc>:SlimeSend<cr>i",
+        mode = "i",
+        desc =
+        "send code chunk"
+      },
+      {
+        "<c-cr>",
+        "<Plug>SlimeRegionSend<cr>",
+        mode = "v",
+        desc =
+        "send code chunk"
+      },
+      {
+        "<cr>",
+        "<Plug>SlimeRegionSend<cr>",
+        mode = "v",
+        desc =
+        "send code chunk"
+      },
+      { "<leader>ctr", ":split term://R<cr>",       desc = "terminal: R" },
+      { "<leader>cti", ":split term://ipython<cr>", desc = "terminal: ipython" },
+      { "<leader>ctp", ":split term://python<cr>",  desc = "terminal: python" },
+      { "<leader>ctj", ":split term://julia<cr>",   desc = "terminal: julia" },
     },
   },
 
@@ -633,9 +648,33 @@ lvim.plugins = {
     'akinsho/flutter-tools.nvim',
     lazy = false,
     dependencies = {
-        'nvim-lua/plenary.nvim',
-        'stevearc/dressing.nvim', -- optional for vim.ui.select
+      'nvim-lua/plenary.nvim',
+      'stevearc/dressing.nvim',   -- optional for vim.ui.select
     },
     config = true,
+  },
+
+  {
+    "lmburns/lf.nvim",
+    config = function(_, opts)
+      -- This feature will not work if the plugin is lazy-loaded
+      vim.g.lf_netrw = 1
+
+      require("lf").setup({
+        escape_quit = false,
+        border = "rounded",
+      })
+
+      vim.keymap.set("n", "<M-o>", "<Cmd>Lf<CR>")
+
+      vim.api.nvim_create_autocmd({ "User" }, {
+        pattern = "LfTermEnter",
+        callback = function(a)
+          vim.api.nvim_buf_set_keymap(a.buf, "t", "q", "q", { nowait = true })
+        end,
+      })
+      require("lf").setup(opts)
+    end,
+    dependencies = { "toggleterm.nvim" }
   },
 }
