@@ -406,13 +406,6 @@ lvim.plugins = {
     },
     keys = {
       { "<leader>F", mode = { "n", "x", "o" }, function() require("flash").jump() end,   desc = "Flash" },
-      {
-        "<leader>S",
-        mode = { "n", "o", "x" },
-        function() require("flash").treesitter() end,
-        desc =
-        "Flash Treesitter"
-      },
       { "r",         mode = "o",               function() require("flash").remote() end, desc = "Remote Flash" },
       {
         "R",
@@ -649,7 +642,7 @@ lvim.plugins = {
     lazy = false,
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'stevearc/dressing.nvim',   -- optional for vim.ui.select
+      'stevearc/dressing.nvim', -- optional for vim.ui.select
     },
     config = true,
   },
@@ -676,5 +669,20 @@ lvim.plugins = {
       require("lf").setup(opts)
     end,
     dependencies = { "toggleterm.nvim" }
+  },
+
+  {
+    'nvim-pack/nvim-spectre',
+    config = function()
+      vim.keymap.set('n', '<leader>S', '<cmd>lua require("spectre").toggle()<CR>', {
+        desc = "Toggle Spectre"
+      })
+      vim.keymap.set('n', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
+        desc = "Search current word"
+      })
+      vim.keymap.set('n', '<leader>Sp', '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
+        desc = "Search on current file"
+      })
+    end
   },
 }
