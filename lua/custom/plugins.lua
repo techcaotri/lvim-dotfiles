@@ -678,11 +678,15 @@ lvim.plugins = {
         desc = "Toggle Spectre"
       })
       vim.keymap.set('n', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
-        desc = "Search current word"
+        desc = "Spectre: Search current word"
       })
       vim.keymap.set('n', '<leader>Sp', '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
-        desc = "Search on current file"
+        desc = "Spectre: Search on current file"
       })
     end
+  },
+
+  {
+    'sindrets/diffview.nvim',
   },
 }

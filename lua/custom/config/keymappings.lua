@@ -6,6 +6,7 @@ lvim.builtin.which_key.mappings.d.i = {}
 lvim.builtin.which_key.mappings.d.o = {}
 lvim.builtin.which_key.mappings.d.u = {}
 lvim.builtin.which_key.mappings.d.p = {}
+lvim.builtin.which_key.mappings.g.d = {}
 
 local opts = {
   mode = "n",     -- NORMAL mode
@@ -235,6 +236,22 @@ local leader_mappings = {
 
   -- Split window
   ['|'] = { "<cmd>:vsplit<CR>", "Split window vertically"},
+
+  -- Git keymaps
+  g = {
+    d = {
+      "<cmd>DiffviewOpen<CR>",
+      "Git diffview open",
+    },
+    q = {
+      "<cmd>DiffviewClose<CR>",
+      "Git diffview close",
+    },
+    D = {
+      "<cmd>Gitsigns diffthis HEAD<cr>",
+      "Git Diff",
+    },
+  }
 }
 
 local which_key = require "which-key"
