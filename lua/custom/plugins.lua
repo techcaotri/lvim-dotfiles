@@ -436,14 +436,14 @@ lvim.plugins = {
   },
   {
     'tzachar/highlight-undo.nvim',
-    require('highlight-undo').setup({
+    -- require('highlight-undo').setup({
       -- hlgroup = 'HighlightUndo',
       -- duration = 500,
       -- keymaps = {
       --   { 'n', 'u',     'undo', {} },
       --   { 'n', '<c-r>', 'redo', {} },
       -- }
-    })
+    -- })
   },
   {
     "lambdalisue/suda.vim",
