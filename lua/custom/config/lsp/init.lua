@@ -1,6 +1,10 @@
 require('custom.config.lsp.language.sh')
 require('custom.config.lsp.language.cpp')
 
+require("lspconfig").lua_ls.setup({
+	settings = { Lua = { hint = { enable = true } } },
+})
+
 local M = {}
 function M.show_inlay_hints(buf)
   local clients = vim.lsp.get_active_clients({ bufnr = buf })
@@ -13,10 +17,12 @@ function M.show_inlay_hints(buf)
           require("clangd_extensions.inlay_hints").set_inlay_hints()
         else
           -- Show inlay_hints using the new 0.10 nvim's lsp feature
-          if vim.fn.has('nvim-0.10.0-dev+dirty') then
-            vim.lsp.inlay_hint.enable(buf, true)
-          else
+          local nvim_version = tostring(vim.version())
+          print('current neovim build version: ' .. nvim_version)
+          if nvim_version == '0.10.0-dev+g643bea31b' then
             vim.lsp.inlay_hint(buf, true)
+          else
+            vim.lsp.inlay_hint.enable(buf, true)
           end
         end
       end
