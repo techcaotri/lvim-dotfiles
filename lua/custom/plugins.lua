@@ -267,7 +267,6 @@ lvim.plugins = {
     config = function()
       require('custom.config.venv-selector').config()
     end,
-    event = "VeryLazy", -- Optional: needed only if you want to type `:VenvSelect` without a keymapping
   },
 
   -- Colorschemes and themes
