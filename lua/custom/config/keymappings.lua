@@ -224,7 +224,7 @@ local leader_mappings = {
 
   -- Cppman submenu
   m = {
-    name = "Cppman",
+   name = "Cppman",
   },
 
   -- Wrapping submenu
