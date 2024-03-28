@@ -19,7 +19,7 @@ function M.show_inlay_hints(buf)
           -- Show inlay_hints using the new 0.10 nvim's lsp feature
           local nvim_version = tostring(vim.version())
           print('current neovim build version: ' .. nvim_version)
-          if nvim_version == '0.10.0-dev+g643bea31b' then
+          if nvim_version == '0.10.0-dev+g643bea31b' or nvim_version == '0.10.0-dev+gd191bdf9d' then
             vim.lsp.inlay_hint(buf, true)
           else
             vim.lsp.inlay_hint.enable(buf, true)
