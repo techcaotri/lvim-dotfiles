@@ -142,3 +142,7 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold' }, {
     end
   end,
 })
+
+-- image.nvim
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua;"
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
