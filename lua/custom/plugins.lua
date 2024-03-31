@@ -655,6 +655,7 @@ lvim.plugins = {
       require("lf").setup({
         escape_quit = false,
         border = "rounded",
+        default_cmd = "lfrun",
       })
 
       vim.keymap.set("n", "<M-o>", "<Cmd>Lf<CR>")
