@@ -762,4 +762,29 @@ lvim.plugins = {
       kitty_method = "normal",
     },
   },
+
+  --
+  {
+    'nvim-telescope/telescope-frecency.nvim',
+    config = function()
+      require("telescope").setup {
+        extensions = {
+          frecency = {
+            show_scores = true,
+            show_unindexed = true,
+            ignore_patterns = { "*.git/*", "*/tmp/*" },
+            disable_devicons = false,
+            workspaces = {
+              workspaces = {
+                ["conf"]     = "/home/tripham/.config",
+                ["app_data"] = "/home/tripham/.local/share",
+                ["project"]  = "/home/tripham/Dev/",
+              }
+            }
+          }
+        },
+      }
+      require("telescope").load_extension "frecency"
+    end,
+  }
 }

@@ -129,6 +129,16 @@ local leader_mappings = {
         require("telescope-live-grep-args.shortcuts").grep_word_under_cursor()
       end,
       "[l]ive grep word under cursor" },
+
+    -- Add keymap for telescope frecency
+    ["s"] = {
+      function()
+        require("telescope").extensions.frecency.frecency {
+          workspace = "CWD",
+        }
+      end,
+      'Telescope Frecency'
+    },
   },
 
   b = {
@@ -224,7 +234,7 @@ local leader_mappings = {
 
   -- Cppman submenu
   m = {
-   name = "Cppman",
+    name = "Cppman",
   },
 
   -- Wrapping submenu
@@ -235,7 +245,7 @@ local leader_mappings = {
   },
 
   -- Split window
-  ['|'] = { "<cmd>:vsplit<CR>", "Split window vertically"},
+  ['|'] = { "<cmd>:vsplit<CR>", "Split window vertically" },
 
   -- Git keymaps
   g = {
