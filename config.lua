@@ -23,6 +23,7 @@ require("custom.config.treesitter")
 -- require("custom.config.lspsaga-settings.test")
 
 vim.opt.relativenumber = true
+vim.opt.scrolloff = 3
 if vim.g.vscode then
   lvim.colorscheme = ""
 else
