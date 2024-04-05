@@ -53,7 +53,8 @@ lvim.plugins = {
           history = {
             path = '~/.local/share/nvim/databases/telescope_history.sqlite3',
             limit = 100,
-          }
+          },
+          sorting_strategy = "ascending",
         },
         extensions = {
           ['ui-select'] = {
