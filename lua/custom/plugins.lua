@@ -645,15 +645,14 @@ lvim.plugins = {
     },
     config = function()
       require('flutter-tools').setup {
-       -- (uncomment below line for windows only)
-       -- flutter_path = "home/flutter/bin/flutter.bat",
+        -- (uncomment below line for windows only)
+        -- flutter_path = "home/flutter/bin/flutter.bat",
 
         debugger = {
           -- make these two params true to enable debug mode
           enabled = true,
           run_via_dap = true,
           register_configurations = function(_)
-
             require("dap").configurations.dart = {
               {
                 type = "dart",
