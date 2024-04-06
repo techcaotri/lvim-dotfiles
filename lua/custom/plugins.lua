@@ -764,7 +764,7 @@ lvim.plugins = {
     },
   },
 
-  --
+  -- Selecting files from your editing history
   {
     'nvim-telescope/telescope-frecency.nvim',
     config = function()
@@ -787,5 +787,21 @@ lvim.plugins = {
       }
       require("telescope").load_extension "frecency"
     end,
+  },
+
+  -- Google translate
+  {
+    'uga-rosa/translate.nvim',
+    config = function()
+      require("translate").setup({
+        default = {
+          command = "translate_shell",
+          output = "insert",
+          parse_before = "trim",
+        },
+      })
+    end,
+  },
+
   }
 }

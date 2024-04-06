@@ -306,3 +306,20 @@ vim.api.nvim_set_keymap('i', '<C-M-j>', '<Esc><Esc>A;<Cr>',
 -- Add LSP format in visual mode
 vim.api.nvim_set_keymap('v', '<space>lf', "<cmd>lua vim.lsp.buf.format()<CR>",
   { noremap = true, silent = true, desc = 'Format selection' })
+
+-- Add keymap for Googles Translate
+vim.api.nvim_set_keymap('v', '<space><C-t>', '', {
+  noremap = true,
+  callback = function()
+    vim.cmd('Translate en')
+    -- local keys = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
+    -- vim.api.nvim_feedkeys(keys, 'm', false)
+    -- vim.api.nvim_feedkeys('<CR>', 'm', false)
+    vim.defer_fn(function()
+      local keys = vim.api.nvim_replace_termcodes('<ESC><CR>', true, false, true)
+      vim.api.nvim_feedkeys(keys, 'm', false)
+    end, 1000)
+  end,
+  silent = true,
+  desc = 'Translate to EN'
+})
