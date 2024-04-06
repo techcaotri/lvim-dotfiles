@@ -1,6 +1,7 @@
 require('custom.config.lsp.language.sh')
 require('custom.config.lsp.language.cpp')
 require('custom.config.lsp.language.lua_ls')
+require('custom.config.lsp.language.html_jsp')
 
 require("lspconfig").lua_ls.setup({
 	settings = { Lua = { hint = { enable = true } } },
