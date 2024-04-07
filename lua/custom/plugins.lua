@@ -737,6 +737,9 @@ lvim.plugins = {
       vim.keymap.set('n', '<leader>Sp', '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
         desc = "Spectre: Search on current file"
       })
+      vim.keymap.set('v', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=false})<CR>', {
+        desc = "Spectre: Search current word"
+      })
     end
   },
 
