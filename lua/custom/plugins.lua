@@ -728,7 +728,14 @@ lvim.plugins = {
   {
     'nvim-pack/nvim-spectre',
     config = function()
-      vim.keymap.set('n', '<leader>S', '<cmd>lua require("spectre").toggle()<CR>', {
+      vim.keymap.set('n', '<leader>S', function()
+        require('spectre').open({
+          is_insert_mode = true,
+          -- the directory where the search tool will be started in
+          cwd = ".",
+          is_close = false, -- close an exists instance of spectre and open new
+        })
+      end, {
         desc = "Toggle Spectre"
       })
       vim.keymap.set('n', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
@@ -739,6 +746,9 @@ lvim.plugins = {
       })
       vim.keymap.set('v', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=false})<CR>', {
         desc = "Spectre: Search current word"
+      })
+      require('spectre').setup({
+        cwd = '.',
       })
     end
   },
