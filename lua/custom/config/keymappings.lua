@@ -52,19 +52,6 @@ local mappings = {
   ["p"] = { "p", "Paste" },
   ["P"] = { "P", "Paste" },
 
-  -- Harpoon bookmarks management
-  B = {
-    name = "Harpoon bookmarks",
-    a = { "<Cmd>lua require('harpoon.mark').add_file()<Cr>", "Add" },
-    m = { "<Cmd>lua require('harpoon.ui').toggle_quick_menu()<Cr>", "Menu" },
-    f = { "<Cmd>Telescope harpoon marks<CR>", "Telescope [f]ind marks" },
-    ["1"] = { "<Cmd>lua require('harpoon.ui').nav_file(1) <Cr>", "Jump 1" },
-    ["2"] = { "<Cmd>lua require('harpoon.ui').nav_file(2) <Cr>", "Jump 2" },
-    ["3"] = { "<Cmd>lua require('harpoon.ui').nav_file(3) <Cr>", "Jump 3" },
-    ["4"] = { "<Cmd>lua require('harpoon.ui').nav_file(4) <Cr>", "Jump 4" },
-    ["5"] = { "<Cmd>lua require('harpoon.ui').nav_file(5) <Cr>", "Jump 5" },
-  },
-
   -- nvim-treesitter-context shortcuts
   ["[c"] = { function()
     require("treesitter-context").go_to_context()
@@ -145,6 +132,9 @@ local leader_mappings = {
     ["N"] = { ":enew<CR>", "New buffer" },
     ["c"] = { ":let @+=expand('%:p')<CR>", "[c]opy absolute path to clipboard" },
   },
+
+  -- Bookmark using 'marks.nvim'
+  m = { name = "Bookmark" },
 
   -- Possession session management
   P = {
@@ -233,7 +223,7 @@ local leader_mappings = {
   ["D"] = { "<Cmd>:DogeGenerate doxygen_javadoc<Cr>", "Doge: [D]ocumentation Generator" },
 
   -- Cppman submenu
-  m = {
+  C = {
     name = "Cppman",
   },
 

@@ -350,12 +350,35 @@ lvim.plugins = {
 
   -- Bookmark places and quickly navigate between them
   {
-    "ThePrimeagen/harpoon",
-    event = "VimEnter",
+    'chentoast/marks.nvim',
     config = function()
-      require("harpoon").setup {}
-      require("telescope").load_extension "harpoon"
-    end,
+      require('marks').setup({
+        -- whether to map keybinds or not. default true
+        default_mappings = false,
+        -- whether movements cycle back to the beginning/end of buffer. default true
+        cyclic = true,
+        bookmark_0 = { sign = "⚑", virt_text = "->" },
+        mappings = {
+          set_next = "<leader>m,",
+          delete = "<leader>mx",
+          delete_line = '<leader>md',
+          delete_buf = '<leader>mD',
+          next = "<leader>mn",
+          prev = "<leader>mp",
+          preview = "<leader>m:",
+          set_bookmark0 = "<leader>m0",
+          set_bookmark1 = '<leader>m1',
+          set_bookmark2 = '<leader>m2',
+          set_bookmark3 = '<leader>m3',
+          set_bookmark4 = '<leader>m4',
+          set_bookmark5 = '<leader>m5',
+          set_bookmark6 = '<leader>m6',
+          set_bookmark7 = '<leader>m7',
+          set_bookmark8 = '<leader>m8',
+          set_bookmark9 = '<leader>m9',
+        },
+      })
+    end
   },
 
   -- LSP enhancements
@@ -464,17 +487,17 @@ lvim.plugins = {
       cppman.setup()
 
       -- Make a keymap to open the word under cursor in CPPman
-      vim.keymap.set("n", "<leader>mc", function()
+      vim.keymap.set("n", "<leader>Cc", function()
           cppman.open_cppman_for(vim.fn.expand("<cword>"))
         end,
-        { desc = 'CPP[m]an word under [c]ursor' }
+        { desc = '[C]PPman word under [c]ursor' }
       )
 
       -- Open search box
-      vim.keymap.set("n", "<leader>ms", function()
+      vim.keymap.set("n", "<leader>Cs", function()
           cppman.input()
         end,
-        { desc = 'CPP[m]an open [s]earchbox' }
+        { desc = '[C]PPman open [s]earchbox' }
       )
     end
   },
