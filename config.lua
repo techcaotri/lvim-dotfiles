@@ -54,11 +54,11 @@ vim.b.navic_lazy_update_context = true
 lvim.builtin.breadcrumbs.active = false
 
 -- Always start 'flash.nvim' when opening file
--- require('custom.config.autocmd').autocmd({ "BufNewFile", "BufRead" }, {
---   callback = function()
---     require("flash").toggle(true)
---   end
--- })
+require('custom.config.autocmd').autocmd({ "BufNewFile", "BufRead" }, {
+  callback = function()
+    require("flash").toggle(true)
+  end
+})
 
 -- bypass null-ls warning, refer to https://github.com/jose-elias-alvarez/null-ls.nvim/issues/428
 -- local notify = vim.notify
