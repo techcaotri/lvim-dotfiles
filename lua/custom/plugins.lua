@@ -83,6 +83,20 @@ lvim.plugins = {
     'nvim-telescope/telescope-ui-select.nvim',
     lazy = true,
     dependencies = 'nvim-telescope/telescope.nvim',
+    config = function()
+      require("telescope").setup {
+        extensions = {
+          ["ui-select"] = {
+            require("telescope.themes").get_dropdown {
+              -- even more opts
+            }
+          }
+        }
+      }
+      -- To get fzf loaded and working with telescope, you need to call
+      -- load_extension, somewhere after setup function:
+      require("telescope").load_extension("ui-select")
+    end,
   },
 
   {
@@ -331,7 +345,8 @@ lvim.plugins = {
     'stevearc/dressing.nvim',
     opts = {
       select = {
-        backend = { "fzf_lua", "nui", "fzf", "builtin" },
+        enabled = true,
+        backend = { "telescope", "fzf", "fzf_lua", "builtin" },
         fzf_lua = {
           winopts = {
             width = 0.7,
