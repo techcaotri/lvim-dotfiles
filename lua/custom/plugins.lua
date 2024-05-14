@@ -824,6 +824,7 @@ lvim.plugins = {
             show_scores = true,
             show_unindexed = true,
             ignore_patterns = { "*.git/*", "*/tmp/*" },
+            db_validate_threshold = 50,
             disable_devicons = false,
             workspaces = {
               workspaces = {
