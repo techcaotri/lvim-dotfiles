@@ -25,7 +25,7 @@ require("ccls").setup {
     disable_signature = true,
     codelens = { enable = false },
     lspconfig = {
-      autostart = true,
+      autostart = false,
       cmd = { "ccls" },
       filetypes = { "c", "cc", "cpp", "objc", "objcpp" },
     }
@@ -43,19 +43,19 @@ local clangd_flags = {
 local clangd_bin = "clangd"
 require("lvim.lsp.manager").setup("clangd", {
   on_attach = function(client)
-    client.server_capabilities.workspaceSymbolProvider = false
+    client.server_capabilities.workspaceSymbolProvider = true
   end,
   cmd = { clangd_bin, unpack(clangd_flags) },
 })
 
-require("lvim.lsp.manager").setup("ccls", {
-  on_attach = function(client)
-    -- This list is copied from https://github.com/MaskRay/ccls/blob/ee2d4f5b9a2181e2c71341d34c7d2463f0c28cd1/src/messages/initialize.cc #L104
-    -- textDocumentSync = true, -- Comment out since adding this will make 'ccls' stop working
-    -- signatureHelpProvider = false, -- Comment out since adding this will make 'ccls' stop working
-    -- callHierarchyProvider = true -- Comment out since adding this will make 'ccls' stop working
-  end
-})
+-- require("lvim.lsp.manager").setup("ccls", {
+--   on_attach = function(client)
+--     -- This list is copied from https://github.com/MaskRay/ccls/blob/ee2d4f5b9a2181e2c71341d34c7d2463f0c28cd1/src/messages/initialize.cc #L104
+--     -- textDocumentSync = true, -- Comment out since adding this will make 'ccls' stop working
+--     -- signatureHelpProvider = false, -- Comment out since adding this will make 'ccls' stop working
+--     -- callHierarchyProvider = true -- Comment out since adding this will make 'ccls' stop working
+--   end
+-- })
 
 -- require("clangd").setup {
 --   on_attach = function (client)
