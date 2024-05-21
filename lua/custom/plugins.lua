@@ -955,4 +955,9 @@ lvim.plugins = {
     "gennaro-tedesco/nvim-jqx",
     ft = { "json", "yaml" },
   },
+
+  -- common formatter
+  {
+    "mhartington/formatter.nvim",
+  },
 }
