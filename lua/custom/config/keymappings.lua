@@ -229,6 +229,7 @@ local leader_mappings = {
 
   -- Wrapping submenu
   W = {
+    name = "+Wrapping",
     ['t'] = { "<cmd>ToggleWrapMode<CR>", "Wrapping: [t]oggle Wrap" },
     ['s'] = { "<cmd>SoftWrapMode<CR>", "Wrapping: [s]oft Wrap" },
     ['h'] = { "<cmd>HardWrapMode<CR>", "Wrapping: [h]ard Wrap" },
@@ -313,3 +314,14 @@ vim.api.nvim_set_keymap('v', '<space><C-t>', '', {
   silent = true,
   desc = 'Translate to EN'
 })
+
+local actions = require('telescope.actions')
+require('telescope').setup{
+  defaults = {
+    mappings = {
+      i = {
+        ["<C-q>"]   = actions.smart_send_to_qflist + actions.open_qflist,
+      },
+    },
+  }
+}
