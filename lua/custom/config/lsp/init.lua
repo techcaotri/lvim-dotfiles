@@ -25,7 +25,7 @@ function M.show_inlay_hints(buf)
           if nvim_version == '0.10.0-dev+g643bea31b' or nvim_version == '0.10.0-dev+gd191bdf9d' then
             vim.lsp.inlay_hint(buf, true)
           else
-            vim.lsp.inlay_hint.enable(true)
+            vim.lsp.inlay_hint.enable(buf, true)
           end
         end
       end
