@@ -17,12 +17,6 @@ lvim.plugins = {
     end,
   },
   {
-    "max397574/better-escape.nvim",
-    config = function()
-      require("better_escape").setup()
-    end
-  },
-  {
     "L3MON4D3/LuaSnip"
   },
   {
