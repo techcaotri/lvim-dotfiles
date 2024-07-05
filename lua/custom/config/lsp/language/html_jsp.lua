@@ -4,4 +4,3 @@ lsp_manager.setup("html", {
 	on_init = require("lvim.lsp").common_on_init,
 	capabilities = require("lvim.lsp").common_capabilities(),
 })
-
