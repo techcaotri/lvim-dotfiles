@@ -65,8 +65,10 @@ end
 
 function M.get_cached_venv()
   local config = require("venv-selector.config")
-  if vim.fn.filereadable(config.settings.cache_file) == 1 then
-    local cache_file = vim.fn.readfile(config.settings.cache_file)
+  local path = require("venv-selector.path")
+  local cache_file = path.expand(config.user_settings.cache.file)
+  if vim.fn.filereadable(cache_file) == 1 then
+    local cache_file = vim.fn.readfile(cache_file)
     if cache_file ~= nil and cache_file[1] ~= nil then
       local venv_cache = vim.fn.json_decode(cache_file[1])
       if venv_cache ~= nil and venv_cache[vim.fn.getcwd()] ~= nil then
