@@ -970,4 +970,16 @@ lvim.plugins = {
     ft = { "go", 'gomod' },
     build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
   },
+  {
+    "cbochs/portal.nvim",
+    -- Optional dependencies
+    config = function()
+      vim.keymap.set("n", "<leader>o", "<cmd>Portal jumplist backward<cr>")
+      vim.keymap.set("n", "<leader>i", "<cmd>Portal jumplist forward<cr>")
+    end,
+    dependencies = {
+      "cbochs/grapple.nvim",
+      "ThePrimeagen/harpoon"
+    },
+  }
 }
