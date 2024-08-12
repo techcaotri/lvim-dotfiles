@@ -27,7 +27,7 @@ vim.opt.scrolloff = 3
 if vim.g.vscode then
   lvim.colorscheme = ""
 else
-  lvim.colorscheme = "newpaper"
+  lvim.colorscheme = "catppuccin-mocha"
 end
 
 lvim.builtin.mason.ensure_installed = {
