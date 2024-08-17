@@ -283,8 +283,9 @@ lvim.plugins = {
     lazy = false,
   },
   {
-    'techcaotri-newpaper',
-    dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
+    'techcaotri/newpaper.nvim',
+    branch = "techcaotri-newspaper",
+    -- dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
     config = function()
       require("newpaper").setup({
         style = "dark",
