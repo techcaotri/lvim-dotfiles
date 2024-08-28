@@ -25,10 +25,8 @@ function M.show_inlay_hints(buf)
           print('current neovim build version: ' .. nvim_version)
           if nvim_version == '0.10.0-dev+g643bea31b' or nvim_version == '0.10.0-dev+gd191bdf9d' then
             vim.lsp.inlay_hint(buf, true)
-          elseif nvim_version == '0.10.0-dev+ga736e845a' then
-            vim.lsp.inlay_hint.enable(true, {})
           else
-            vim.lsp.inlay_hint.enable(buf, true)
+            vim.lsp.inlay_hint.enable(true, {})
           end
         end
       end
