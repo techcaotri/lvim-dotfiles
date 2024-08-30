@@ -315,12 +315,16 @@ vim.api.nvim_set_keymap('v', '<space><C-t>', '', {
   desc = 'Translate to EN'
 })
 
+-- Add keymap to convert to Unix EOL
+vim.api.nvim_set_keymap('n', '<Space>bu', ':%s/\r//g<CR>',
+  { noremap = true, silent = false, desc = "Convert to Unix EOL, remove ^M from end of line" })
+
 local actions = require('telescope.actions')
-require('telescope').setup{
+require('telescope').setup {
   defaults = {
     mappings = {
       i = {
-        ["<C-q>"]   = actions.smart_send_to_qflist + actions.open_qflist,
+        ["<C-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
       },
     },
   }
