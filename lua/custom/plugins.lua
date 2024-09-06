@@ -770,6 +770,14 @@ lvim.plugins = {
   },
 
   -- image preview
+  -- Fix the issue: luarocks unable to install 'magick' with lua version > 5.1. Reference: https://github.com/3rd/image.nvim/issues/124#issuecomment-2030392795
+  {
+    "vhyrro/luarocks.nvim",
+    priority = 1001,
+    opts = {
+      rocks = { "magick" },
+    },
+  },
   {
     "3rd/image.nvim",
     event = "VeryLazy",
