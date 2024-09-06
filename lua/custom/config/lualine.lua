@@ -3,7 +3,7 @@
 local components = require("lvim.core.lualine.components")
 
 local function possession_session()
-  return require('possession.session').session_name or 'tmp'
+  return require('possession.session').get_session_name() or 'tmp'
 end
 
 lvim.builtin.lualine.style = "lvim"
