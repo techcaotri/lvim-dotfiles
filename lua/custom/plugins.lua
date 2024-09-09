@@ -282,16 +282,6 @@ lvim.plugins = {
     'techcaotri/Colorschemes',
     lazy = false,
   },
-  -- {
-  --   'techcaotri/newpaper.nvim',
-  --   branch = "techcaotri-newspaper",
-  --   -- dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
-  --   config = function()
-  --     require("newpaper").setup({
-  --       style = "dark",
-  --     })
-  --   end
-  -- },
   { "catppuccin/nvim", name = "catppuccin", priority = 1000
   },
 
