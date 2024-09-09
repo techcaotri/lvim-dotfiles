@@ -282,17 +282,16 @@ lvim.plugins = {
     'techcaotri/Colorschemes',
     lazy = false,
   },
-  {
-    'techcaotri/newpaper.nvim',
-    branch = "techcaotri-newspaper",
-    -- dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
-    config = function()
-      require("newpaper").setup({
-        style = "dark",
-      })
-    end
-
-  },
+  -- {
+  --   'techcaotri/newpaper.nvim',
+  --   branch = "techcaotri-newspaper",
+  --   -- dir = '/home/tripham/Dev/Playground_Terminal/Neovim_Awesome/newpaper.nvim',
+  --   config = function()
+  --     require("newpaper").setup({
+  --       style = "dark",
+  --     })
+  --   end
+  -- },
   { "catppuccin/nvim", name = "catppuccin", priority = 1000
   },
 
@@ -815,6 +814,7 @@ lvim.plugins = {
       max_height = nil,
       max_width_window_percentage = nil,
       max_height_window_percentage = 50,
+      tmux_show_only_in_active_window = true,
       kitty_method = "normal",
     },
   },
