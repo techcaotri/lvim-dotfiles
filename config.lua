@@ -111,19 +111,21 @@ vim.g.header_field_author_email = 'techcaotri@gmail.com'
 -- vim.cmd('autocmd CursorHold * lua vim.diagnostic.open_float({scope="line"})')
 -- vim.o.updatetime = 300
 
--- Replace xsel with xclip for clipboard handling
-vim.g.clipboard = {
-  name = "xclip",
-  copy = {
-    ["+"] = "xclip -i -selection clipboard",
-    ["*"] = "xclip -i -selection clipboard"
-  },
-  paste = {
-    ["+"] = "xclip -o -selection clipboard",
-    ["*"] = "xclip -o -selection clipboard"
-  },
-  cache_enabled = true
-}
+-- Replace xsel with xclip for clipboard handling if current desktop session is not Wayland
+if os.getenv("XDG_SESSION_TYPE") ~= "wayland" then
+  vim.g.clipboard = {
+    name = "xclip",
+    copy = {
+      ["+"] = "xclip -i -selection clipboard",
+      ["*"] = "xclip -i -selection clipboard"
+    },
+    paste = {
+      ["+"] = "xclip -o -selection clipboard",
+      ["*"] = "xclip -o -selection clipboard"
+    },
+    cache_enabled = true
+  }
+end
 
 -- Add 'Redir' for copy output of lua command to clipboard
 -- Usage: :Redir lua=vim.tbl_keys(package.loaded)
