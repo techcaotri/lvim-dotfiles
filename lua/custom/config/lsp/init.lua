@@ -53,4 +53,8 @@ require('custom.config.autocmd').autocmd('LspAttach', {
   end,
 })
 
+require'lspconfig'.qmlls.setup{
+  cmd = { '/home/tripham/Qt_new/6.8.0/gcc_64/bin/qmlls', '--verbose'}
+}
+
 return M;
