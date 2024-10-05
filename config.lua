@@ -52,6 +52,8 @@ lvim.builtin.mason.ensure_installed = {
 vim.b.navic_lazy_update_context = true
 -- Disable default breadcrumbs and use the one from LspSaga instead.
 lvim.builtin.breadcrumbs.active = false
+-- Always show bufferline
+lvim.builtin.bufferline.options.always_show_bufferline = true
 
 -- Always start 'flash.nvim' when opening file
 require('custom.config.autocmd').autocmd({ "BufNewFile", "BufRead" }, {
