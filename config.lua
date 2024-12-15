@@ -30,6 +30,16 @@ else
   lvim.colorscheme = "catppuccin-mocha"
 end
 
+-- to prevent colision with rusteceanvim
+-- https://github.com/mrcjkb/rustaceanvim/discussions/174#discussioncomment-8193827
+vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "rust_analyzer" })
+
+-- In order for the above to work, one must execute `:LvimCacheReset` manually'
+-- or schedule the following
+vim.schedule(function()
+    vim.cmd "LvimCacheReset"
+end)
+
 lvim.builtin.mason.ensure_installed = {
   "bashls",
   "clangd",
