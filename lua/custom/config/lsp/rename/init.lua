@@ -18,17 +18,6 @@ _G.CosmicUI_user_opts = {
     prompt = '> ',
     prompt_hl = 'Comment',
   },
-  code_actions = {
-    min_width = nil,
-    border = {
-      bottom_hl = 'FloatBorder',
-      highlight = 'FloatBorder',
-      style = nil,
-      title = 'Code Actions',
-      title_align = 'center',
-      title_hl = 'FloatBorder',
-    },
-  },
 }
 
 local function rename(popup_opts, opts)

@@ -776,8 +776,16 @@ lvim.plugins = {
         build = ":TSUpdate",
         config = function()
           require("nvim-treesitter.configs").setup({
-            ensure_installed = { "markdown" },
-            highlight = { enable = true },
+            highlight = {
+              enable = true,
+            },
+            ensure_installed = {
+              "vimdoc",
+              "luadoc",
+              "vim",
+              "lua",
+              "markdown"
+            },
           })
         end,
       },
@@ -1007,8 +1015,40 @@ lvim.plugins = {
   },
   {
     'mrcjkb/rustaceanvim',
-    version = '^5',   -- Recommended
-    lazy = false,     -- This plugin is already lazy
-  }
-
+    version = '^5', -- Recommended
+    lazy = false,   -- This plugin is already lazy
+    config = function()
+      vim.g.rustaceanvim = {
+        -- Plugin configuration
+        tools = {
+        },
+        -- LSP configuration
+        server = {
+          on_attach = function(client, bufnr)
+            local wk = require "which-key"
+            wk.register({
+              ["<leader>lA"] = {"<Cmd>RustLsp hover actions<CR>", "rustaceanvim: Hover Actions"},
+              ["<leader>la"] = {"<Cmd>RustLsp codeAction<CR>", "rustaceanvim: Code Actions"},
+              ["<leader>R"] = {
+                name = "rustaceanvim:",
+                r = {"<Cmd>RustLsp[!] run {args[]}?<CR>", "rustaceanvim: Run"},
+                R = {"<Cmd>RustLsp[!] runnables {args[]}?<CR>", "rustaceanvim: Runnables"},
+                d = {"<Cmd>RustLsp[!] debug {args[]}?<CR>", "rustaceanvim: Debug"},
+                D = {"<Cmd>RustLsp[!] debuggables {args[]}?<CR>", "rustaceanvim: Debuggables"},
+              },
+              ["K"] = {"<Cmd>RustLsp openDocs<CR>", "rustaceanvim: Open Docs" },
+            })
+          end,
+          default_settings = {
+            -- rust-analyzer language server configuration
+            ['rust-analyzer'] = {
+            },
+          },
+        }
+      }
+    end
+  },
+  {
+    "AndrewRadev/bufferize.vim",
+  },
 }

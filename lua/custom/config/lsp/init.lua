@@ -7,7 +7,7 @@ require('custom.config.lsp.language.go')
 require('custom.config.lsp.language.cmake')
 
 require("lspconfig").lua_ls.setup({
-	settings = { Lua = { hint = { enable = true } } },
+  settings = { Lua = { hint = { enable = true } } },
 })
 
 local M = {}
@@ -47,15 +47,19 @@ require('custom.config.autocmd').autocmd('LspAttach', {
     nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
     nmap('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
 
-    nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+    if client.name ~= 'copilot' and client.name ~= 'rust-analyzer' then
+      nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
+    end
     nmap('<leader>lh', vim.lsp.buf.signature_help, 'Signature Documentation')
 
     M.show_inlay_hints(ev.buf)
   end,
 })
 
-require'lspconfig'.qmlls.setup{
-  cmd = { '/home/tripham/Qt_new/6.8.0/gcc_64/bin/qmlls', '--verbose'}
+require 'lspconfig'.qmlls.setup {
+  cmd = { '/home/tripham/Qt_new/6.8.0/gcc_64/bin/qmlls', '--verbose' }
 }
 
 return M;
