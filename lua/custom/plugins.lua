@@ -1028,16 +1028,16 @@ lvim.plugins = {
           on_attach = function(client, bufnr)
             local wk = require "which-key"
             wk.register({
-              ["<leader>lA"] = {"<Cmd>RustLsp hover actions<CR>", "rustaceanvim: Hover Actions"},
-              ["<leader>la"] = {"<Cmd>RustLsp codeAction<CR>", "rustaceanvim: Code Actions"},
+              ["<leader>lA"] = { "<Cmd>RustLsp hover actions<CR>", "rustaceanvim: Hover Actions" },
+              ["<leader>la"] = { "<Cmd>RustLsp codeAction<CR>", "rustaceanvim: Code Actions" },
               ["<leader>R"] = {
                 name = "rustaceanvim:",
-                r = {"<Cmd>RustLsp[!] run {args[]}?<CR>", "rustaceanvim: Run"},
-                R = {"<Cmd>RustLsp[!] runnables {args[]}?<CR>", "rustaceanvim: Runnables"},
-                d = {"<Cmd>RustLsp[!] debug {args[]}?<CR>", "rustaceanvim: Debug"},
-                D = {"<Cmd>RustLsp[!] debuggables {args[]}?<CR>", "rustaceanvim: Debuggables"},
+                r = { "<Cmd>RustLsp[!] run {args[]}?<CR>", "rustaceanvim: Run" },
+                R = { "<Cmd>RustLsp[!] runnables {args[]}?<CR>", "rustaceanvim: Runnables" },
+                d = { "<Cmd>RustLsp[!] debug {args[]}?<CR>", "rustaceanvim: Debug" },
+                D = { "<Cmd>RustLsp[!] debuggables {args[]}?<CR>", "rustaceanvim: Debuggables" },
               },
-              ["K"] = {"<Cmd>RustLsp openDocs<CR>", "rustaceanvim: Open Docs" },
+              ["K"] = { "<Cmd>RustLsp openDocs<CR>", "rustaceanvim: Open Docs" },
             })
           end,
           default_settings = {
@@ -1045,11 +1045,25 @@ lvim.plugins = {
             ['rust-analyzer'] = {
             },
           },
-  },
+        },
       }
     end
   },
   {
     "AndrewRadev/bufferize.vim",
   },
+  -- WINDOWS --
+  {
+    "JoseConseco/windows.nvim",
+    dependencies = {
+      "anuvyklack/middleclass",
+      "anuvyklack/animation.nvim"
+    },
+    config = function()
+      vim.o.winwidth = 20
+      vim.o.winminwidth = 10
+      vim.o.equalalways = false
+      require('windows').setup()
+    end
+  }
 }

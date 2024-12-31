@@ -329,3 +329,7 @@ require('telescope').setup {
     },
   }
 }
+
+-- Add keymap for maximize window
+vim.api.nvim_set_keymap('n', '<C-w>z', '<cmd>WindowsMaximize<CR>',
+  { noremap = true, silent = false, desc = "WindowsMaximize" })
