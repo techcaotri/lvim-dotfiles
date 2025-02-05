@@ -752,7 +752,7 @@ lvim.plugins = {
       end
       for _, mode in ipairs { 'n', 'v' } do
         local keymap = vim.api.nvim_set_keymap
-        keymap(mode, '<Leader>/', '', {
+        keymap(mode, '<Leader>S', '', {
           callback = grugfar(mode, 'tabnew', nil, nil),
           desc = 'Search and Replace',
         })
