@@ -728,31 +728,55 @@ lvim.plugins = {
   },
 
   {
-    'nvim-pack/nvim-spectre',
-    config = function()
-      vim.keymap.set('n', '<leader>S', function()
-        require('spectre').open({
-          is_insert_mode = true,
-          -- the directory where the search tool will be started in
-          cwd = ".",
-          is_close = false, -- close an exists instance of spectre and open new
+    'MagicDuck/grug-far.nvim',
+    init = function()
+      local function grugfar(mode, wincmd, current_word, current_file)
+        return function()
+          local caller
+          if mode == 'n' then
+            caller = 'grug_far'
+          else
+            -- send control-u before calling the command
+            -- This is required for visual mode
+            vim.api.nvim_feedkeys('\27', 'nx', false)
+            caller = 'with_visual_selection'
+          end
+          require('grug-far')[caller] {
+            windowCreationCommand = wincmd,
+            prefills = {
+              search = mode == 'n' and current_word and vim.fn.expand '<cword>',
+              paths = current_file and vim.fn.expand '%',
+            },
+          }
+        end
+      end
+      for _, mode in ipairs { 'n', 'v' } do
+        local keymap = vim.api.nvim_set_keymap
+        keymap(mode, '<Leader>/', '', {
+          callback = grugfar(mode, 'tabnew', nil, nil),
+          desc = 'Search and Replace',
         })
-      end, {
-        desc = "Toggle Spectre"
-      })
-      vim.keymap.set('n', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
-        desc = "Spectre: Search current word"
-      })
-      vim.keymap.set('n', '<leader>Sp', '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
-        desc = "Spectre: Search on current file"
-      })
-      vim.keymap.set('v', '<leader>Sw', '<cmd>lua require("spectre").open_visual({select_word=false})<CR>', {
-        desc = "Spectre: Search current word"
-      })
-      require('spectre').setup({
-        cwd = '.',
-      })
-    end
+        keymap(mode, '<Leader>Ss', '', {
+          callback = grugfar(mode, 'split', true, nil),
+          desc = 'hsplit: S/R selected words',
+        })
+        keymap(mode, '<Leader>Sv', '', {
+          callback = grugfar(mode, 'vsplit', nil, nil),
+          desc = 'vsplit: S/R selected words',
+        })
+        keymap(mode, '<Leader>St', '', {
+          callback = grugfar(mode, 'tabnew', true, nil),
+          desc = 'tabnew: S/R of selected words',
+        })
+        keymap(mode, '<Leader>Sf', '', {
+          callback = grugfar(mode, 'vsplit', true, true),
+          desc = 'vsplit: S/R selected words in current file',
+        })
+      end
+    end,
+    config = function()
+      require('grug-far').setup { startInInsertMode = false }
+    end,
   },
 
   {
