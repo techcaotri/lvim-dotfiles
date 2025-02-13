@@ -746,6 +746,7 @@ lvim.plugins = {
             prefills = {
               search = mode == 'n' and current_word and vim.fn.expand '<cword>',
               paths = current_file and vim.fn.expand '%',
+              flags = '--sort=path',
             },
           }
         end
