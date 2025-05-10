@@ -732,6 +732,7 @@ lvim.plugins = {
 
   {
     'MagicDuck/grug-far.nvim',
+    tag = "1.6.3",
     init = function()
       local function grugfar(mode, wincmd, current_word, current_file)
         return function()
