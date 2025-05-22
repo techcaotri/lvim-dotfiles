@@ -732,13 +732,12 @@ lvim.plugins = {
 
   {
     'MagicDuck/grug-far.nvim',
-    tag = "1.6.3",
     init = function()
       local function grugfar(mode, wincmd, current_word, current_file)
         return function()
           local caller
           if mode == 'n' then
-            caller = 'grug_far'
+            caller = 'open'
           else
             -- send control-u before calling the command
             -- This is required for visual mode
