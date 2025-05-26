@@ -1,6 +1,7 @@
 lvim.plugins = {
   {
-    "p00f/clangd_extensions.nvim",
+    -- "p00f/clangd_extensions.nvim",
+    "Toni500github/clangd_extensions.nvim",
     ft = require("custom.config.clangd-extensions").filetype,
     config = require("custom.config.clangd-extensions").config,
     dependencies = require("custom.config.clangd-extensions").dependencies,
