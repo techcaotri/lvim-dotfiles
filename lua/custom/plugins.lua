@@ -1224,6 +1224,11 @@ lvim.plugins = {
     "m4xshen/hardtime.nvim",
     lazy = false,
     dependencies = { "MunifTanjim/nui.nvim" },
-    opts = {},
+    opts = {
+      resetting_keys = {
+        ["y"] = {},
+        ["p"] = {},
+      }
+    },
   },
 }
