@@ -13,4 +13,5 @@ lvim.builtin.project.patterns = {
   "pyproject.toml",
   ".vscode",
   "pubspec.yaml",
+  "CMakeLists.txt",
 }
