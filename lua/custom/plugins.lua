@@ -1066,12 +1066,12 @@ lvim.plugins = {
       -- currently designating it as `copilot` provider is dangerous because: https://github.com/yetone/avante.nvim/issues/1048
       -- Of course, you can reduce the request frequency by increasing `suggestion.debounce`.
       auto_suggestions_provider = "claude",
-      claude = {
-        endpoint = "https://api.anthropic.com",
-        model = "claude-3-5-haiku-20241022",
-        temperature = 0,
-        max_tokens = 8192,
-      },
+      -- claude = {
+      --   endpoint = "https://api.anthropic.com",
+      --   model = "claude-3-5-haiku-20241022",
+      --   temperature = 0,
+      --   max_tokens = 8192,
+      -- },
       ---Specify the special dual_boost mode
       ---1. enabled: Whether to enable dual_boost mode. Default to false.
       ---2. first_provider: The first provider to generate response. Default to "openai".
@@ -1218,17 +1218,6 @@ lvim.plugins = {
         },
         ft = { "markdown", "Avante" },
       },
-    },
-  },
-  {
-    "m4xshen/hardtime.nvim",
-    lazy = false,
-    dependencies = { "MunifTanjim/nui.nvim" },
-    opts = {
-      resetting_keys = {
-        ["y"] = {},
-        ["p"] = {},
-      }
     },
   },
 }
