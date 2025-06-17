@@ -170,3 +170,7 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold' }, {
 -- image.nvim
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua;"
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
+
+-- Make 'grug-far.nvim' happy
+vim.g.maplocalleader = "\\"
+
