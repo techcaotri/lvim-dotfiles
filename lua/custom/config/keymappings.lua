@@ -333,3 +333,26 @@ require('telescope').setup {
 -- Add keymap for maximize window
 vim.api.nvim_set_keymap('n', '<C-w>z', '<cmd>WindowsMaximize<CR>',
   { noremap = true, silent = false, desc = "WindowsMaximize" })
+
+function _G.C(...)
+    local args = {...}
+    local output
+    
+    if #args == 0 then
+        output = "nil"
+    elseif #args == 1 then
+        output = type(args[1]) == "table" and vim.inspect(args[1]) or tostring(args[1])
+    else
+        output = vim.inspect(args)
+    end
+    
+    vim.fn.setreg('+', output)
+    print("📋 Copied: " .. (string.len(output) > 50 and string.sub(output, 1, 50) .. "..." or output))
+    return args[1] -- Return first argument for chaining
+end
+-- Usage examples:
+-- C(vim.version())
+-- C("hello", "world")
+-- C({a = 1, b = 2})
+-- C(vim.api.nvim_list_bufs())
+vim.api.nvim_set_keymap('n', '<Space>cc', ':<C-u>lua C()<Left><Left>', { noremap = true, silent = false, desc = "Copy lua result" })
