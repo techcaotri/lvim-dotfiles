@@ -45,7 +45,7 @@ require('custom.config.autocmd').autocmd('LspAttach', {
       vim.keymap.set('n', keys, func, { buffer = ev.buf, desc = desc })
     end
     nmap('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
-    nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+    -- nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
     nmap('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
 
     local client = vim.lsp.get_client_by_id(ev.data.client_id)

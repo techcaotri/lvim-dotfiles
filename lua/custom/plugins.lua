@@ -1209,12 +1209,11 @@ lvim.plugins = {
   },
   {
     "gcmt/vessel.nvim",
-    keys = { "gl", "gL", "gm"},
     config = function()
       require("vessel").setup({
         create_commands = true,
         commands = {
-          view_marks = "Marks",           -- you can customize each command name
+          view_marks = "Marks", -- you can customize each command name
           view_jumps = "Jumps",
           view_buffers = "Buffers",
         },
@@ -1223,9 +1222,16 @@ lvim.plugins = {
           use_backtick = true,
         },
       })
-      vim.keymap.set("n", "gl", "<Plug>(VesselViewJumps)", { desc = "Vessel: View all jumps" })
-      vim.keymap.set("n", "gL", "<Plug>(VesselViewMarks)", { desc = "Vessel: View all marks" })
-      vim.keymap.set("n", "gm", "<plug>(VesselSetLocalMark)", { desc = "Vessel: Set local marks" })
+      vim.api.nvim_set_keymap('n', 'gl', '<Plug>(VesselViewJumps)',
+        { noremap = true, silent = true, desc = 'Vessel: View all jumps' })
+      vim.api.nvim_set_keymap('n', 'gL', '<Plug>(VesselViewMarks)',
+        { noremap = true, silent = true, desc = 'Vessel: View all marks' })
+      vim.api.nvim_set_keymap('n', 'gm', '<plug>(VesselSetLocalMark)',
+        { noremap = true, silent = true, desc = 'Vessel: Set local marks' })
     end,
+  },
+  {
+    'dnlhc/glance.nvim',
+    cmd = 'Glance',
   },
 }

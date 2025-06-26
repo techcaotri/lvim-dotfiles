@@ -335,24 +335,35 @@ vim.api.nvim_set_keymap('n', '<C-w>z', '<cmd>WindowsMaximize<CR>',
   { noremap = true, silent = false, desc = "WindowsMaximize" })
 
 function _G.C(...)
-    local args = {...}
-    local output
-    
-    if #args == 0 then
-        output = "nil"
-    elseif #args == 1 then
-        output = type(args[1]) == "table" and vim.inspect(args[1]) or tostring(args[1])
-    else
-        output = vim.inspect(args)
-    end
-    
-    vim.fn.setreg('+', output)
-    print("📋 Copied: " .. (string.len(output) > 50 and string.sub(output, 1, 50) .. "..." or output))
-    return args[1] -- Return first argument for chaining
+  local args = { ... }
+  local output
+
+  if #args == 0 then
+    output = "nil"
+  elseif #args == 1 then
+    output = type(args[1]) == "table" and vim.inspect(args[1]) or tostring(args[1])
+  else
+    output = vim.inspect(args)
+  end
+
+  vim.fn.setreg('+', output)
+  print("📋 Copied: " .. (string.len(output) > 50 and string.sub(output, 1, 50) .. "..." or output))
+  return args[1] -- Return first argument for chaining
 end
+
 -- Usage examples:
 -- C(vim.version())
 -- C("hello", "world")
 -- C({a = 1, b = 2})
 -- C(vim.api.nvim_list_bufs())
-vim.api.nvim_set_keymap('n', '<Space>cc', ':<C-u>lua C()<Left><Left>', { noremap = true, silent = false, desc = "Copy lua result" })
+vim.api.nvim_set_keymap('n', '<Space>cc', ':<C-u>lua C()<Left><Left>',
+  { noremap = true, silent = false, desc = "Copy lua result" })
+
+vim.api.nvim_set_keymap('n', 'gD', '<CMD>Glance definitions<CR>',
+  { noremap = true, silent = true, desc = 'Glance: definitions' })
+vim.api.nvim_set_keymap('n', 'gR', '<CMD>Glance references<CR>',
+  { noremap = true, silent = true, desc = 'Glance: references' })
+vim.api.nvim_set_keymap('n', 'gY', '<CMD>Glance type_definitions<CR>',
+  { noremap = true, silent = true, desc = 'Glance: type definitions' })
+vim.api.nvim_set_keymap('n', 'gM', '<CMD>Glance implementations<CR>',
+  { noremap = true, silent = true, desc = 'Glance: implementations' })
