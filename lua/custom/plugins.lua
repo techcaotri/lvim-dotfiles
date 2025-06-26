@@ -961,19 +961,6 @@ lvim.plugins = {
     ft = { "go", 'gomod' },
     build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
   },
-  {
-    "cbochs/portal.nvim",
-    -- Optional dependencies
-    config = function()
-      vim.keymap.set("n", "<leader>o", "<cmd>Portal jumplist backward<cr>")
-      vim.keymap.set("n", "<leader>i", "<cmd>Portal jumplist forward<cr>")
-    end,
-    dependencies = {
-      "cbochs/grapple.nvim",
-      "ThePrimeagen/harpoon"
-    },
-  },
-
   -- regex
   {
     'tomiis4/Hypersonic.nvim',
@@ -1219,5 +1206,26 @@ lvim.plugins = {
         ft = { "markdown", "Avante" },
       },
     },
+  },
+  {
+    "gcmt/vessel.nvim",
+    keys = { "gl", "gL", "gm"},
+    config = function()
+      require("vessel").setup({
+        create_commands = true,
+        commands = {
+          view_marks = "Marks",           -- you can customize each command name
+          view_jumps = "Jumps",
+          view_buffers = "Buffers",
+        },
+        marks = {
+          toggle_mark = true,
+          use_backtick = true,
+        },
+      })
+      vim.keymap.set("n", "gl", "<Plug>(VesselViewJumps)", { desc = "Vessel: View all jumps" })
+      vim.keymap.set("n", "gL", "<Plug>(VesselViewMarks)", { desc = "Vessel: View all marks" })
+      vim.keymap.set("n", "gm", "<plug>(VesselSetLocalMark)", { desc = "Vessel: Set local marks" })
+    end,
   },
 }
