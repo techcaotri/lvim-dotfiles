@@ -87,8 +87,12 @@ lvim.builtin.which_key.mappings.l.s = {}
 lvim.builtin.which_key.mappings.l.r = {}
 -- Disable <leader>ld for remapping it to diagnostic floating window
 lvim.builtin.which_key.mappings.l.d = {}
+-- Disable <leader>lD for remapping it to better floating window
+lvim.builtin.which_key.mappings.l.D = {}
 -- Disable <leader>sl for remapping it to diagnostic floating window
 lvim.builtin.which_key.mappings.s.l = {}
+-- Disable <space>lS for remapping it to better floating window
+lvim.builtin.which_key.mappings.l.S = {}
 
 local leader_mappings_opts = {
   mode = "n",     -- NORMAL mode
@@ -179,11 +183,17 @@ local leader_mappings = {
     ['<M-d>'] = { "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", "Buffer Diagnostics" },
     ['d'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
 
-    ['D'] = { "<cmd>Telescope lsp_document_symbols<CR>", "LSP: Document Symbols" },
+    ['D'] = { function()
+        require('telescope.builtin').lsp_document_symbols({fname_width = 35, symbol_width=60, symbol_type_width = 15})
+      end, "LSP: [D]ocument Symbols" },
     ['R'] = {
       function()
         require('custom.config.lsp.rename')({}, {})
       end, "LSP: Custom [R]ename" },
+    ['S'] = {
+      function()
+        require('telescope.builtin').lsp_workspace_symbols({fname_width = 0.5, symbol_width=0.35, symbol_type_width = 0.15})
+      end, "LSP: Workspace [S]ymbols" },
     ['r'] = {
       function()
         require("telescope.builtin").lsp_references({ fname_width = 65, trim_text = true, })
