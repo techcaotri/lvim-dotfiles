@@ -30,11 +30,11 @@ return function(...)
     local currName = vim.fn.expand('<cword>')
     for _, msg_i in pairs(msg) do
       if msg_i then
-       require("notify")(msg_i)
+         -- vim.notify(msg_i)
       end
     end
     -- require("notify")(vim.inspect(msg))
-    -- logger:log(msg, { title = ('Rename: %s -> %s'):format(currName, new_word) })
+    logger:log(msg, { title = ('Rename: %s -> %s'):format(currName, new_word) })
   end
 
   vim.lsp.handlers[method](...)
