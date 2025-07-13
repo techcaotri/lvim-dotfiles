@@ -250,18 +250,33 @@ local leader_mappings = {
 
   -- Git keymaps
   g = {
-    d = {
-      "<cmd>DiffviewOpen<CR>",
-      "Git diffview open",
-    },
-    q = {
-      "<cmd>DiffviewClose<CR>",
-      "Git diffview close",
-    },
-    D = {
-      "<cmd>Gitsigns diffthis HEAD<cr>",
-      "Git Diff",
-    },
+    ['d'] = {
+      name = "Git Diff",
+      o = {
+        "<cmd>DiffviewOpen<CR>",
+        "Git diffview [o]pen",
+      },
+      c = {
+        "<cmd>DiffviewClose<CR>",
+        "Git diffview [c]lose",
+      },
+      h = {
+        "<cmd>Gitsigns diffthis HEAD<cr>",
+        "Git diffview [h]ead",
+      },
+      r = {
+        "<cmd>DiffviewFileHistory<cr>",
+        "Git [r]epo history",
+      },
+      f = {
+        "<cmd>DiffviewFileHistory --follow %<cr>",
+        "Git [f]ile history",
+      },
+      s = {
+        "<cmd>DiffviewFileHistory --follow<cr>",
+        "Git [s]election history",
+      },
+    }
   }
 }
 
