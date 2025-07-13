@@ -181,9 +181,9 @@ local leader_mappings = {
   l = {
     -- Diagnostic related keymaps
     ['<M-d>'] = { "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", "Buffer Diagnostics" },
-    ['d'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
+    ['D'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
 
-    ['D'] = { function()
+    ['d'] = { function()
         require('telescope.builtin').lsp_document_symbols({fname_width = 35, symbol_width=60, symbol_type_width = 15})
       end, "LSP: [D]ocument Symbols" },
     ['R'] = {
