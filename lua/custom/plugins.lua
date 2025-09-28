@@ -1222,7 +1222,7 @@ lvim.plugins = {
           use_backtick = true,
         },
       })
-      vim.api.nvim_set_keymap('n', 'gl', '<Plug>(VesselViewJumps)',
+      vim.api.nvim_set_keymap('n', 'gj', '<Plug>(VesselViewJumps)',
         { noremap = true, silent = true, desc = 'Vessel: View all jumps' })
       vim.api.nvim_set_keymap('n', 'gL', '<Plug>(VesselViewMarks)',
         { noremap = true, silent = true, desc = 'Vessel: View all marks' })
