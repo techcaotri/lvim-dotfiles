@@ -1290,5 +1290,20 @@ lvim.plugins = {
     init = function()
       vim.keymap.set({ 'n', 'v' }, "<leader>tw", require("visual-whitespace").toggle, {})
     end
-  }
+  },
+  {
+    "nvimtools/none-ls.nvim",
+    dependencies = {
+      "gbprod/none-ls-shellcheck.nvim",
+    },
+    config = function()
+      local null_ls = require("null-ls")
+      local sources = {
+        null_ls.builtins.formatting.stylua,
+      }
+      null_ls.setup({
+        sources = sources,
+      })
+    end,
+  },
 }

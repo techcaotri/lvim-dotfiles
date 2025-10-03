@@ -9,12 +9,12 @@ vim.filetype.add({
 	},
 })
 
-local has, linters = pcall(require, "lvim.lsp.null-ls.linters")
-if has then
-	linters.setup({
-		{ command = "shellcheck", extra_args = { "--severity", "warning" } },
-	})
-end
+lvim.lsp.null_ls.linters = {
+  {
+    exe = "shellcheck",
+    args = { "--severity", "warning" },
+  },
+}
 
 vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "bashls" })
 
