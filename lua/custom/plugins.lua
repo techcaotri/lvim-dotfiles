@@ -1221,7 +1221,7 @@ lvim.plugins = {
           use_backtick = true,
         },
       })
-      vim.api.nvim_set_keymap('n', 'gl', '<Plug>(VesselViewJumps)',
+      vim.api.nvim_set_keymap('n', 'gj', '<Plug>(VesselViewJumps)',
         { noremap = true, silent = true, desc = 'Vessel: View all jumps' })
       vim.api.nvim_set_keymap('n', 'gL', '<Plug>(VesselViewMarks)',
         { noremap = true, silent = true, desc = 'Vessel: View all marks' })
@@ -1280,5 +1280,30 @@ lvim.plugins = {
         stopline = 500,
       }
     }
+  },
+  {
+    'mcauley-penney/visual-whitespace.nvim',
+    config = true,
+    branch = 'compat-v10',
+    event = "ModeChanged *:[vV\22]", -- optionally, lazy load on entering visual mode
+    opts = {},
+    init = function()
+      vim.keymap.set({ 'n', 'v' }, "<leader>tw", require("visual-whitespace").toggle, {})
+    end
+  },
+  {
+    "nvimtools/none-ls.nvim",
+    dependencies = {
+      "gbprod/none-ls-shellcheck.nvim",
+    },
+    config = function()
+      local null_ls = require("null-ls")
+      local sources = {
+        null_ls.builtins.formatting.stylua,
+      }
+      null_ls.setup({
+        sources = sources,
+      })
+    end,
   },
 }

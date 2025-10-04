@@ -1,5 +1,7 @@
-local formatters = require("lvim.lsp.null-ls.formatters")
-formatters.setup({
-	{ command = "fixjson", filetypes = { "json" } },
-})
+lvim.lsp.null_ls.formatters = {
+  {
+    exe = "fixjson",
+    filetypes = { "json", "jsonc" },
+  },
+}
 
