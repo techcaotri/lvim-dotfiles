@@ -274,7 +274,6 @@ lvim.plugins = {
   -- Python venv selector
   {
     "linux-cultist/venv-selector.nvim",
-    branch = "regexp",
     dependencies = { "neovim/nvim-lspconfig", "nvim-telescope/telescope.nvim" },
     config = function()
       require('custom.config.venv-selector').config()
