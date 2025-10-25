@@ -13,24 +13,45 @@ require("lspconfig").lua_ls.setup({
 
 local M = {}
 function M.show_inlay_hints(buf)
+  local function enable_builtin_inlay(bufnr)
+    -- Support both pre-0.10 dev API and 0.10+ API shapes
+    -- 1) Old nightly: vim.lsp.inlay_hint(bufnr, true)
+    if type(vim.lsp.inlay_hint) == "function" then
+      return vim.lsp.inlay_hint(bufnr, true)
+    end
+    -- 2) Newer: vim.lsp.inlay_hint.enable(...)
+    local ih = vim.lsp.inlay_hint
+    if ih and type(ih.enable) == "function" then
+      -- Try the 0.10 stable signature first: enable(bufnr, true)
+      local ok = pcall(ih.enable, bufnr, true)
+      if not ok then
+        -- Fallback to older dev signature: enable(true, { bufnr = bufnr })
+        pcall(ih.enable, true, { bufnr = bufnr })
+      end
+    end
+  end
+
   local clients = vim.lsp.get_active_clients({ bufnr = buf })
-  if #clients > 0 then
-    for _, client in ipairs(clients) do
-      if client.server_capabilities.inlayHintProvider then
-        -- vim.notify(vim.inspect(client))
-        if client.name == 'clangd' then
-          -- Show inlay hints using clangd_extensions
-          require("clangd_extensions.inlay_hints").set_inlay_hints()
-        else
-          -- Show inlay_hints using the new 0.10 nvim's lsp feature
-          local nvim_version = tostring(vim.version())
-          print('current neovim build version: ' .. nvim_version)
-          if nvim_version == '0.10.0-dev+g643bea31b' or nvim_version == '0.10.0-dev+gd191bdf9d' then
-            vim.lsp.inlay_hint(buf, true)
+  if #clients == 0 then return end
+
+  for _, client in ipairs(clients) do
+    if client.server_capabilities and client.server_capabilities.inlayHintProvider then
+      if client.name == "clangd" then
+        -- Use clangd_extensions if present; otherwise fall back to builtin
+        local ok_ext = pcall(require, "clangd_extensions")
+        if ok_ext then
+          local ok_inlay, ce_inlay = pcall(require, "clangd_extensions.inlay_hints")
+          if ok_inlay and ce_inlay and type(ce_inlay.set_inlay_hints) == "function" then
+            ce_inlay.set_inlay_hints()
           else
-            vim.lsp.inlay_hint.enable(true, {})
+            enable_builtin_inlay(buf)
           end
+        else
+          enable_builtin_inlay(buf)
         end
+      else
+        -- Non-clangd LSPs → builtin inlay hints
+        enable_builtin_inlay(buf)
       end
     end
   end

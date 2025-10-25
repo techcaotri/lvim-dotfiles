@@ -1,11 +1,5 @@
 lvim.plugins = {
-  {
-    -- "p00f/clangd_extensions.nvim",
-    "Toni500github/clangd_extensions.nvim",
-    ft = require("custom.config.clangd-extensions").filetype,
-    config = require("custom.config.clangd-extensions").config,
-    dependencies = require("custom.config.clangd-extensions").dependencies,
-  },
+  -- Neovim 0.11 has good native LSP support for clangd, so we can use that instead of "Toni500github/clangd_extensions.nvim"
   {
     "NvChad/nvim-colorizer.lua",
     config = function(_, opts)
