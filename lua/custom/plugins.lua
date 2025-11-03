@@ -1257,6 +1257,10 @@ lvim.plugins = {
     init = function()
       -- modify your configuration vars here
       vim.g.matchup_treesitter_stopline = 500
+      vim.g.matchup_matchparen_enabled = 0
+      vim.g.matchup_surround_enabled = 1
+      vim.g.matchup_matchparen_deferred_show_delay = 50 -- default: 50
+      vim.g.matchup_matchparen_deferred_hide_delay = 700 -- default: 700
 
       -- or call the setup function provided as a helper. It defines the
       -- configuration vars for you

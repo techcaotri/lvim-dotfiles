@@ -37,7 +37,7 @@ vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "rust_analyz
 -- In order for the above to work, one must execute `:LvimCacheReset` manually'
 -- or schedule the following
 vim.schedule(function()
-    vim.cmd "LvimCacheReset"
+  vim.cmd "LvimCacheReset"
 end)
 
 lvim.builtin.mason.ensure_installed = {
@@ -173,4 +173,3 @@ package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/shar
 
 -- Make 'grug-far.nvim' happy
 vim.g.maplocalleader = "\\"
-
