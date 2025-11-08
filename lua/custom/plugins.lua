@@ -1259,7 +1259,7 @@ lvim.plugins = {
       vim.g.matchup_treesitter_stopline = 500
       vim.g.matchup_matchparen_enabled = 0
       vim.g.matchup_surround_enabled = 1
-      vim.g.matchup_matchparen_deferred_show_delay = 50 -- default: 50
+      vim.g.matchup_matchparen_deferred_show_delay = 50  -- default: 50
       vim.g.matchup_matchparen_deferred_hide_delay = 700 -- default: 700
 
       -- or call the setup function provided as a helper. It defines the
@@ -1304,4 +1304,42 @@ lvim.plugins = {
       })
     end,
   },
+  {
+    "theHamsta/nvim-dap-virtual-text",
+    opts = {
+      virt_text_win_col = 80,
+    },
+  },
+  {
+    "nvim-tree/nvim-tree.lua",
+    opts = function(_, opts)
+      -- make sure the nested tables exist
+      opts.renderer                           = opts.renderer or {}
+      opts.actions                            = opts.actions or {}
+      opts.actions.file_popup                 = opts.actions.file_popup or {}
+
+      -- 1) Show long names in a floating window instead of truncating
+      opts.renderer.full_name                 = true
+
+      -- 2) (Optional) Tweak that floating window so it’s usable
+      --    Adjust or remove this block if you’re happy with defaults
+      opts.actions.file_popup.open_win_config = vim.tbl_deep_extend(
+        "force",
+        opts.actions.file_popup.open_win_config or {},
+        {
+          relative = "cursor", -- open near cursor
+          border   = "rounded",
+          style    = "minimal",
+          row      = 1,
+          col      = 1,
+        }
+      )
+
+      return opts
+    end,
+    config = function(_, opts)
+      require("nvim-tree").setup(opts)
+    end
+  }
+
 }
