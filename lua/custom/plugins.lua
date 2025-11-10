@@ -1311,35 +1311,43 @@ lvim.plugins = {
     },
   },
   {
-    "nvim-tree/nvim-tree.lua",
-    opts = function(_, opts)
-      -- make sure the nested tables exist
-      opts.renderer                           = opts.renderer or {}
-      opts.actions                            = opts.actions or {}
-      opts.actions.file_popup                 = opts.actions.file_popup or {}
-
-      -- 1) Show long names in a floating window instead of truncating
-      opts.renderer.full_name                 = true
-
-      -- 2) (Optional) Tweak that floating window so it’s usable
-      --    Adjust or remove this block if you’re happy with defaults
-      opts.actions.file_popup.open_win_config = vim.tbl_deep_extend(
-        "force",
-        opts.actions.file_popup.open_win_config or {},
-        {
-          relative = "cursor", -- open near cursor
-          border   = "rounded",
-          style    = "minimal",
-          row      = 1,
-          col      = 1,
-        }
-      )
-
-      return opts
+    "pmizio/typescript-tools.nvim",
+    ft = {
+      "javascript",
+      "javascriptreact",
+      "javascript.jsx",
+      "typescript",
+      "typescriptreact",
+      "typescript.tsx",
+    },
+    lazy = true,
+    config = function()
+      require("custom.config.typtools").config()
     end,
-    config = function(_, opts)
-      require("nvim-tree").setup(opts)
-    end
-  }
-
+  },
+  {
+    "mxsdev/nvim-dap-vscode-js",
+    dependencies = { "mfussenegger/nvim-dap", {
+      'microsoft/vscode-js-debug',
+      commit = "4d7c704d3f07",
+      build = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out",
+    }, },
+    ft = {
+      "javascript",
+      "javascriptreact",
+      "javascript.jsx",
+      "typescript",
+      "typescriptreact",
+      "typescript.tsx",
+    },
+    lazy = true,
+    event = { "BufReadPre", "BufNew" },
+    config = function()
+      -- require("dap-vscode-js").setup {
+        -- debugger_path = vim.fn.stdpath "data" .. "/mason/packages/js-debug-adapter",
+        -- debugger_cmd = { "js-debug-adapter" },
+        -- adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
+      -- }
+    end,
+  },
 }

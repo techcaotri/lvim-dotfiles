@@ -1,3 +1,47 @@
+-- function key
+vim.keymap.set({ "i", "c", "t" }, "<F1>", "<Esc><F1>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F2>", "<Esc><F2>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F3>", "<Esc><F3>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F4>", "<Esc><F4>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F5>", "<Esc><F5>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F6>", "<Esc><F6>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F7>", "<Esc><F7>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F8>", "<Esc><F8>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F9>", "<Esc><F9>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F10>", "<Esc><F10>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F11>", "<Esc><F11>", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c", "t" }, "<F12>", "<Esc><F12>", { noremap = true, silent = true })
+
+-- Remap the function keys with modifiers to avoid conflicts with terminal/emulator
+-- Need remap as true to allow recursive mapping (e.g. <F26> -> <C-F2> -> <Debugging: Stop debug session>)
+vim.keymap.set({ "n", "x" }, "<F13>", "<S-F1>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F14>", "<S-F2>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F15>", "<S-F3>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F16>", "<S-F4>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F17>", "<S-F5>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F18>", "<S-F6>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F19>", "<S-F7>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F20>", "<S-F8>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F21>", "<S-F9>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F22>", "<S-F10>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F23>", "<S-F11>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F24>", "<S-F12>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F25>", "<C-F1>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F26>", "<C-F2>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F27>", "<C-F3>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F28>", "<C-F4>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F29>", "<C-F5>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F30>", "<C-F6>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F31>", "<C-F7>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F32>", "<C-F8>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F33>", "<C-F9>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F34>", "<C-F10>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F35>", "<C-F11>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F36>", "<C-F12>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F37>", "<C-S-F1>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F54>", "<A-F6>", { remap = true, silent = true })
+vim.keymap.set({ "n", "x" }, "<F57>", "<A-F9>", { remap = true, silent = true })
+
 -- Disable some debug keymaps
 lvim.builtin.which_key.mappings.d.b = {}
 lvim.builtin.which_key.mappings.d.c = {}
@@ -7,6 +51,9 @@ lvim.builtin.which_key.mappings.d.o = {}
 lvim.builtin.which_key.mappings.d.u = {}
 lvim.builtin.which_key.mappings.d.p = {}
 lvim.builtin.which_key.mappings.g.d = {}
+
+-- paste
+vim.keymap.set({ "n", "x" }, "p", "P", { noremap = true, silent = true })
 
 local opts = {
   mode = "n",     -- NORMAL mode
@@ -184,15 +231,15 @@ local leader_mappings = {
     ['D'] = { "<cmd>lua vim.diagnostic.open_float({scope=\"line\"})<CR>", "LSP: Show [d]iagnostic in floating window" },
 
     ['d'] = { function()
-        require('telescope.builtin').lsp_document_symbols({fname_width = 35, symbol_width=60, symbol_type_width = 15})
-      end, "LSP: [D]ocument Symbols" },
+      require('telescope.builtin').lsp_document_symbols({ fname_width = 35, symbol_width = 60, symbol_type_width = 15 })
+    end, "LSP: [D]ocument Symbols" },
     ['R'] = {
       function()
         require('custom.config.lsp.rename')({}, {})
       end, "LSP: Custom [R]ename" },
     ['S'] = {
       function()
-        require('telescope.builtin').lsp_workspace_symbols({fname_width = 0.5, symbol_width=0.35, symbol_type_width = 0.15})
+        require('telescope.builtin').lsp_workspace_symbols({ fname_width = 0.5, symbol_width = 0.35, symbol_type_width = 0.15 })
       end, "LSP: Workspace [S]ymbols" },
     ['r'] = {
       function()

@@ -31,10 +31,16 @@ local new_keymaps = {
   ['<F8>'] = { func = function() require('dap').step_over() end, desc = "DAP: Step over" },
   ['<S-F8>'] = { func = function() require('dap').step_out() end, desc = "DAP: Step out" },
   ['<F6>'] = { func = function() require('dap').toggle_breakpoint() end, desc = "DAP: Toggle breakpoints" },
-  ['<C-F6>'] = { func = function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end, desc =
-  "DAP: Breakpoints with message" },
-  ['<A-F6>'] = { func = function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc =
-  "DAP: Breakpoints with condition" },
+  ['<C-F6>'] = {
+    func = function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end,
+    desc =
+    "DAP: Breakpoints with message"
+  },
+  ['<A-F6>'] = {
+    func = function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end,
+    desc =
+    "DAP: Breakpoints with condition"
+  },
   ['<S-F7>'] = { func = function() require('dap').step_back() end, desc = "DAP: Step back" },
   ['<F10>'] = { func = function() require('dap').run_last() end, desc = "DAP: Run last session" },
   ['<C-F10>'] = { func = function() require('dap').focus_frame() end, desc = "DAP: Focus frame (Stack traverse)" },
@@ -154,6 +160,320 @@ function M.config()
   }
   dap.configurations.c = dap.configurations.cpp
 
+  local present_dap_utils, dap_utils = pcall(require, "dap.utils")
+  -- Enable virtual text
+  vim.g.dap_virtual_text = true
+
+  -- ╭──────────────────────────────────────────────────────────╮
+  -- │ Icons                                                    │
+  -- ╰──────────────────────────────────────────────────────────╯
+  vim.fn.sign_define("DapBreakpoint", { text = "🔵", texthl = "", linehl = "", numhl = "" })
+  vim.fn.sign_define("DapBreakpointRejected", { text = "🔴", texthl = "", linehl = "", numhl = "" })
+  vim.fn.sign_define("DapConditionalBreakpoint", { text = "🟡", texthl = "", linehl = "", numhl = "" })
+  vim.fn.sign_define("DapStopped", { text = "🟢", texthl = "", linehl = "", numhl = "" })
+
+  local exts = {
+    "javascript",
+    "typescript",
+    "javascriptreact",
+    "typescriptreact",
+    "vue",
+    "svelte",
+  }
+
+  -- ╭──────────────────────────────────────────────────────────╮
+  -- │ Adapters                                                 │
+  -- ╰──────────────────────────────────────────────────────────╯
+  dap.adapters["pwa-node"] = {
+    type = "server",
+    host = "localhost",
+    port = "${port}",
+    executable = {
+      command = "node",
+      args = { vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js", "${port}" },
+    }
+  }
+
+  dap.adapters["pwa-chrome"] = {
+    type = "server",
+    host = "localhost",
+    port = "${port}",
+    executable = {
+      command = "node",
+      args = { vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js", "${port}" },
+    }
+  }
+
+  -- ╭──────────────────────────────────────────────────────────╮
+  -- │ Configurations                                           │
+  -- ╰──────────────────────────────────────────────────────────╯
+
+  for i, ext in ipairs(exts) do
+    dap.configurations[ext] = {
+      {
+        type = "pwa-chrome",
+        request = "launch",
+        name = "Launch Chrome with \"localhost\"",
+        url = function()
+          local co = coroutine.running()
+          return coroutine.create(function()
+            vim.ui.input({ prompt = 'Enter URL: ', default = 'http://localhost:3000' }, function(url)
+              if url == nil or url == '' then
+                return
+              else
+                coroutine.resume(co, url)
+              end
+            end)
+          end)
+        end,
+        webRoot = '${workspaceFolder}',
+        protocol = 'inspector',
+        sourceMaps = true,
+        userDataDir = false,
+        skipFiles = { "<node_internals>/**", "node_modules/**", "${workspaceFolder}/node_modules/**" },
+        resolveSourceMapLocations = {
+          "${webRoot}/*",
+          "${webRoot}/apps/**/**",
+          "${workspaceFolder}/apps/**/**",
+          "${webRoot}/packages/**/**",
+          "${workspaceFolder}/packages/**/**",
+          "${workspaceFolder}/*",
+          "!**/node_modules/**",
+        }
+      },
+      {
+        name = 'Next.js: debug server-side (pwa-node)',
+        type = 'pwa-node',
+        request = 'attach',
+        port = 9231,
+        skipFiles = { '<node_internals>/**', 'node_modules/**' },
+        cwd = '${workspaceFolder}',
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch Current File (pwa-node)",
+        cwd = vim.fn.getcwd(),
+        args = { "${file}" },
+        sourceMaps = true,
+        -- protocol = "inspector",
+        -- console = "integratedTerminal",
+        -- runtimeExecutable = "pnpm",
+        -- runtimeArgs = {
+        --   "run-script", "dev"
+        -- },
+        resolveSourceMapLocations = {
+          "${workspaceFolder}/**",
+          "!**/node_modules/**",
+        }
+
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch Current File (pwa-node with ts-node)",
+        cwd = vim.fn.getcwd(),
+        runtimeArgs = { "--loader", "ts-node/esm" },
+        runtimeExecutable = "node",
+        args = { "${file}" },
+        sourceMaps = true,
+        protocol = "inspector",
+        skipFiles = { "<node_internals>/**", "node_modules/**" },
+        resolveSourceMapLocations = {
+          "${workspaceFolder}/**",
+          "!**/node_modules/**",
+        },
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch Test Current File (pwa-node with jest)",
+        cwd = vim.fn.getcwd(),
+        runtimeArgs = { "${workspaceFolder}/node_modules/.bin/jest" },
+        runtimeExecutable = "node",
+        args = { "${file}", "--coverage", "false" },
+        rootPath = "${workspaceFolder}",
+        sourceMaps = true,
+        console = "integratedTerminal",
+        internalConsoleOptions = "neverOpen",
+        skipFiles = { "<node_internals>/**", "node_modules/**" },
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch Test Current File (pwa-node with vitest)",
+        cwd = vim.fn.getcwd(),
+        program = "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+        args = { "--inspect-brk", "--threads", "false", "run", "${file}" },
+        autoAttachChildProcesses = true,
+        smartStep = true,
+        console = "integratedTerminal",
+        skipFiles = { "<node_internals>/**", "node_modules/**" },
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch Test Current File (pwa-node with deno)",
+        cwd = vim.fn.getcwd(),
+        runtimeArgs = { "test", "--inspect-brk", "--allow-all", "${file}" },
+        runtimeExecutable = "deno",
+        attachSimplePort = 9229,
+      },
+      {
+        type = "pwa-chrome",
+        request = "attach",
+        name = "Attach Program (pwa-chrome, select port)",
+        program = "${file}",
+        cwd = vim.fn.getcwd(),
+        sourceMaps = true,
+        protocol = 'inspector',
+        port = function()
+          return vim.fn.input("Select port: ", 9222)
+        end,
+        webRoot = "${workspaceFolder}",
+        skipFiles = { "<node_internals>/**", "node_modules/**", "${workspaceFolder}/node_modules/**" },
+        resolveSourceMapLocations = {
+          "${webRoot}/*",
+          "${webRoot}/apps/**/**",
+          "${workspaceFolder}/apps/**/**",
+          "${webRoot}/packages/**/**",
+          "${workspaceFolder}/packages/**/**",
+          "${workspaceFolder}/*",
+          "!**/node_modules/**",
+        }
+      },
+      {
+        type = "pwa-node",
+        request = "attach",
+        name = "Attach Program (pwa-node, select pid)",
+        cwd = vim.fn.getcwd(),
+        processId = dap_utils.pick_process,
+        skipFiles = { "<node_internals>/**" },
+      },
+    }
+  end
+
+  -- local firefoxExecutable = "/usr/bin/firefox"
+  -- dap.configurations.typescript = {
+  --   {
+  --     type = "node2",
+  --     name = "node attach",
+  --     request = "attach",
+  --     program = "${file}",
+  --     cwd = vim.fn.getcwd(),
+  --     sourceMaps = true,
+  --     protocol = "inspector",
+  --   },
+  --   {
+  --     type = "chrome",
+  --     name = "Debug with Chrome",
+  --     request = "attach",
+  --     program = "${file}",
+  --     -- cwd = "${workspaceFolder}",
+  --     -- protocol = "inspector",
+  --     port = 9222,
+  --     webRoot = "${workspaceFolder}",
+  --     -- sourceMaps = true,
+  --     sourceMapPathOverrides = {
+  --       -- Sourcemap override for nextjs
+  --       ["webpack://_N_E/./*"] = "${webRoot}/*",
+  --       ["webpack:///./*"] = "${webRoot}/*",
+  --     },
+  --   },
+  --   {
+  --     name = "Debug with Firefox",
+  --     type = "firefox",
+  --     request = "launch",
+  --     reAttach = true,
+  --     sourceMaps = true,
+  --     url = "http://localhost:6969",
+  --     webRoot = "${workspaceFolder}",
+  --     firefoxExecutable = firefoxExecutable,
+  --   },
+  --   {
+  --     name = "Launch",
+  --     type = "pwa-node",
+  --     request = "launch",
+  --     program = "${file}",
+  --     rootPath = "${workspaceFolder}",
+  --     cwd = "${workspaceFolder}",
+  --     sourceMaps = true,
+  --     skipFiles = { "<node_internals>/**" },
+  --     protocol = "inspector",
+  --     console = "integratedTerminal",
+  --   },
+  --   {
+  --     name = "Attach to node process",
+  --     type = "pwa-node",
+  --     request = "attach",
+  --     rootPath = "${workspaceFolder}",
+  --     processId = require("dap.utils").pick_process,
+  --   },
+  --   {
+  --     name = "Debug Main Process (Electron)",
+  --     type = "pwa-node",
+  --     request = "launch",
+  --     program = "${workspaceFolder}/node_modules/.bin/electron",
+  --     args = {
+  --       "${workspaceFolder}/dist/index.js",
+  --     },
+  --     outFiles = {
+  --       "${workspaceFolder}/dist/*.js",
+  --     },
+  --     resolveSourceMapLocations = {
+  --       "${workspaceFolder}/dist/**/*.js",
+  --       "${workspaceFolder}/dist/*.js",
+  --     },
+  --     rootPath = "${workspaceFolder}",
+  --     cwd = "${workspaceFolder}",
+  --     sourceMaps = true,
+  --     skipFiles = { "<node_internals>/**" },
+  --     protocol = "inspector",
+  --     console = "integratedTerminal",
+  --   },
+  --   {
+  --     name = "Compile & Debug Main Process (Electron)",
+  --     type = custom_adapter,
+  --     request = "launch",
+  --     preLaunchTask = "npm run build-ts",
+  --     program = "${workspaceFolder}/node_modules/.bin/electron",
+  --     args = {
+  --       "${workspaceFolder}/dist/index.js",
+  --     },
+  --     outFiles = {
+  --       "${workspaceFolder}/dist/*.js",
+  --     },
+  --     resolveSourceMapLocations = {
+  --       "${workspaceFolder}/dist/**/*.js",
+  --       "${workspaceFolder}/dist/*.js",
+  --     },
+  --     rootPath = "${workspaceFolder}",
+  --     cwd = "${workspaceFolder}",
+  --     sourceMaps = true,
+  --     skipFiles = { "<node_internals>/**" },
+  --     protocol = "inspector",
+  --     console = "integratedTerminal",
+  --   },
+  --   {
+  --     type = "pwa-node",
+  --     request = "launch",
+  --     name = "Debug Jest Tests",
+  --     -- trace = true, -- include debugger info
+  --     runtimeExecutable = "node",
+  --     runtimeArgs = {
+  --       "./node_modules/jest/bin/jest.js",
+  --       "--runInBand",
+  --     },
+  --     rootPath = "${workspaceFolder}",
+  --     cwd = "${workspaceFolder}",
+  --     console = "integratedTerminal",
+  --     internalConsoleOptions = "neverOpen",
+  --   },
+  -- }
+
+  -- dap.configurations.typescriptreact = dap.configurations.typescript
+  -- dap.configurations.javascript = dap.configurations.typescript
+  -- dap.configurations.javascriptreact = dap.configurations.typescript
   -- auto reload .vscode/launch.json
   local type_to_filetypes = { cppdbg = { "c", "cpp" }, codelldb = { "rust" }, delve = { "go" } }
   local dap_vscode = require("dap.ext.vscode")

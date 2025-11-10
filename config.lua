@@ -173,3 +173,28 @@ package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/shar
 
 -- Make 'grug-far.nvim' happy
 vim.g.maplocalleader = "\\"
+
+-- after/plugin/nvim-tree-fullname.lua (example)
+if lvim.builtin.nvimtree then
+  -- Ensure nested tables exist
+  lvim.builtin.nvimtree.setup = lvim.builtin.nvimtree.setup or {}
+  lvim.builtin.nvimtree.setup.renderer = lvim.builtin.nvimtree.setup.renderer or {}
+  lvim.builtin.nvimtree.setup.actions = lvim.builtin.nvimtree.setup.actions or {}
+  lvim.builtin.nvimtree.setup.actions.file_popup = lvim.builtin.nvimtree.setup.actions.file_popup or {}
+  
+  -- 1) Show long names in a floating window
+  lvim.builtin.nvimtree.setup.renderer.full_name = true
+  
+  -- 2) Tweak the floating window
+  lvim.builtin.nvimtree.setup.actions.file_popup.open_win_config = vim.tbl_deep_extend(
+    "force",
+    lvim.builtin.nvimtree.setup.actions.file_popup.open_win_config or {},
+    {
+      relative = "cursor",
+      border = "rounded", 
+      style = "minimal",
+      row = 1,
+      col = 1,
+    }
+  )
+end
