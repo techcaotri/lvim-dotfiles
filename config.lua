@@ -167,10 +167,6 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold' }, {
   end,
 })
 
--- image.nvim
-package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua;"
-package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua;"
-
 -- Make 'grug-far.nvim' happy
 vim.g.maplocalleader = "\\"
 
@@ -203,3 +199,4 @@ vim.api.nvim_create_user_command('RunNode', function(opts)
   local file = vim.fn.expand('%:p') -- Get full path of current file
   vim.cmd('vsplit term://node ' .. file)
 end, { desc = 'Run current Node.js file in a new vertical split terminal' })
+

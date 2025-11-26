@@ -782,16 +782,6 @@ lvim.plugins = {
     'sindrets/diffview.nvim',
   },
 
-  -- image preview
-  -- Fix the issue: luarocks unable to install 'magick' with lua version > 5.1. Reference: https://github.com/3rd/image.nvim/issues/124#issuecomment-2030392795
-  {
-    "vhyrro/luarocks.nvim",
-    priority = 1001,
-    opts = {
-      rocks = { "magick" },
-    },
-  },
-
   -- Selecting files from your editing history
   {
     'nvim-telescope/telescope-frecency.nvim',
@@ -832,7 +822,20 @@ lvim.plugins = {
     end,
   },
 
-  -- Java
+  -- -- Java
+  -- {
+  --   'nvim-java/nvim-java',
+  --   dependencies = {
+  --     'nvim-java/lua-async-await',
+  --     'nvim-java/nvim-java-refactor',
+  --     'nvim-java/nvim-java-core',
+  --     'nvim-java/nvim-java-test',
+  --     'nvim-java/nvim-java-dap',
+  --     'MunifTanjim/nui.nvim',
+  --     'neovim/nvim-lspconfig',
+  --     'mfussenegger/nvim-dap',
+  --   },
+  -- },
   {
     'mfussenegger/nvim-jdtls',
     ft = { 'java' },
@@ -869,7 +872,16 @@ lvim.plugins = {
         -- 💀
         -- This is the default if not provided, you can remove it. Or adjust as needed.
         -- One dedicated LSP server & client will be started per unique root_dir
-        root_dir = require('jdtls.setup').find_root({ '.git', 'mvnw', 'gradlew' }),
+        root_dir = require('jdtls.setup').find_root({
+          'settings.gradle',
+          'settings.gradle.kts',
+          'pom.xml',
+          'build.gradle',
+          'mvnw',
+          'gradlew',
+          'build.gradle',
+          'build.gradle.kts'
+        }),
 
         -- Here you can configure eclipse.jdt.ls specific settings
         -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
@@ -1344,9 +1356,9 @@ lvim.plugins = {
     event = { "BufReadPre", "BufNew" },
     config = function()
       -- require("dap-vscode-js").setup {
-        -- debugger_path = vim.fn.stdpath "data" .. "/mason/packages/js-debug-adapter",
-        -- debugger_cmd = { "js-debug-adapter" },
-        -- adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
+      -- debugger_path = vim.fn.stdpath "data" .. "/mason/packages/js-debug-adapter",
+      -- debugger_cmd = { "js-debug-adapter" },
+      -- adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
       -- }
     end,
   },
