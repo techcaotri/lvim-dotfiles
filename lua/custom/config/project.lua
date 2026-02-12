@@ -14,4 +14,5 @@ lvim.builtin.project.patterns = {
   ".vscode",
   "pubspec.yaml",
   "CMakeLists.txt",
+  "manim.cfg",
 }
