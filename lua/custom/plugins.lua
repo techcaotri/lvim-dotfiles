@@ -726,7 +726,7 @@ lvim.plugins = {
 
   {
     'MagicDuck/grug-far.nvim',
-    tag = "1.6.3",
+    -- tag = "1.6.3",
     init = function()
       local function grugfar(mode, wincmd, current_word, current_file)
         return function()
@@ -744,7 +744,7 @@ lvim.plugins = {
             prefills = {
               search = mode == 'n' and current_word and vim.fn.expand '<cword>',
               paths = current_file and vim.fn.expand '%',
-              flags = '--sort=path',
+              flags = '--sort=path -i --no-ignore-vcs -A 2 -B 2',
             },
           }
         end
