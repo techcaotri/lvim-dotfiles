@@ -397,6 +397,12 @@ lvim.plugins = {
   -- LSP enhancements
   {
     'ranjithshegde/ccls.nvim',
+    -- Pin to the last commit before ccls migrated to the native vim.lsp.config/enable
+    -- API (commit d62652a), which requires Neovim 0.12. On nvim 0.11 the newer version
+    -- prints "Attempting to configure Lsp server. This feature requires nvim>= 0.12"
+    -- and skips setting up the LSP entirely. This commit uses the lspconfig/vim.lsp.start
+    -- path that works on nvim 0.11.
+    commit = "de925cada98108c25d1043980e83ec7887c53b05",
     event = "VeryLazy",
   },
   {

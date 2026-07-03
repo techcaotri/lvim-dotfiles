@@ -7,74 +7,72 @@ function M.config()
   Log = require "lvim.core.log"
   Log:init()
 
+  -- NOTE (2026-07): venv-selector.nvim was rewritten ("regex"/v2). The old top-level
+  -- options (auto_refresh, search_venv_managers, search_workspace, search=<bool>, parents,
+  -- name, dap_enabled, ...) no longer exist. Passing the old `search = true` boolean is what
+  -- caused `t: expected table, got boolean` in config.lua:finalize_settings.
+  --
+  -- v2 config lives under `options` / `search` / `hooks` / `cache`. The installed v2 requires
+  -- Neovim 0.11+ only (NOT 0.12), so no plugin downgrade is needed here.
+  --
+  -- Old option -> v2 mapping:
+  --   auto_refresh / search / parents / name / search_venv_managers / search_workspace
+  --       -> removed. v2 ships default fd-based searches (cwd, workspace, file, poetry,
+  --          pipenv, pyenv, pixi, conda, pipx, virtualenvs, hatch). Venvs are found by their
+  --          `.../bin/python` binary, so custom directory names like ".linux-venv" or
+  --          ".venv-python310" are discovered automatically regardless of the folder name.
+  --   dap_enabled            -> removed (dap wiring changed; handled elsewhere via nvim-dap-python).
+  --   fd_binary_name         -> options.fd_binary_name (auto-detected if omitted).
+  --   notify_user_on_activate -> options.notify_user_on_venv_activation.
   require("venv-selector").setup({
+    options = {
+      -- Print a message when a venv is activated.
+      notify_user_on_venv_activation = true,
 
-    -- auto_refresh (default: false). Will automatically start a new search every time VenvSelect is opened.
-    -- When its set to false, you can refresh the search manually by pressing ctrl-r. For most users this
-    -- is probably the best default setting since it takes time to search and you usually work within the same
-    -- directory structure all the time.
-    auto_refresh = false,
+      -- Name of the fd binary. On Debian/Ubuntu it is often "fdfind"; leave unset to auto-detect.
+      fd_binary_name = "fd",
 
-    -- search_venv_managers (default: true). Will search for Poetry and Pipenv virtual environments in their
-    -- default location. If you dont use the default location, you can
-    search_venv_managers = true,
+      -- Keep v2's default searches (poetry/pipenv/pyenv/conda/cwd/workspace/file/...).
+      enable_default_searches = true,
 
-    -- search_workspace (default: true). Your lsp has the concept of "workspaces" (project folders), and
-    -- with this setting, the plugin will look in those folders for venvs. If you only use venvs located in
-    -- project folders, you can set search = false and search_workspace = true.
-    search_workspace = true,
-
-    -- path (optional, default not set). Absolute path on the file system where the plugin will look for venvs.
-    -- Only set this if your venvs are far away from the code you are working on for some reason. Otherwise its
-    -- probably better to let the VenvSelect search for venvs in parent folders (relative to your code). VenvSelect
-    -- searchs for your venvs in parent folders relative to what file is open in the current buffer, so you get
-    -- different results when searching depending on what file you are looking at.
-    -- path = "/home/username/your_venvs",
-
-    -- search (default: true) - Search your computer for virtual environments outside of Poetry and Pipenv.
-    -- Used in combination with parents setting to decide how it searches.
-    -- You can set this to false to speed up the plugin if your virtual envs are in your workspace, or in Poetry
-    -- or Pipenv locations. No need to search if you know where they will be.
-    search = true,
-
-    -- dap_enabled (default: false) Configure Debugger to use virtualvenv to run debugger.
-    -- require nvim-dap-python from https://github.com/mfussenegger/nvim-dap-python
-    -- require debugpy from https://github.com/microsoft/debugpy
-    -- require nvim-dap from https://github.com/mfussenegger/nvim-dap
-    dap_enabled = false,
-
-    -- parents (default: 2) - Used when search = true only. How many parent directories the plugin will go up
-    -- (relative to where your open file is on the file system when you run VenvSelect). Once the parent directory
-    -- is found, the plugin will traverse down into all children directories to look for venvs. The higher
-    -- you set this number, the slower the plugin will usually be since there is more to search.
-    -- You may want to set this to to 0 if you specify a path in the path setting to avoid searching parent
-    -- directories.
-    parents = 2,
-
-    -- name (default: venv) - The name of the venv directories to look for.
-    name = { "venv", ".venv", ".linux-venv", ".venv-python310", ".python311-venv" },     -- NOTE: You can also use a lua table here for multiple names: {"venv", ".venv"}`
-
-    -- fd_binary_name (default: fd) - The name of the fd binary on your system. Some Debian based Linux Distributions like Ubuntu use ´fdfind´.
-    fd_binary_name = "fd",
-
-
-    -- notify_user_on_activate (default: true) - Prints a message that the venv has been activated
-    notify_user_on_activate = true,
+      -- Remember and auto-activate the last venv used per project (replaces the old
+      -- possession-based restore below, which is kept working as a fallback).
+      enable_cached_venvs = true,
+      cached_venv_automatic_activation = true,
+    },
   })
 end
 
 function M.get_cached_venv()
-  local config = require("venv-selector.config")
+  -- v2 cache (venvs2.json) is keyed by project root and each entry is a table:
+  --   { value = "<python_path>", type = "venv"|"anaconda"|"uv", source = ... }
+  -- (v1 stored a bare python-path string keyed by cwd.)
+  local ok, config = pcall(require, "venv-selector.config")
+  if not ok then return nil end
   local path = require("venv-selector.path")
   local cache_file = path.expand(config.user_settings.cache.file)
-  if vim.fn.filereadable(cache_file) == 1 then
-    local cache_file = vim.fn.readfile(cache_file)
-    if cache_file ~= nil and cache_file[1] ~= nil then
-      local venv_cache = vim.fn.json_decode(cache_file[1])
-      if venv_cache ~= nil and venv_cache[vim.fn.getcwd()] ~= nil then
-        return venv_cache[vim.fn.getcwd()]
-      end
-    end
+  if vim.fn.filereadable(cache_file) ~= 1 then
+    return nil
+  end
+  local lines = vim.fn.readfile(cache_file)
+  if lines == nil or lines[1] == nil then
+    return nil
+  end
+  local decoded_ok, venv_cache = pcall(vim.fn.json_decode, lines[1])
+  if not decoded_ok or type(venv_cache) ~= "table" then
+    return nil
+  end
+  local entry = venv_cache[vim.fn.getcwd()]
+  if entry == nil then
+    return nil
+  end
+  -- v2 shape (table with .value) -> normalize to { path, type }.
+  if type(entry) == "table" and entry.value ~= nil then
+    return { path = entry.value, type = entry.type or "venv" }
+  end
+  -- Tolerate a legacy bare-string entry.
+  if type(entry) == "string" then
+    return { path = entry, type = "venv" }
   end
   return nil
 end
@@ -92,18 +90,34 @@ end
 
 function M.possession_after_load(name, user_data)
   Log:debug("user_data: " .. vim.inspect(user_data))
-  local venv = require("venv-selector.venv")
-  if user_data == nil or venv == nil then
+  if user_data == nil or user_data['venv-selector'] == nil then
     return
   end
 
-  -- Load cached venv-selector
-  if user_data['venv-selector'] ~= nil and user_data['venv-selector']['cached_venv'] ~= nil then
-    local venv_path = user_data['venv-selector']['cached_venv']
-    Log:debug("Loading venv_path: " .. vim.inspect(venv_path))
-    venv.set_venv_and_system_paths(venv_path)
+  local cached = user_data['venv-selector']['cached_venv']
+  if cached == nil then
+    return
+  end
+
+  -- Normalize: current format is { path = ..., type = ... }; tolerate a legacy bare string.
+  local venv_path, venv_type
+  if type(cached) == "table" then
+    venv_path, venv_type = cached.path, cached.type or "venv"
+  elseif type(cached) == "string" then
+    venv_path, venv_type = cached, "venv"
+  end
+  if not venv_path or venv_path == "" then
+    return
+  end
+
+  Log:debug("Loading venv_path: " .. vim.inspect(venv_path))
+  -- v2 API: activate a venv from its python path. (The old
+  -- venv.set_venv_and_system_paths() no longer exists in venv-selector.)
+  local ok, vs = pcall(require, "venv-selector")
+  if ok and type(vs.activate_from_path) == "function" then
+    pcall(vs.activate_from_path, venv_path, venv_type)
     -- Prevent the asking for 'Enter' input
-    vim.api.nvim_feedkeys("<CR>",'m',false)
+    vim.api.nvim_feedkeys("<CR>", 'm', false)
   end
 end
 
