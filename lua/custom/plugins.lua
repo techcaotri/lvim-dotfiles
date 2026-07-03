@@ -799,6 +799,7 @@ lvim.plugins = {
   -- Selecting files from your editing history
   {
     'nvim-telescope/telescope-frecency.nvim',
+    version = "^1.0.0",
     config = function()
       require("telescope").setup {
         extensions = {
