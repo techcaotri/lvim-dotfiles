@@ -1564,7 +1564,7 @@ Switch mechanism        | NVIM_APPNAME=lvim-lazyvim       | Full isolation; Luna
 Keymap loading          | apply() at init + on VeryLazy   | Beat LazyVim's cache-gated loader; user maps win
 Completion              | blink.cmp (LazyVim default)     | Modern default; nvim-cmp available via extras.coding.nvim-cmp
 TypeScript LSP          | typescript-tools.nvim           | The user's actual server (dropped LazyVim vtsls extra)
-File explorer           | neo-tree (LazyVim default)      | Functional equivalent of nvim-tree
+File explorer           | nvim-tree (ported)              | Same plugin as LunarVim, settings preserved (LazyVim's snacks explorer replaced)
 Dashboard               | snacks.dashboard (LazyVim)      | Functional equivalent of alpha
 Telescope display       | default (custom 2-col dropped)  | Cosmetic only; reduces migration risk
 Single-key leader maps  | w/q/c/'/' override LazyVim groups| Matches LunarVim muscle memory (their actions)
@@ -1603,10 +1603,30 @@ Colorscheme                             | catppuccin-mocha applied
 leader / localleader / scrolloff        | space / backslash / 3 (correct)
 Plugin specs registered                 | 127
 Core modules load                       | which-key, telescope, lspsaga, flash, typescript-tools, possession
-Keymaps applied (normal mode)           | 370 maps; 19/19 parity spot-checks pass
+Keymaps applied (normal mode)           | 369-370 maps; 19/19 parity spot-checks pass
 User commands                           | :Redir, :RunNode present
 Switcher new / old / status             | all pass; lvim-new launcher verified
+Per-keymap command/module audit         | every keymap's command + function module resolves (see II.14.1)
+Functional smoke test                   | <leader>/ comments; <leader>e opens nvim-tree
 ```
+
+### II.14.1 Per-keymap audit + fixes
+
+A command/module audit (load all plugins, then verify every registered keymap's
+target command exists and every function-keymap's module loads) surfaced and fixed:
+
+```
+Keymap        | Problem                                          | Fix
+<leader>e     | :Neotree missing (LazyVim uses snacks explorer)  | added nvim-tree.lua; map -> :NvimTreeToggle
+<leader>vc    | :VenvSelectCached only exists if auto-activate=off| call venv-selector cached-retrieve directly
+<leader>M     | :MarkdownPreviewToggle is buffer-local           | bind buffer-locally in markdown filetype
+<leader>lR    | custom.lsp.rename module was not ported          | ported (nui.nvim, 0.11 position_encoding)
+```
+
+Remaining audit flags are false positives (key-remaps like `<leader>/`->`gcc`,
+cutlass `mm`->`dd`, `<Plug>` chains) or headless-only VeryLazy timing
+(`:LazyExtras`/`:LazyHealth` exist once VeryLazy fires, which it always does
+interactively).
 
 ### First-run notes (expected, not errors)
 
@@ -1615,6 +1635,14 @@ Switcher new / old / status             | all pass; lvim-new launcher verified
   `lvim-new --headless '+Lazy! sync' +qa`, then `lvim-new '+checkhealth'`.
 - During that first install, transient `E5113 "Parser could not be created"` for a
   filetype can appear until parsers finish; it clears on the next launch.
+- **Tree-sitter parser compilation (toolchain):** LazyVim's `nvim-treesitter`
+  compiles parsers with the `tree-sitter` CLI, whose prebuilt binary requires a
+  recent glibc (observed: `GLIBC_2.39 not found`). On systems with an older glibc,
+  parser builds fail (highlighting falls back to none for un-precompiled languages).
+  This is a toolchain/environment issue independent of the config; fixes are to
+  install a `tree-sitter` CLI built for the local glibc, use a newer Neovim/glibc, or
+  rely on parsers shipped with Neovim. LunarVim avoided this because its pinned older
+  `nvim-treesitter` compiled parsers with `cc` directly.
 - **Copilot** requires Node >= 22 (this machine has 20.11.1) — upgrade Node for
   Copilot to function; nothing else depends on it.
 - Some plugins build native bits: `avante` (`make`), `vscode-js-debug` (`npm`),
