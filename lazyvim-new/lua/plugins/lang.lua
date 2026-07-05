@@ -150,8 +150,15 @@ return {
       vim.g.mkdp_open_ip = "127.0.0.1"
       vim.g.mkdp_port = "8888"
       vim.g.mkdp_theme = "light"
+      -- :MarkdownPreviewToggle is a buffer-local command; bind <leader>M only in
+      -- markdown buffers (matches how it worked in the LunarVim setup).
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function(ev)
+          vim.keymap.set("n", "<leader>M", "<cmd>MarkdownPreviewToggle<cr>", { buffer = ev.buf, desc = "Markdown preview" })
+        end,
+      })
     end,
-    keys = { { "<leader>M", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown preview" } },
   },
 
   -- ---- Misc language tools ----

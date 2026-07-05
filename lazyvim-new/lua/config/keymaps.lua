@@ -94,7 +94,7 @@ local function apply()
   end, "Close Buffer")
   m("n", "<leader>f", "<cmd>Telescope find_files<CR>", "Find File")
   m("n", "<leader>h", "<cmd>nohlsearch<CR>", "No Highlight")
-  m("n", "<leader>e", "<cmd>Neotree toggle<CR>", "Explorer")
+  m("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", "Explorer")
 
   -- =========================================================================
   -- <leader>b : Buffers (LunarVim defaults + user)
@@ -275,7 +275,12 @@ local function apply()
   m("n", "<leader>Pf", "<cmd>Telescope possession list<CR>", "Possession: find sessions")
   m("n", "<leader>Pi", "<cmd>PossessionShow<CR>", "Possession: show info")
   m("n", "<leader>vs", "<cmd>VenvSelect<CR>", "Venv Select")
-  m("n", "<leader>vc", "<cmd>VenvSelectCached<CR>", "Venv Select cached")
+  m("n", "<leader>vc", function()
+    -- venv-selector v2 only defines :VenvSelectCached when automatic activation is
+    -- off; call the cached-retrieve directly so this works regardless.
+    local ok = pcall(function() require("venv-selector.cached_venv").retrieve() end)
+    if not ok then vim.cmd("VenvSelect") end
+  end, "Venv Select cached")
   m("n", "<leader>|", "<cmd>vsplit<CR>", "Split window vertically")
   m("n", "<leader>D", "<cmd>DogeGenerate doxygen_javadoc<CR>", "Doge: generate docs")
   m("n", "<leader><F5>", [[<cmd>let _s=@/<Bar>%s/\s\+$//e<Bar>let @/=_s<CR>]], "Delete trailing spaces")
