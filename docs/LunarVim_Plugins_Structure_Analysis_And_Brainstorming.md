@@ -59,7 +59,15 @@
   - II.5 Step-by-Step Implementation Guide (no timeline)
   - II.6 Risks, Mitigations, and Rollback
   - II.7 Validation Checklist
-  - Appendices A (API remediation), B (Neovim version reference), C (sources)
+- **Part II-B — Implementation Record (as built)**
+  - II.8 What Was Built (+ new config layout)
+  - II.9 The Parallel Switcher (setup_lvim.sh)
+  - II.10 Startup & the Deterministic Keymap Fix
+  - II.11 Keymap Parity Approach
+  - II.12 Design Decisions & Deviations
+  - II.13 Functionality Coverage
+  - II.14 Testing & Verification Results
+- **Appendices** A (API remediation), B (Neovim version reference), C (sources)
 
 ---
 
@@ -1379,6 +1387,247 @@ isolated by `NVIM_APPNAME`. The worst case at any point is "run `lvim` like befo
 [ ] No deprecation errors in :messages / :Notifications on startup
 [ ] Startup time acceptable (:Lazy profile)
 ```
+
+---
+
+# Part II-B — Implementation Record (as built)
+
+This part documents the **actual migration that was implemented** on the
+`lazyvim-migration` branch, following the plan in II.4-II.5. It is a testable,
+parallel LazyVim configuration that reproduces the LunarVim functionality and
+keymaps, switchable with a single script, so it can be validated before becoming a
+daily driver.
+
+## II.8 What Was Built
+
+- **Branch:** `lazyvim-migration`.
+- **New config:** `lazyvim-new/` in the repo (the `-new` suffix keeps the original
+  LunarVim config untouched and revert trivial), deployed via
+  `NVIM_APPNAME=lvim-lazyvim` to `~/.config/lvim-lazyvim` (a symlink).
+- **Switcher:** `setup_lvim.sh` at the repo root (`new` / `old` / `status`).
+- **Isolation:** the new config's data/state/cache live under
+  `~/.local/share|state`, `~/.cache` / `lvim-lazyvim` — fully separate from LunarVim.
+  The existing `lvim` command is never modified.
+- **Verification:** headless bootstrap + startup confirmed the config loads with the
+  catppuccin-mocha theme, correct options, 127 plugin specs, and 370 normal-mode
+  keymaps (see II.14).
+
+### II.8.1 New configuration layout
+
+```
+lazyvim-new/
+  init.lua                     bootstrap; load config.lazy then keymaps + autocmds
+  lua/config/lazy.lua          lazy.setup: LazyVim + Extras + user spec imports
+  lua/config/options.lua       vim.opt deltas + globals (leader, clipboard, header)
+  lua/config/keymaps.lua       apply(): custom + full LunarVim-default leader tree
+  lua/config/autocmds.lua      autoread, flash toggle, :Redir, :RunNode, _G.C()
+  lua/plugins/colorscheme.lua  catppuccin-mocha
+  lua/plugins/editor.lua       flash/surround/cutlass/move/marks/windows/wrapping/...
+  lua/plugins/telescope.lua    telescope + 8 extensions + layout/history/mappings
+  lua/plugins/git.lua          diffview, fugitive, lazygit
+  lua/plugins/ui.lua           rainbow-delimiters, ts-context, bufferline, colorizer, ...
+  lua/plugins/coding.lua       treesitter opts (ignore dart, indent disable), playground
+  lua/plugins/lsp.lua          lspsaga, glance, outline, ccls, server overrides, mason
+  lua/plugins/dap.lua          cpp/python/js adapters, F-key debug maps, launch.json
+  lua/plugins/lang.lua         typescript-tools, go, rust, flutter, quarto, cppman, ...
+  lua/plugins/ai.lua           avante, copilot, img-clip
+  lua/plugins/tools.lua        tmux, yanky, grug-far, translate, lf, toggleterm, possession
+  lua/custom/possession.lua    custom session-save prompt
+  README.md                    quickstart + known differences
+setup_lvim.sh                  new/old/status switcher (repo root)
+```
+
+## II.9 The Parallel Switcher (`setup_lvim.sh`)
+
+The switcher makes the new config a separate `NVIM_APPNAME` app, so both editors
+coexist. `new` sets up the symlink + a `lvim-new` launcher; `old` removes them;
+neither touches LunarVim.
+
+```mermaid
+%% setup_lvim.sh switching mechanism -- NVIM_APPNAME isolation.
+flowchart TD
+    Script["setup_lvim.sh (new | old | status)"]
+    Link["symlink ~/.config/lvim-lazyvim -> repo/lazyvim-new"]
+    Launcher["~/.local/bin/lvim-new<br/>(env NVIM_APPNAME=lvim-lazyvim nvim)"]
+    Rm["remove symlink + launcher"]
+    NvimNew["NEW editor: LazyVim<br/>isolated data/state/cache under lvim-lazyvim"]
+    LvimOld["OLD editor: lvim (LunarVim)<br/>~/.config/lvim -- never touched"]
+
+    Script -->|"new"| Link
+    Script -->|"new"| Launcher
+    Script -->|"old"| Rm
+    Launcher --> NvimNew
+    Link --> NvimNew
+    Rm --> LvimOld
+    Script -.->|"either mode"| LvimOld
+```
+
+**Explanation.** After `setup_lvim.sh new`, launch the new editor with **`lvim-new`**
+and the old one with **`lvim`** — they share nothing. `setup_lvim.sh old` removes the
+`lvim-new` launcher and symlink (the config files and installed plugin data are
+preserved for re-testing). The script prints all isolated locations and is
+idempotent. Because LunarVim is never modified, the worst case at any point is "run
+`lvim` like before."
+
+```
+Command                  | Effect
+setup_lvim.sh new        | symlink + lvim-new launcher; prints locations + usage
+setup_lvim.sh old        | remove launcher + symlink; keep repo config + plugin data
+setup_lvim.sh status     | show whether new is active, launcher installed, paths
+```
+
+## II.10 Startup & the Deterministic Keymap Fix
+
+A subtlety surfaced during testing: LazyVim auto-loads `lua/config/keymaps.lua` on
+`VeryLazy` through a **cache-gated loader** (`_load` guards on
+`lazy.core.cache.find`), which could skip the user file when the config-dir module
+index was not yet warm (aggravated by first-run install churn). The fix loads the
+user keymaps/autocmds **deterministically** in `init.lua` and re-applies keymaps on
+`VeryLazy` so they also win over LazyVim's own defaults.
+
+```mermaid
+%% New config startup + deterministic, LazyVim-winning keymap application.
+flowchart TD
+    Init["init.lua"]
+    LazyCfg["config/lazy.lua : lazy.setup"]
+    Opts["config/options.lua (before plugins)"]
+    LVcore["import lazyvim.plugins (LazyVim core)"]
+    Extras["import Extras (lang / dap / test / telescope / yanky / copilot)"]
+    UserSpecs["import plugins/*.lua (user plugins + overrides)"]
+    Keys["config/keymaps.lua : apply() now"]
+    Autos["config/autocmds.lua"]
+    VeryLazy["User VeryLazy event"]
+    Reapply["apply() again + which-key group labels"]
+    Done["Editor ready (user keymaps win)"]
+
+    Init --> LazyCfg
+    LazyCfg --> Opts
+    LazyCfg --> LVcore --> Extras --> UserSpecs
+    Init -->|"after lazy.setup (deterministic)"| Keys
+    Init --> Autos
+    UserSpecs -.->|"LazyVim registers its keymaps"| VeryLazy
+    Keys -.->|"registers a re-apply hook"| VeryLazy
+    VeryLazy --> Reapply --> Done
+```
+
+**Explanation.** `options.lua` loads before plugins (so leader/indent are right from
+the start). After `lazy.setup`, `init.lua` requires `config.keymaps`, whose `apply()`
+runs immediately and also registers a `VeryLazy` hook. Because LazyVim registers its
+own `VeryLazy` keymap handler *earlier* (during `lazy.setup`), it fires first; our
+re-apply fires after and therefore **wins** on any overlapping key. `require` caches,
+so each file executes once regardless of how many loaders reference it.
+
+## II.11 Keymap Parity Approach
+
+Full parity required reproducing **both** layers of the LunarVim keymap surface:
+
+1. The user's custom bindings from `keymappings.lua` (F-keys, `<leader>l*` LSP tree,
+   diffview, venv, possession, wrapping, glance, etc.).
+2. The **LunarVim default `<leader>` tree** (single-key `; w q / c f h e` and the
+   `b`/`d`/`g`/`l`/`L`/`p`/`s`/`T` submenus), minus the entries the user disabled,
+   mapped to LazyVim/native equivalents.
+
+The reproduced default tree (abridged), with the equivalent used:
+
+```
+LunarVim default            | Reproduced with (LazyVim/native)
+<leader>; Dashboard         | snacks.dashboard (fallback :Alpha)
+<leader>w Save              | :w!
+<leader>q Quit              | :confirm q
+<leader>/ Comment           | native gcc / gc (visual)
+<leader>c Close Buffer      | snacks.bufdelete (fallback :bd)
+<leader>f Find File         | Telescope find_files
+<leader>h No Highlight      | :nohlsearch
+<leader>e Explorer          | :Neotree toggle
+<leader>b* Buffers          | bufferline (Pick/Cycle/Close/Sort) + Telescope buffers
+<leader>d* Debug            | nvim-dap (toggle/continue/repl/session) + dap-ui
+<leader>g* Git              | gitsigns (hunks/blame/stage) + Telescope git_* + lazygit
+<leader>l* LSP              | vim.lsp / vim.diagnostic + Telescope + LspInfo/Mason
+<leader>L* Config/LazyVim   | edit config, Telescope keymaps, :Lazy, :LazyExtras/:LazyHealth
+<leader>p* Plugins          | :Lazy install/sync/clean/update/profile/log/debug
+<leader>s* Search           | Telescope (find/grep/help/oldfiles/registers/keymaps/...)
+<leader>T* Treesitter       | :checkhealth vim.treesitter
+```
+
+Plugin-specific keys (flash `<leader>F`, markdown `<leader>M`, outline `<leader>o`,
+undo `<leader>u`, cppman `<leader>Cc/Cs`, grug-far `<leader>S*`, vessel `gj/gL/gm`,
+easy-align `ga`, lf `<M-o>`, quarto `<leader>q*`, rust `<leader>R*`, toggleterm
+`<M-h/v/i>`, trevJ `<leader>j`, whitespace `<leader>tw`) live in their plugin specs'
+`keys`. DAP F-key bindings (`<F6>`..`<F10>` and modifier variants delivered by the
+terminal F13-F57 remaps) are set in `lua/plugins/dap.lua`.
+
+## II.12 Design Decisions & Deviations
+
+```
+Decision                | Choice                          | Rationale
+Switch mechanism        | NVIM_APPNAME=lvim-lazyvim       | Full isolation; LunarVim untouched; reversible
+Keymap loading          | apply() at init + on VeryLazy   | Beat LazyVim's cache-gated loader; user maps win
+Completion              | blink.cmp (LazyVim default)     | Modern default; nvim-cmp available via extras.coding.nvim-cmp
+TypeScript LSP          | typescript-tools.nvim           | The user's actual server (dropped LazyVim vtsls extra)
+File explorer           | neo-tree (LazyVim default)      | Functional equivalent of nvim-tree
+Dashboard               | snacks.dashboard (LazyVim)      | Functional equivalent of alpha
+Telescope display       | default (custom 2-col dropped)  | Cosmetic only; reduces migration risk
+Single-key leader maps  | w/q/c/'/' override LazyVim groups| Matches LunarVim muscle memory (their actions)
+lazy-lock.json          | gitignored in lazyvim-new/      | Generated per machine on first :Lazy sync
+```
+
+## II.13 Functionality Coverage
+
+```
+Area              | LunarVim setup                 | New config (as built)
+Theme             | catppuccin-mocha               | catppuccin-mocha (same)
+LSP               | lvim.lsp.manager + mason        | native vim.lsp.config via lspconfig + LazyVim lang Extras + ccls
+Completion        | nvim-cmp                        | blink.cmp (nvim-cmp available as extra)
+Formatting/Lint   | none-ls                         | conform.nvim + nvim-lint (LazyVim)
+Treesitter        | pinned (LunarVim snapshot)      | LazyVim-managed (master on 0.11; main on 0.12)
+Fuzzy find        | telescope + 7 extensions        | telescope + 8 extensions (frecency/live-grep-args/undo/...)
+Git               | gitsigns/lazygit/fugitive/diffview | same (lazygit via snacks + lazygit.nvim)
+Debugging         | nvim-dap + adapters + F-keys    | dap.core extra + cpp/python/js adapters + F-keys
+Testing           | neotest + neotest-python        | test.core extra + neotest-python
+Python venv       | venv-selector v2 + possession   | venv-selector v2 + possession session hooks
+Languages         | py/js-ts/go/rust/c++/java/dart/quarto | LazyVim lang Extras + go.nvim/rustaceanvim/typescript-tools/jdtls/flutter/quarto/ccls
+AI                | avante + copilot                | avante + copilot (Copilot needs Node >= 22)
+Sessions          | possession + alpha list         | possession (+ venv hooks); dashboard via snacks
+Editing/motions   | surround/flash/yanky/cutlass/... | same, re-homed as lazy specs
+```
+
+## II.14 Testing & Verification Results
+
+All verified headless with `NVIM_APPNAME=lvim-lazyvim` on Neovim 0.11.5.
+
+```
+Check                                   | Result
+Lua syntax (all config files)           | PASS
+Config bootstraps (lazy install)        | PASS -- no spec/config errors
+Colorscheme                             | catppuccin-mocha applied
+leader / localleader / scrolloff        | space / backslash / 3 (correct)
+Plugin specs registered                 | 127
+Core modules load                       | which-key, telescope, lspsaga, flash, typescript-tools, possession
+Keymaps applied (normal mode)           | 370 maps; 19/19 parity spot-checks pass
+User commands                           | :Redir, :RunNode present
+Switcher new / old / status             | all pass; lvim-new launcher verified
+```
+
+### First-run notes (expected, not errors)
+
+- First launch git-clones ~127 plugins and installs LSP servers, tree-sitter
+  parsers, and formatters — network + a few minutes. Pre-install with
+  `lvim-new --headless '+Lazy! sync' +qa`, then `lvim-new '+checkhealth'`.
+- During that first install, transient `E5113 "Parser could not be created"` for a
+  filetype can appear until parsers finish; it clears on the next launch.
+- **Copilot** requires Node >= 22 (this machine has 20.11.1) — upgrade Node for
+  Copilot to function; nothing else depends on it.
+- Some plugins build native bits: `avante` (`make`), `vscode-js-debug` (`npm`),
+  `markdown-preview` (`npm`).
+
+### Known gaps (functional equivalents in place)
+
+- The alpha dashboard's possession-session list is not reproduced (snacks dashboard
+  is used instead; sessions remain available via `<leader>Pf`).
+- The custom two-column telescope entry display is not ported (default display).
+- `<leader>w`/`q`/`c`/`/` deliberately override LazyVim's same-key groups to match
+  the LunarVim single-key actions; LazyVim's versions of those are reachable under
+  their other keys or via which-key discovery.
 
 ---
 
