@@ -1628,6 +1628,48 @@ cutlass `mm`->`dd`, `<Plug>` chains) or headless-only VeryLazy timing
 (`:LazyExtras`/`:LazyHealth` exist once VeryLazy fires, which it always does
 interactively).
 
+### II.14.2 LunarVim core-default behavior parity pass
+
+A second parity pass studied the LunarVim DISTRIBUTION defaults themselves
+(`lua/lvim/keymappings.lua`, `lsp/config.lua` buffer_mappings, and the core modules
+nvimtree/terminal/telescope/cmp/autocmds/bufferline/autopairs) and ported everything
+LazyVim does not already provide. Trigger: the explorer regression where `v` did not
+open the file in a vertical split -- LunarVim's nvim-tree ships a custom `on_attach`
+on top of the stock mappings.
+
+```
+Area           | LunarVim default behavior                          | Ported as
+nvim-tree      | on_attach: l/o/<CR> open, v VERTICAL SPLIT,        | same on_attach in plugins/explorer.lua,
+               | h close dir, C change root, gtg/gtf telescope      | plus window picker, centralized selection,
+               | scoped to node dir; window-picker on split opens   | filters, git indicators, trash, confirms
+Core keymaps   | i-mode Alt+arrows window nav; t-mode C-h/j/k/l;    | config/keymaps.lua additions
+               | c-mode C-j/C-k wildmenu; x-mode A-j/A-k move       |
+LSP on-attach  | gs signature help; gl line-diagnostic float;       | LspAttach autocmd in config/autocmds.lua
+               | omnifunc + gq formatexpr via LSP                   | (gd/gD/gr/gI/K already LazyVim)
+Telescope      | C-j/C-k history, C-c close, C-n/C-p move;          | defaults.mappings + pickers opts
+               | buffers picker normal-mode with dd / C-d delete;   |
+               | find_files hidden; colorscheme preview             |
+Terminal       | exec terminals with dedicated counts + dynamic     | Terminal objects on M-h/M-v/M-i
+               | fractional sizes, bound in n AND t modes           | (user's keys; LunarVim used M-1/2/3)
+Completion     | cmp C-j/C-k select, C-Space open, C-e abort        | same keys on blink.cmp
+Autopairs      | nvim-autopairs: treesitter checks, M-e fast wrap   | mini.pairs disabled; nvim-autopairs added
+Bufferline     | right-mouse opens buffer in vertical split         | right_mouse_command = "vert sbuffer %d"
+Autocmds       | dap-repl unlisted; lua gf require-path fix         | config/autocmds.lua
+Theme          | catppuccin-mocha + personal Colorschemes pack      | both in plugins/colorscheme.lua
+Mason          | cpptools installed (cppdbg adapter dependency)     | added to mason ensure_installed
+```
+
+Already provided by LazyVim (verified equivalent, not re-ported): window nav
+`<C-hjkl>`, resize with `<C-arrows>`, `<A-j>/<A-k>` line moves (n/i/v), `]q`/`[q`,
+`<`/`>` keep-selection, `<C-s>` save, `gcc`/`gc` comments, q-to-close filetypes,
+yank highlight, VimResized equalize, `gd/gD/gr/gI/K` LSP maps, dashboard buttons
+(snacks), smart buffer close (snacks.bufdelete vs buf_kill), Mason UI keys.
+
+Functional verification: in the nvim-tree buffer, `v` is mapped as
+"nvim-tree: Open: Vertical Split" and pressing it on a file grew the window count
+from 2 to 3 with the file opened; terminal-mode nav, command-line C-j, visual-block
+moves, and M-h terminal maps all registered.
+
 ### First-run notes (expected, not errors)
 
 - First launch git-clones ~127 plugins and installs LSP servers, tree-sitter
