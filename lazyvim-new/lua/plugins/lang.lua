@@ -1,8 +1,24 @@
 -- Language-specific plugins not fully covered by LazyVim lang Extras.
--- NOTE: TypeScript uses LazyVim's default vtsls (from extras.lang.typescript).
--- The old setup used typescript-tools.nvim; to switch back, disable vtsls and add
--- pmizio/typescript-tools.nvim. Kept on vtsls here to avoid two TS servers.
 return {
+  -- ---- JavaScript / TypeScript: typescript-tools.nvim (user's tsserver) ----
+  {
+    "pmizio/typescript-tools.nvim",
+    ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    opts = {
+      separate_diagnostic_server = true,
+      settings = {
+        jsx_close_tag = { enable = false },
+        tsserver_file_preferences = {
+          importModuleSpecifierPreference = "non-relative",
+        },
+        code_lens = "off",
+      },
+    },
+    config = function(_, opts)
+      require("typescript-tools").setup(opts)
+    end,
+  },
   -- ---- Python ----
   {
     "linux-cultist/venv-selector.nvim",
@@ -94,6 +110,11 @@ return {
       vim.g.slime_target = "neovim"
       vim.g.slime_python_ipython = 1
     end,
+    keys = {
+      { "<leader>cm", "<Plug>SlimeConfig", ft = { "python", "quarto", "markdown" }, desc = "Slime: config/mark terminal" },
+      { "<leader><cr>", "<Plug>SlimeParagraphSend", ft = { "python", "quarto", "markdown" }, desc = "Slime: send paragraph" },
+      { "<c-cr>", "<Plug>SlimeRegionSend", mode = "x", ft = { "python", "quarto", "markdown" }, desc = "Slime: send region" },
+    },
   },
 
   -- ---- C / C++ tooling ----

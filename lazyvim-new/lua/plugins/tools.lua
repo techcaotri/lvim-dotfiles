@@ -78,6 +78,37 @@ return {
         nvim_tree = true,
         delete_buffers = false,
       },
+      -- Persist + restore the active Python venv per session (venv-selector v2).
+      hooks = {
+        before_save = function()
+          local cached
+          local ok, config = pcall(require, "venv-selector.config")
+          if ok and config.user_settings and config.user_settings.cache then
+            local path = require("venv-selector.path")
+            local cache_file = path.expand(config.user_settings.cache.file)
+            if vim.fn.filereadable(cache_file) == 1 then
+              local lines = vim.fn.readfile(cache_file)
+              local dok, cache = pcall(vim.fn.json_decode, lines[1])
+              if dok and type(cache) == "table" then
+                local entry = cache[vim.fn.getcwd()]
+                if type(entry) == "table" and entry.value then
+                  cached = { path = entry.value, type = entry.type or "venv" }
+                end
+              end
+            end
+          end
+          return { ["venv-selector"] = { cached_venv = cached } }
+        end,
+        after_load = function(_, user_data)
+          local c = user_data and user_data["venv-selector"] and user_data["venv-selector"].cached_venv
+          if type(c) == "table" and c.path and c.path ~= "" then
+            local ok, vs = pcall(require, "venv-selector")
+            if ok and type(vs.activate_from_path) == "function" then
+              pcall(vs.activate_from_path, c.path, c.type or "venv")
+            end
+          end
+        end,
+      },
     },
     config = function(_, opts)
       require("possession").setup(opts)
