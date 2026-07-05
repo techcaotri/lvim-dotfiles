@@ -25,16 +25,42 @@ return {
         layout_config = { width = 0.90, height = 0.65, preview_width = 0.4 },
         cache_picker = false,
         mappings = {
+          -- LunarVim defaults (C-j/C-k history, C-c close) + user additions.
           i = {
             ["<C-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
             ["<C-Down>"] = actions.cycle_history_next,
             ["<C-Up>"] = actions.cycle_history_prev,
+            ["<C-j>"] = actions.cycle_history_next,
+            ["<C-k>"] = actions.cycle_history_prev,
+            ["<C-c>"] = actions.close,
+            ["<C-n>"] = actions.move_selection_next,
+            ["<C-p>"] = actions.move_selection_previous,
+          },
+          n = {
+            ["<C-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
+            ["<C-n>"] = actions.move_selection_next,
+            ["<C-p>"] = actions.move_selection_previous,
           },
         },
         history = {
           path = vim.fn.expand("~/.local/share/nvim/databases/telescope_history.sqlite3"),
           limit = 100,
         },
+      })
+      -- LunarVim default picker behaviors.
+      opts.pickers = vim.tbl_deep_extend("force", opts.pickers or {}, {
+        find_files = { hidden = true },
+        live_grep = { only_sort_text = true },
+        grep_string = { only_sort_text = true },
+        buffers = {
+          initial_mode = "normal",
+          mappings = {
+            i = { ["<C-d>"] = actions.delete_buffer },
+            n = { ["dd"] = actions.delete_buffer },
+          },
+        },
+        colorscheme = { enable_preview = true },
+        git_files = { hidden = true, show_untracked = true },
       })
       opts.extensions = vim.tbl_deep_extend("force", opts.extensions or {}, {
         ["ui-select"] = require("telescope.themes").get_dropdown(),

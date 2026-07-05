@@ -36,6 +36,27 @@ local function apply()
   end
 
   -- =========================================================================
+  -- LunarVim core default keymaps not provided by LazyVim
+  -- (from lunarvim/lua/lvim/keymappings.lua)
+  -- =========================================================================
+  -- Window navigation from insert mode with Alt+arrows.
+  m("i", "<A-Up>", "<C-\\><C-N><C-w>k", "Window up (from insert)", { noremap = true })
+  m("i", "<A-Down>", "<C-\\><C-N><C-w>j", "Window down (from insert)", { noremap = true })
+  m("i", "<A-Left>", "<C-\\><C-N><C-w>h", "Window left (from insert)", { noremap = true })
+  m("i", "<A-Right>", "<C-\\><C-N><C-w>l", "Window right (from insert)", { noremap = true })
+  -- Window navigation from terminal mode.
+  m("t", "<C-h>", "<C-\\><C-N><C-w>h", "Window left (from terminal)")
+  m("t", "<C-j>", "<C-\\><C-N><C-w>j", "Window down (from terminal)")
+  m("t", "<C-k>", "<C-\\><C-N><C-w>k", "Window up (from terminal)")
+  m("t", "<C-l>", "<C-\\><C-N><C-w>l", "Window right (from terminal)")
+  -- Command-line wildmenu navigation with C-j / C-k.
+  map("c", "<C-j>", 'pumvisible() ? "\\<C-n>" : "\\<C-j>"', { expr = true, noremap = true })
+  map("c", "<C-k>", 'pumvisible() ? "\\<C-p>" : "\\<C-k>"', { expr = true, noremap = true })
+  -- Move visual-block selection up/down.
+  m("x", "<A-j>", ":m '>+1<CR>gv-gv", "Move selection down")
+  m("x", "<A-k>", ":m '<-2<CR>gv-gv", "Move selection up")
+
+  -- =========================================================================
   -- Non-leader editing / navigation (keymappings.lua)
   -- =========================================================================
   m("x", "p", "P", "Paste (keep register)", { noremap = true })

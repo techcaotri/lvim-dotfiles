@@ -19,4 +19,43 @@ return {
   },
   -- Inspect the treesitter tree.
   { "nvim-treesitter/playground", cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" } },
+
+  -- Completion muscle memory: LunarVim's cmp used <C-j>/<C-k> to select items and
+  -- <C-Space>/<C-e> to open/abort. Map the same on blink.cmp.
+  {
+    "saghen/blink.cmp",
+    optional = true,
+    opts = {
+      keymap = {
+        ["<C-j>"] = { "select_next", "fallback" },
+        ["<C-k>"] = { "select_prev", "fallback" },
+        ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<C-e>"] = { "hide", "fallback" },
+      },
+    },
+  },
+
+  -- Autopairs: LunarVim used nvim-autopairs (treesitter checks, <M-e> fast wrap).
+  -- Replace LazyVim's default mini.pairs to keep identical pairing behavior.
+  { "nvim-mini/mini.pairs", enabled = false },
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    opts = {
+      check_ts = true,
+      ts_config = { lua = { "string", "source" }, javascript = { "string", "template_string" } },
+      disable_filetype = { "TelescopePrompt", "spectre_panel" },
+      fast_wrap = {
+        map = "<M-e>",
+        chars = { "{", "[", "(", '"', "'" },
+        pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
+        offset = 0,
+        end_key = "$",
+        keys = "qwertyuiopzxcvbnmasdfghjkl",
+        check_comma = true,
+        highlight = "Search",
+        highlight_grey = "Comment",
+      },
+    },
+  },
 }

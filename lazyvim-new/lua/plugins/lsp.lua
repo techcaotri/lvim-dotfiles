@@ -69,6 +69,10 @@ return {
         "isort",
         "flake8",
         "cmake-language-server",
+        -- C/C++ debugging: the cppdbg DAP adapter (plugins/dap.lua) launches
+        -- mason's cpptools OpenDebugAD7 binary.
+        "cpptools",
+        "clang-format",
       })
     end,
   },

@@ -1,5 +1,9 @@
--- Colorscheme -- match the LunarVim setup (catppuccin-mocha).
+-- Colorscheme -- match the LunarVim setup (catppuccin-mocha) and keep the user's
+-- personal colorscheme pack available for :Telescope colorscheme switching.
 return {
+  -- User's personal colorscheme collection (same as the LunarVim setup).
+  { "techcaotri/Colorschemes", lazy = false, priority = 999 },
+
   {
     "catppuccin/nvim",
     name = "catppuccin",

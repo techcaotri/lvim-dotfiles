@@ -30,6 +30,49 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   end,
 })
 
+-- LunarVim LSP buffer mappings/options not covered by LazyVim's defaults
+-- (from lunarvim/lua/lvim/lsp/config.lua buffer_mappings + buffer_options).
+-- LazyVim already provides gd/gD/gr/gI/K; we add gs, gl, omnifunc and formatexpr.
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(ev)
+    local buf = ev.buf
+    vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, { buffer = buf, desc = "Show signature help", silent = true })
+    vim.keymap.set("n", "gl", function()
+      local float = vim.diagnostic.config().float
+      if float then
+        local config = type(float) == "table" and vim.deepcopy(float) or {}
+        config.scope = "line"
+        vim.diagnostic.open_float(config)
+      end
+    end, { buffer = buf, desc = "Show line diagnostics", silent = true })
+    -- LSP-powered completion + gq formatting, as LunarVim set on attach.
+    vim.bo[buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+    vim.bo[buf].formatexpr = "v:lua.vim.lsp.formatexpr(#{timeout_ms:500})"
+  end,
+})
+
+-- dap-repl buffers should not appear in the buffer list (LunarVim default).
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "dap-repl",
+  callback = function()
+    vim.opt_local.buflisted = false
+  end,
+})
+
+-- Fix gf for lua require-style paths (LunarVim default).
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "lua",
+  callback = function()
+    vim.opt_local.include = [=[\v<((do|load)file|require)\s*\(?['"]\zs[^'"]+\ze['"]]=]
+    vim.opt_local.includeexpr = "substitute(v:fname,'\\.','/','g')"
+    vim.opt_local.suffixesadd:prepend(".lua")
+    vim.opt_local.suffixesadd:prepend("init.lua")
+    for _, path in ipairs(vim.api.nvim_get_runtime_file("lua", true)) do
+      vim.opt_local.path:append(path)
+    end
+  end,
+})
+
 -- :Redir <cmd> -- capture an ex/lua command's output into a scratch buffer.
 -- Usage: :Redir lua=vim.tbl_keys(package.loaded)
 vim.api.nvim_create_user_command("Redir", function(ctx)

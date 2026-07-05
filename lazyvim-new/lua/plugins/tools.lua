@@ -48,15 +48,56 @@ return {
     keys = { { "<M-o>", "<cmd>Lf<cr>", desc = "lf file manager" } },
   },
 
-  -- toggleterm execs (M-h horizontal, M-v vertical, M-i float).
+  -- toggleterm execs (M-h horizontal, M-v vertical, M-i float), reproducing
+  -- LunarVim's exec-terminal behavior (lvim.core.terminal): dedicated terminal
+  -- counts, dynamic fractional sizes, bound in BOTH normal and terminal modes.
   {
     "akinsho/toggleterm.nvim",
-    keys = {
-      { "<M-h>", "<cmd>ToggleTerm direction=horizontal size=20<cr>", desc = "Terminal (horizontal)" },
-      { "<M-v>", "<cmd>ToggleTerm direction=vertical size=80<cr>", desc = "Terminal (vertical)" },
-      { "<M-i>", "<cmd>ToggleTerm direction=float<cr>", desc = "Terminal (float)" },
+    keys = { { "<M-h>" }, { "<M-v>" }, { "<M-i>" } },
+    opts = {
+      size = 20,
+      open_mapping = nil,
+      hide_numbers = true,
+      shade_terminals = true,
+      shading_factor = 2,
+      start_in_insert = true,
+      insert_mappings = true,
+      persist_size = false,
+      close_on_exit = true,
+      float_opts = { border = "curved" },
     },
-    opts = { open_mapping = nil },
+    config = function(_, opts)
+      require("toggleterm").setup(opts)
+
+      -- LunarVim's dynamic size: fractions of the current window dimension.
+      local function dyn_size(direction, size)
+        if size <= 1 then
+          local id = vim.api.nvim_get_current_win()
+          if direction == "horizontal" then
+            return vim.api.nvim_win_get_height(id) * size
+          end
+          return vim.api.nvim_win_get_width(id) * size
+        end
+        return size
+      end
+
+      local Terminal = require("toggleterm.terminal").Terminal
+      local execs = {
+        { key = "<M-h>", direction = "horizontal", size = 0.3, count = 101, desc = "Horizontal Terminal" },
+        { key = "<M-v>", direction = "vertical", size = 0.4, count = 102, desc = "Vertical Terminal" },
+        { key = "<M-i>", direction = "float", size = nil, count = 103, desc = "Float Terminal" },
+      }
+      for _, e in ipairs(execs) do
+        local term
+        local function toggle()
+          if not term then
+            term = Terminal:new({ direction = e.direction, count = e.count, hidden = false })
+          end
+          term:toggle(e.size and dyn_size(e.direction, e.size) or nil, e.direction)
+        end
+        vim.keymap.set({ "n", "t" }, e.key, toggle, { desc = e.desc, noremap = true, silent = true })
+      end
+    end,
   },
 
   -- Capture command output into a buffer.

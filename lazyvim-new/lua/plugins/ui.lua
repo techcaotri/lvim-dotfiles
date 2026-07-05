@@ -26,8 +26,19 @@ return {
   -- Sticky scope/context header.
   { "nvim-treesitter/nvim-treesitter-context", event = "VeryLazy", opts = {} },
 
-  -- Always show the bufferline (matches lvim.builtin.bufferline.always_show).
-  { "akinsho/bufferline.nvim", opts = { options = { always_show_bufferline = true } } },
+  -- Bufferline: always visible (user override) + LunarVim mouse behavior
+  -- (right-click a tab opens that buffer in a vertical split).
+  {
+    "akinsho/bufferline.nvim",
+    opts = {
+      options = {
+        always_show_bufferline = true,
+        right_mouse_command = "vert sbuffer %d",
+        left_mouse_command = "buffer %d",
+        diagnostics = "nvim_lsp",
+      },
+    },
+  },
 
   -- Inline color-code highlighting.
   {
