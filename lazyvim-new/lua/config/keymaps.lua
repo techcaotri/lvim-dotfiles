@@ -66,6 +66,12 @@ local function apply()
   m("n", "yyp", "<cmd>co.<CR>", "Duplicate line")
   m("n", "[c", function() pcall(function() require("treesitter-context").go_to_context() end) end, "Goto treesitter context")
   m("n", "<C-w>z", "<cmd>WindowsMaximize<CR>", "Maximize window")
+  -- Resize with arrows -- restore LunarVim's direction (C-Up shrinks, C-Down grows;
+  -- LazyVim's default reverses these two).
+  m("n", "<C-Up>", "<cmd>resize -2<CR>", "Resize: shrink height")
+  m("n", "<C-Down>", "<cmd>resize +2<CR>", "Resize: grow height")
+  m("n", "<C-Left>", "<cmd>vertical resize -2<CR>", "Resize: shrink width")
+  m("n", "<C-Right>", "<cmd>vertical resize +2<CR>", "Resize: grow width")
   m("n", "gD", "<cmd>Glance definitions<CR>", "Glance: definitions")
   m("n", "gR", "<cmd>Glance references<CR>", "Glance: references")
   m("n", "gY", "<cmd>Glance type_definitions<CR>", "Glance: type definitions")
@@ -109,10 +115,9 @@ local function apply()
   m("n", "<leader>q", "<cmd>confirm q<CR>", "Quit")
   m("n", "<leader>/", "gcc", "Comment toggle line", { remap = true })
   m("x", "<leader>/", "gc", "Comment toggle (visual)", { remap = true })
-  m("n", "<leader>c", function()
-    local ok = pcall(function() require("snacks").bufdelete() end)
-    if not ok then vim.cmd("bd") end
-  end, "Close Buffer")
+  -- NOTE: <leader>c is intentionally NOT bound to close-buffer -- it collided with
+  -- LazyVim's default <leader>c "Code" group (inconsistent effect). Close a buffer
+  -- with <leader>bd (or the bufferline mouse). LazyVim's <leader>c group is kept.
   m("n", "<leader>f", "<cmd>Telescope find_files<CR>", "Find File")
   m("n", "<leader>h", "<cmd>nohlsearch<CR>", "No Highlight")
   m("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", "Explorer")
@@ -339,10 +344,13 @@ local function groups()
       { "<leader>ls", group = "LspSaga" },
       { "<leader>lo", group = "Original LSP" },
       { "<leader>L", group = "Config/LazyVim" },
+      { "<leader>m", group = "Bookmark" },
       { "<leader>n", group = "LineNumbers" },
       { "<leader>p", group = "Plugins" },
       { "<leader>P", group = "Possession" },
       { "<leader>s", group = "Search" },
+      { "[", group = "Previous motion" },
+      { "]", group = "Next motion" },
       { "<leader>T", group = "Treesitter" },
       { "<leader>v", group = "Python venv" },
       { "<leader>W", group = "Wrapping" },

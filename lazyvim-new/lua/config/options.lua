@@ -18,6 +18,15 @@ opt.cursorline = true
 opt.wrap = false
 opt.timeoutlen = 1000
 
+-- Folds: always OPEN a file with everything unfolded. LazyVim keeps foldlevel=99
+-- and enables LSP folding (clangd) for C++, but a low foldlevel can linger (e.g.
+-- restored from a session's saved fold state), leaving C++ files opening fully
+-- folded. foldlevelstart=99 forces every freshly-displayed window to foldlevel 99,
+-- and dropping "folds" from sessionoptions stops sessions from restoring closed
+-- folds. Together: C++ (and everything) opens expanded.
+opt.foldlevelstart = 99
+opt.sessionoptions:remove("folds")
+
 -- Prevent auto-continuation of // comments on newline after an inline comment.
 opt.formatoptions:append("/")
 

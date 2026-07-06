@@ -4,10 +4,25 @@ return {
   -- Copilot: enable inline auto-suggestions (matches copilot.lua config).
   {
     "zbirenbaum/copilot.lua",
-    opts = {
-      suggestion = { enabled = true, auto_trigger = true },
-      panel = { enabled = true },
-    },
+    opts = function(_, opts)
+      opts.suggestion = { enabled = true, auto_trigger = true }
+      opts.panel = { enabled = true }
+      -- Copilot needs Node >= 22, but the default `node` on this machine is v20
+      -- (which makes Copilot throw a version error on every buffer). Point it at
+      -- the newest nvm-installed Node >= 22 if one exists.
+      local nodes = vim.fn.glob(vim.fn.expand("~") .. "/.nvm/versions/node/v*/bin/node", true, true)
+      local best
+      for _, n in ipairs(nodes) do
+        local major = tonumber(n:match("/v(%d+)%."))
+        if major and major >= 22 then
+          best = n
+        end
+      end
+      if best then
+        opts.copilot_node_command = best
+      end
+      return opts
+    end,
   },
 
   -- Avante (Cursor-like AI). Needs ANTHROPIC_API_KEY at runtime to actually query.

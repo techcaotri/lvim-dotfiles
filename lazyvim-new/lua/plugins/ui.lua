@@ -69,4 +69,67 @@ return {
       { "<leader>tw", mode = { "n", "v" }, function() require("visual-whitespace").toggle() end, desc = "Toggle visual whitespace" },
     },
   },
+
+  -- Command line at the BOTTOM (classic), not the centered popup, for less
+  -- distraction. LunarVim shipped no noice cmdline popup; LazyVim enables one by
+  -- default, so route the cmdline back to the classic bottom line. Search (/, ?)
+  -- also uses the bottom line. Notifications/LSP popups from noice are untouched.
+  {
+    "folke/noice.nvim",
+    opts = {
+      cmdline = { view = "cmdline" },
+    },
+  },
+
+  -- Startup dashboard: list saved possession sessions (ports the old LunarVim
+  -- alpha.lua behavior). LazyVim's snacks dashboard only knows about the built-in
+  -- "session" source (persistence.nvim), so we append possession sessions —
+  -- newest first — as numbered shortcuts before the Quit entry. Read straight from
+  -- the session directory on disk so it does not depend on plugin load order.
+  {
+    "folke/snacks.nvim",
+    opts = function(_, opts)
+      local function session_items()
+        local ok, cfg = pcall(require, "possession.config")
+        local dir = (ok and cfg and cfg.session_dir) or (vim.fn.stdpath("data") .. "/possession")
+        local files = vim.fn.glob(tostring(dir) .. "/*.json", true, true)
+        table.sort(files, function(a, b)
+          return vim.fn.getftime(a) > vim.fn.getftime(b)
+        end)
+        local items = {}
+        for i, f in ipairs(files) do
+          if i > 9 then -- show the 9 most-recent sessions (keys 1-9); rest via <leader>Pf
+            break
+          end
+          local name = vim.fn.fnamemodify(f, ":t:r")
+          items[#items + 1] = {
+            icon = " ",
+            key = tostring(i),
+            desc = name,
+            action = "<cmd>PossessionLoad " .. vim.fn.fnameescape(name) .. "<cr>",
+          }
+        end
+        return items
+      end
+
+      opts.dashboard = opts.dashboard or {}
+      opts.dashboard.preset = opts.dashboard.preset or {}
+      local keys = opts.dashboard.preset.keys or {}
+      local sess = session_items()
+      if #sess > 0 then
+        -- Insert the session shortcuts just before the "Quit" entry (or append).
+        local quit_idx = #keys + 1
+        for i, k in ipairs(keys) do
+          if k.key == "q" then
+            quit_idx = i
+            break
+          end
+        end
+        for j = #sess, 1, -1 do
+          table.insert(keys, quit_idx, sess[j])
+        end
+      end
+      opts.dashboard.preset.keys = keys
+    end,
+  },
 }

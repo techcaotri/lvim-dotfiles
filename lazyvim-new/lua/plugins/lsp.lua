@@ -37,8 +37,10 @@ return {
         filetypes = { "html", "jsp" },
       })
 
-      -- bash LSP (there is no LazyVim lang.sh extra).
-      opts.servers.bashls = opts.servers.bashls or {}
+      -- bash LSP (no LazyVim lang.sh extra); also attach to zsh (LunarVim did).
+      opts.servers.bashls = vim.tbl_deep_extend("force", opts.servers.bashls or {}, {
+        filetypes = { "sh", "zsh", "bash" },
+      })
 
       -- ccls: secondary C/C++ server used for call-hierarchy (clangd stays primary).
       opts.servers.ccls = {
@@ -53,6 +55,23 @@ return {
       opts.servers.lua_ls = vim.tbl_deep_extend("force", opts.servers.lua_ls or {}, {
         settings = { Lua = { hint = { enable = true } } },
       })
+
+      -- CSS/SCSS/LESS server (was in LunarVim's mason ensure_installed).
+      opts.servers.cssls = opts.servers.cssls or {}
+
+      -- Jinja templates -- the .jinja/.jinja2/.j2 filetype is registered in
+      -- config/autocmds.lua; jinja_lsp is a Mason package (jinja-lsp).
+      opts.servers.jinja_lsp = opts.servers.jinja_lsp or {}
+
+      -- CMake language server (LunarVim ran it alongside neocmake from lang.cmake).
+      opts.servers.cmake = opts.servers.cmake or {}
+
+      -- Qt QML: qmlls ships with Qt (not a Mason package), so skip Mason and point
+      -- at the Qt6 binary (matches the old lsp/init.lua qmlls cmd).
+      opts.servers.qmlls = {
+        mason = false,
+        cmd = { "/home/tripham/Qt_new/6.8.0/gcc_64/bin/qmlls", "--verbose" },
+      }
     end,
   },
 

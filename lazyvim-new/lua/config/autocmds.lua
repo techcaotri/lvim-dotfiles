@@ -2,6 +2,21 @@
 -- LazyVim ships common autocmds (highlight-on-yank, resize splits, close-with-q,
 -- auto-create-dir, etc.); here we add only the user-specific ones from config.lua.
 
+-- Filetype detection ported from LunarVim (jinja templates, zsh, ZMK *.keymap).
+vim.filetype.add({
+  extension = {
+    jinja = "jinja",
+    jinja2 = "jinja",
+    j2 = "jinja",
+    zsh = "zsh",
+  },
+})
+-- ZMK / devicetree keymap files use dts syntax (from custom/config/syntax.lua).
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern = "*.keymap",
+  command = "set syntax=dts",
+})
+
 -- Auto-reload files changed on disk (from the old config.lua).
 local autoread = vim.api.nvim_create_augroup("ar_autoread", { clear = true })
 vim.api.nvim_create_autocmd("FileChangedShellPost", {

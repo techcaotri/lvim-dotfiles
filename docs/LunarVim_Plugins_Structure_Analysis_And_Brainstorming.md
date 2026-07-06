@@ -67,6 +67,8 @@
   - II.12 Design Decisions & Deviations
   - II.13 Functionality Coverage
   - II.14 Testing & Verification Results
+  - II.15 Post-migration behavior sync + full re-audit (2026-07-05)
+  - II.16 Runtime fixes: treesitter, plugin builds, sessions, Copilot (2026-07-05)
 - **Appendices** A (API remediation), B (Neovim version reference), C (sources)
 
 ---
@@ -1567,7 +1569,7 @@ TypeScript LSP          | typescript-tools.nvim           | The user's actual se
 File explorer           | nvim-tree (ported)              | Same plugin as LunarVim, settings preserved (LazyVim's snacks explorer replaced)
 Dashboard               | snacks.dashboard (LazyVim)      | Functional equivalent of alpha
 Telescope display       | default (custom 2-col dropped)  | Cosmetic only; reduces migration risk
-Single-key leader maps  | w/q/c/'/' override LazyVim groups| Matches LunarVim muscle memory (their actions)
+Single-key leader maps  | w/q/'/' override LazyVim groups  | Matches LunarVim muscle memory (their actions); <leader>c reverted to LazyVim's Code group (II.16.1)
 lazy-lock.json          | gitignored in lazyvim-new/      | Generated per machine on first :Lazy sync
 ```
 
@@ -1587,7 +1589,8 @@ Testing           | neotest + neotest-python        | test.core extra + neotest-
 Python venv       | venv-selector v2 + possession   | venv-selector v2 + possession session hooks
 Languages         | py/js-ts/go/rust/c++/java/dart/quarto | LazyVim lang Extras + go.nvim/rustaceanvim/typescript-tools/jdtls/flutter/quarto/ccls
 AI                | avante + copilot                | avante + copilot (Copilot needs Node >= 22)
-Sessions          | possession + alpha list         | possession (+ venv hooks); dashboard via snacks
+Sessions          | possession + alpha list         | possession (+ venv hooks); dashboard lists sessions (II.15.1)
+Command line      | native bottom cmdline (no noice) | noice routed to bottom, cmdline.view="cmdline" (II.15.1)
 Editing/motions   | surround/flash/yanky/cutlass/... | same, re-homed as lazy specs
 ```
 
@@ -1684,24 +1687,184 @@ moves, and M-h terminal maps all registered.
   This is a toolchain/environment issue independent of the config; fixes are to
   install a `tree-sitter` CLI built for the local glibc, use a newer Neovim/glibc, or
   rely on parsers shipped with Neovim. LunarVim avoided this because its pinned older
-  `nvim-treesitter` compiled parsers with `cc` directly.
-- **Copilot** requires Node >= 22 (this machine has 20.11.1) — upgrade Node for
-  Copilot to function; nothing else depends on it.
+  `nvim-treesitter` compiled parsers with `cc` directly. **RESOLVED 2026-07-05 —
+  see II.16** (local glibc-2.35 `tree-sitter` built with cargo).
+- **Copilot** requires Node >= 22 (this machine has 20.11.1). **RESOLVED
+  2026-07-05 — see II.16** (Copilot now points at the nvm-installed Node 22).
 - Some plugins build native bits: `avante` (`make`), `vscode-js-debug` (`npm`),
   `markdown-preview` (`npm`).
 
 ### Known gaps (functional equivalents in place)
 
-- The alpha dashboard's possession-session list is not reproduced (snacks dashboard
-  is used instead; sessions remain available via `<leader>Pf`).
+- ~~The alpha dashboard's possession-session list is not reproduced~~ **CLOSED
+  2026-07-05** — the possession-session list is now on the snacks dashboard
+  (see II.15.1, item 2). Sessions remain available via `<leader>Pf` as well.
 - The custom two-column telescope entry display is not ported (default display).
-- `<leader>w`/`q`/`c`/`/` deliberately override LazyVim's same-key groups to match
-  the LunarVim single-key actions; LazyVim's versions of those are reachable under
-  their other keys or via which-key discovery.
+- `<leader>w`/`q`/`/` deliberately override LazyVim's same-key groups to match the
+  LunarVim single-key actions; LazyVim's versions of those are reachable under their
+  other keys or via which-key discovery. (`<leader>c` was reverted to LazyVim's
+  default "Code" group — see II.16.1; close a buffer with `<leader>bd`.)
+
+> A full re-audit on 2026-07-05 (Section **II.15**) closed the session-list gap,
+> migrated three user-requested behaviors, and fixed nine additional gaps the first
+> pass missed (qmlls/cssls/jinja/cmake/zsh LSP, `*.keymap` syntax, `project.nvim`,
+> resize direction, which-key labels). No functional gaps remain.
 
 ---
 
-## Appendix A — Deprecated-API remediation index
+## II.15 Post-migration behavior sync + full re-audit (2026-07-05)
+
+A follow-up pass (a) migrated three specific LunarVim behaviors the user called out,
+and (b) ran an independent, adversarial re-audit of EVERY dimension (plugins,
+keymaps, options/autocmds/commands, LSP/lang/DAP/tooling) to confirm nothing else
+was missed. All changes were validated headless with `lvim-new`
+(NVIM_APPNAME=lvim-lazyvim) on Neovim 0.11.5.
+
+### II.15.1 The three requested behaviors
+
+```
+# | Request                        | Old LunarVim source              | New home + change                         | Status / verification
+1 | Bottom command line, not popup | no noice (native bottom cmdline) | plugins/ui.lua: folke/noice.nvim opts     | DONE. merged cmdline.view == "cmdline"
+  |                                |                                  | cmdline = { view = "cmdline" }            |
+2 | Show saved sessions on startup | custom/config/alpha.lua          | plugins/ui.lua: folke/snacks.nvim opts    | DONE. dashboard keys 9 -> 10; session
+  |                                | (possession.query -> alpha       | append possession sessions (newest       | shortcut inserted; :PossessionLoad
+  |                                | dashboard buttons)               | first, up to 5) before the Quit entry     | resolves; session_dir read from disk
+3 | Auto-expand pane on focus      | plugins.lua windows.nvim         | already migrated in plugins/editor.lua    | DONE (was already present). plugin
+  |                                | (winwidth=20, equalalways=false) | (JoseConseco/windows.nvim, same options)  | loads; winwidth=20; WindowsMaximize ok
+```
+
+Item 1 was a NEW distraction introduced by LazyVim (which ships noice with a
+centered cmdline popup); LunarVim shipped no noice, so the fix routes the cmdline
+back to the classic bottom line (search `/`,`?` too). Item 2 closes the one gap the
+original migration recorded ("Known gaps", above). Item 3 was already done during
+the initial migration and only needed verification.
+
+### II.15.2 Re-audit result — genuine gaps found and FIXED
+
+The adversarial re-audit surfaced items the first pass missed. All fixed and
+headless-verified:
+
+```
+Area   | Gap (old behavior)                                    | Fix (file)                                       | Verified
+LSP    | qmlls (Qt QML server, custom Qt6 cmd) not migrated;   | plugins/lsp.lua: opts.servers.qmlls = {mason=    | present; mason=false so Mason
+       | user is an active Qt dev (hardcoded Qt path)          | false, cmd={.../gcc_64/bin/qmlls,'--verbose'}}   | does not try to install it
+LSP    | cssls (CSS server) was in old ensure_installed        | plugins/lsp.lua: opts.servers.cssls = {}         | present
+LSP    | jinja_lsp + .jinja/.jinja2/.j2 filetype not migrated  | lsp.lua opts.servers.jinja_lsp; autocmds.lua     | present; .jinja/.j2 -> jinja
+       |                                                       | vim.filetype.add                                 |
+LSP    | cmake server (ran alongside neocmake in LunarVim)     | plugins/lsp.lua: opts.servers.cmake = {}         | present (neocmake via lang.cmake)
+LSP    | bashls did not attach to zsh; .zsh not a filetype     | lsp.lua bashls filetypes={sh,zsh,bash};          | filetypes={sh,zsh,bash}; .zsh->zsh
+       |                                                       | autocmds.lua zsh filetype.add                    |
+Syntax | *.keymap -> syntax=dts (ZMK/devicetree) not migrated  | config/autocmds.lua BufNewFile/BufRead autocmd   | autocmd registered
+Editor | project.nvim root detection + 15 custom patterns      | plugins/tools.lua: ahmedkhalf/project.nvim with  | plugin registered; patterns +
+       | (Makefile, CMakeLists.txt, pyproject.toml, manim.cfg, | detection_methods={pattern,lsp}, patterns list,  | detection_methods ported;
+       | pubspec.yaml, .vscode, ...) not migrated              | telescope "projects" extension                   | telescope projects ext loaded
+Keymap | <C-Up>/<C-Down> resize direction inverted vs old      | config/keymaps.lua explicit resize maps          | C-Up -> resize -2, C-Down -> +2
+       | (LazyVim default reverses them)                       | (restores LunarVim direction)                    | (user maps win over LazyVim)
+Keymap | which-key labels <leader>m 'Bookmark' and '[' / ']'   | config/keymaps.lua groups() additions            | labels added
+       | 'Previous/Next motion' missing (cosmetic)             |                                                  |
+```
+
+### II.15.3 Confirmed-intentional (documented, NOT changed)
+
+These old items are deliberately replaced or dropped; recorded so the absence is
+explicit rather than silent:
+
+```
+Old item                          | Disposition | Reason
+nvim-cmp                          | REPLACED    | blink.cmp (LazyVim default); C-j/C-k/C-Space/C-e remapped to old cmp keys
+none-ls + none-ls-shellcheck      | REPLACED    | conform.nvim (format) + nvim-lint (shellcheck) -- both in lock
+mhartington/formatter.nvim        | REPLACED    | conform.nvim
+folke/neodev.nvim                 | REPLACED    | lazydev.nvim (LazyVim default Lua dev)
+Comment.nvim                      | REPLACED    | ts-comments.nvim + native gc
+rcarriga/nvim-notify              | REPLACED    | snacks.notifier (noice routes to it)
+tsserver                          | REPLACED    | typescript-tools.nvim (the user's actual server)
+L3MON4D3/LuaSnip                  | DROPPED-OK  | blink.cmp snippet engine + friendly-snippets (present); re-add only if hand-written LuaSnip snippets are used
+mini.pick, ibhagwan/fzf-lua       | DROPPED-OK  | were only avante file_selector backends; telescope is the actual selector
+vim.b.navic_lazy_update_context   | DROPPED-OK  | navic breadcrumbs replaced by LspSaga winbar; the flag is moot
+cmake filetypes {cmake, txt}      | ADJUSTED    | cmake server restored, but the odd .txt->cmake association dropped (it would attach a CMake LSP to every plain-text file)
+flake8 (mason ensure_installed)   | KEPT-AS-WAS | installed but not wired into nvim-lint (old config also only listed it); python lints via ruff
+<leader>db{l,c} breakpoints       | ADJUSTED    | moved to <leader>dB{l,c} to avoid colliding with the <leader>db* debug tree
+```
+
+### II.15.4 Coverage tally (post-fix)
+
+```
+Dimension                  | Old items | Disposition                        | Remaining genuine gaps
+Plugins                    | ~80       | present / replaced / dropped-OK    | 0  (project.nvim restored)
+Keymaps                    | ~130      | 126 present + fixes above           | 0  (resize direction + labels restored)
+Options / autocmds / cmds  | 26        | all present                         | 0  (*.keymap, jinja/zsh filetypes added)
+LSP / lang / DAP / tooling | 31        | all present                         | 0  (qmlls/cssls/jinja/cmake/zsh added)
+```
+
+Net: **no remaining functional gaps.** The only deliberate omissions are the
+DROPPED-OK / ADJUSTED rows in II.15.3, each with a stated reason. Files touched in
+this pass: `lua/plugins/ui.lua`, `lua/plugins/lsp.lua`, `lua/plugins/tools.lua`,
+`lua/config/autocmds.lua`, `lua/config/keymaps.lua`.
+
+## II.16 Runtime fixes: treesitter, plugin builds, sessions, Copilot (2026-07-05)
+
+A second same-day pass fixed four runtime issues on this machine (glibc 2.35,
+Neovim 0.11.5 which ships no bundled parsers, default Node v20). All verified
+headless with `lvim-new`.
+
+```
+# | Symptom                                   | Root cause                                      | Fix
+1 | Opening a Markdown file spews errors      | nvim-treesitter (main branch) compiles parsers  | Built tree-sitter 0.26.10 from source with
+  | ("No parser for language markdown";       | with the Mason `tree-sitter` CLI, which is a    | cargo (glibc 2.35) and replaced the Mason
+  | render-markdown.nvim stack traces)        | prebuilt binary needing GLIBC_2.39 (box has     | binary at mason/packages/tree-sitter-cli/
+  |                                           | 2.35) -> no parser ever compiles, and this      | tree-sitter-linux-x64 (backup kept as
+  |                                           | Neovim ships no bundled parsers                 | *.glibc239.bak). Then :TSInstall compiled 37
+  |                                           |                                                 | parsers with cc. Markdown/lua/... now load.
+2 | markdown-preview.nvim + vscode-js-debug   | vscode-js-debug: build re-ran `mv dist out`     | vscode-js-debug build made idempotent:
+  | "cannot install, errors"                  | with out/ already present -> non-zero exit,     | `test -f out/src/vsDebugServer.js || (rm -rf
+  |                                           | so Lazy marks build failed (adapter WAS built). | out dist && npm i --legacy-peer-deps && npx
+  |                                           | markdown-preview: npm install was fine.         | gulp vsDebugServerBundle && mv dist out)`.
+  |                                           |                                                 | Both now report build_err=none.
+3 | Old LunarVim sessions (tmp, lvim,         | New config's possession dir                     | Copied the 33 old sessions from
+  | nvim_config, 30+ project sessions) are    | (~/.local/share/lvim-lazyvim/possession) had    | ~/.local/share/lvim/possession into the new
+  | not on the lvim-new startup dashboard     | only the new `tmp` session; the old ones live   | dir (no-clobber), and raised the dashboard
+  |                                           | under NVIM_APPNAME=lvim's data dir              | session list from 5 to 9 (ui.lua). They load
+  |                                           | (~/.local/share/lvim/possession)                | fine (old name+vimscript format is accepted).
+4 | Copilot throws a Node-version error on    | copilot.lua needs Node >= 22; the default       | copilot.lua opts now globs
+  | every buffer / during session restore     | `node` on PATH is v20                           | ~/.nvm/versions/node/v*/bin/node, picks the
+  |                                           |                                                 | newest >= 22 (v22.22.3) and sets
+  |                                           |                                                 | copilot_node_command to it (ai.lua).
+```
+
+Files touched this pass: `lua/plugins/ui.lua` (dashboard 5->9), `lua/plugins/dap.lua`
+(idempotent vscode-js-debug build), `lua/plugins/ai.lua` (Copilot Node 22). Data:
+33 session JSONs copied; the Mason `tree-sitter` binary replaced.
+
+### Durability caveat (tree-sitter binary)
+
+The tree-sitter fix replaces a **Mason-managed** binary. If Mason later updates
+`tree-sitter-cli` (via `:Mason`/`:MasonUpdate` or a LazyVim treesitter bump) it will
+re-download the prebuilt `GLIBC_2.39` binary and parser compilation will break
+again. To re-apply the fix:
+
+```
+cargo install tree-sitter-cli --version <mason's version> --locked
+cp ~/.cargo/bin/tree-sitter \
+   ~/.local/share/lvim-lazyvim/mason/packages/tree-sitter-cli/tree-sitter-linux-x64
+```
+
+A permanent alternative is to upgrade the OS glibc (>= 2.39) or use a Neovim build
+that bundles the parsers. Copilot's Node path is resolved dynamically from nvm, so
+it survives nvm node upgrades (as long as a v22+ remains installed).
+
+### II.16.1 Follow-up UX fixes
+
+```
+Issue                                      | Fix
+<leader>c had an inconsistent effect       | Removed the close-buffer binding (snacks.bufdelete) from
+(it both closed the buffer AND was         | config/keymaps.lua. <leader>c now falls through to LazyVim's
+LazyVim's <leader>c "Code" group prefix)   | default "Code" group. Close a buffer with <leader>bd instead.
+Opening C++ files showed everything folded | config/options.lua: foldlevelstart=99 (every window opens at
+(LazyVim enables clangd LSP folding; a low | foldlevel 99 = unfolded) and sessionoptions:remove("folds")
+foldlevel lingered, e.g. restored from a   | (restored sessions no longer force folds closed). C++ (and all
+session's saved fold state)                | filetypes) now open expanded.
+```
+
 
 The authoritative per-call remediation list for LunarVim core is **Table A in
 Section I.10** (12 items with `file:line`, status, and replacement). Under the

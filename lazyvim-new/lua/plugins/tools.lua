@@ -158,4 +158,38 @@ return {
       end)
     end,
   },
+
+  -- Project/root detection (ported from LunarVim's lvim.builtin.project /
+  -- custom/config/project.lua). Auto-cds to the project root using the user's
+  -- detection methods + pattern list, and adds the telescope "projects" picker.
+  {
+    "ahmedkhalf/project.nvim",
+    event = "VeryLazy",
+    opts = {
+      detection_methods = { "pattern", "lsp" },
+      patterns = {
+        ".git",
+        "_darcs",
+        ".hg",
+        ".bzr",
+        ".svn",
+        "Makefile",
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "requirements.txt",
+        "pyproject.toml",
+        ".vscode",
+        "pubspec.yaml",
+        "CMakeLists.txt",
+        "manim.cfg",
+      },
+    },
+    config = function(_, opts)
+      require("project_nvim").setup(opts)
+      pcall(function()
+        require("telescope").load_extension("projects")
+      end)
+    end,
+  },
 }

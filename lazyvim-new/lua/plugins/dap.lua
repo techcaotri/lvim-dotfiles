@@ -27,7 +27,12 @@ return {
       {
         "microsoft/vscode-js-debug",
         commit = "4d7c704d3f07",
-        build = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out",
+        -- Idempotent build: skip if already bundled (out/src/vsDebugServer.js);
+        -- otherwise clean-build so the final `mv dist out` never fails on an
+        -- existing out/ (the original cause of the build error).
+        build = "test -f out/src/vsDebugServer.js || "
+          .. "(rm -rf out dist && npm install --legacy-peer-deps "
+          .. "&& npx gulp vsDebugServerBundle && mv dist out)",
       },
     },
     config = function()
