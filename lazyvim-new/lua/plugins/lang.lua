@@ -22,7 +22,8 @@ return {
   -- ---- Python ----
   {
     "linux-cultist/venv-selector.nvim",
-    branch = "regexp",
+    -- The old "regexp" rewrite branch has been merged back into `main`; pinning it
+    -- now prints a warning on startup. Track `main` (the v2 API this config uses).
     ft = "python",
     dependencies = { "neovim/nvim-lspconfig", "nvim-telescope/telescope.nvim" },
     cmd = { "VenvSelect", "VenvSelectCached" },
