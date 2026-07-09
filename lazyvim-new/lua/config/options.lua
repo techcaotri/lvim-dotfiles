@@ -18,6 +18,13 @@ opt.cursorline = true
 opt.wrap = false
 opt.timeoutlen = 1000
 
+-- No permanent empty command-line row below the statusline. With noice rendering
+-- messages/command output natively (see plugins/ui.lua), cmdheight=1 would leave a
+-- blank line under the statusline when idle; cmdheight=0 reclaims it and Neovim
+-- still shows messages/:command output on the bottom line on demand. (Set this
+-- back to 1 if you prefer a persistent message line over the extra blank row.)
+opt.cmdheight = 0
+
 -- Folds: always OPEN a file with everything unfolded. LazyVim keeps foldlevel=99
 -- and enables LSP folding (clangd) for C++, but a low foldlevel can linger (e.g.
 -- restored from a session's saved fold state), leaving C++ files opening fully

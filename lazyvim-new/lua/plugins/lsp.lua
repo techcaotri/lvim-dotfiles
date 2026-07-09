@@ -95,4 +95,17 @@ return {
       })
     end,
   },
+
+  -- Shell formatting with shfmt (installed via Mason above). LazyVim's conform
+  -- default maps only the `sh` filetype; also map `bash` so shfmt formats shell
+  -- scripts however Neovim detects their filetype. shfmt does not support zsh
+  -- syntax, so zsh is intentionally left unmapped.
+  {
+    "stevearc/conform.nvim",
+    opts = function(_, opts)
+      opts.formatters_by_ft = opts.formatters_by_ft or {}
+      opts.formatters_by_ft.sh = opts.formatters_by_ft.sh or { "shfmt" }
+      opts.formatters_by_ft.bash = { "shfmt" }
+    end,
+  },
 }

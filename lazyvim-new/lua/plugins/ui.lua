@@ -70,14 +70,21 @@ return {
     },
   },
 
-  -- Command line at the BOTTOM (classic), not the centered popup, for less
-  -- distraction. LunarVim shipped no noice cmdline popup; LazyVim enables one by
-  -- default, so route the cmdline back to the classic bottom line. Search (/, ?)
-  -- also uses the bottom line. Notifications/LSP popups from noice are untouched.
+  -- Command line AND command output at the BOTTOM (classic), like LunarVim -- not
+  -- noice's centered popup. LazyVim enables noice's cmdline popup + command_palette
+  -- preset by default. We:
+  --   * route the cmdline input back to the classic bottom line (cmdline.view), and
+  --   * let Neovim render messages / :command output natively on the bottom line
+  --     (messages.enabled = false) instead of noice popups/splits.
+  -- Search (/, ?) stays at the bottom. Notifications still go through snacks; noice
+  -- LSP hover/signature popups are untouched. (cmdheight=0 is set in
+  -- config/options.lua so there is no blank command-line row under the statusline.)
   {
     "folke/noice.nvim",
     opts = {
       cmdline = { view = "cmdline" },
+      messages = { enabled = false },
+      presets = { command_palette = false, long_message_to_split = false },
     },
   },
 
