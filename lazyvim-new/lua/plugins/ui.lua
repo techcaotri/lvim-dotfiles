@@ -122,6 +122,18 @@ return {
       opts.dashboard = opts.dashboard or {}
       opts.dashboard.preset = opts.dashboard.preset or {}
       local keys = opts.dashboard.preset.keys or {}
+
+      -- Recent Files should list ALL recent files, not just the current
+      -- project/root. LazyVim's default "r" action routes through LazyVim.pick,
+      -- which injects cwd = LazyVim.root() and thus scopes oldfiles to the
+      -- project. root=false disables that scoping so every recent file shows.
+      for _, k in ipairs(keys) do
+        if k.key == "r" then
+          k.action = ':lua LazyVim.pick("oldfiles", { root = false })()'
+          k.desc = "Recent Files (all)"
+        end
+      end
+
       local sess = session_items()
       if #sess > 0 then
         -- Insert the session shortcuts just before the "Quit" entry (or append).
