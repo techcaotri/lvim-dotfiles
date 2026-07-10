@@ -112,7 +112,7 @@ return {
       vim.g.slime_python_ipython = 1
     end,
     keys = {
-      { "<leader>cm", "<Plug>SlimeConfig", ft = { "python", "quarto", "markdown" }, desc = "Slime: config/mark terminal" },
+      { "<leader>lm", "<Plug>SlimeConfig", ft = { "python", "quarto", "markdown" }, desc = "Slime: config/mark terminal" },
       { "<leader><cr>", "<Plug>SlimeParagraphSend", ft = { "python", "quarto", "markdown" }, desc = "Slime: send paragraph" },
       { "<c-cr>", "<Plug>SlimeRegionSend", mode = "x", ft = { "python", "quarto", "markdown" }, desc = "Slime: send region" },
     },

@@ -32,6 +32,21 @@ return {
     opts = function(_, opts)
       opts.servers = opts.servers or {}
 
+      -- Retire LazyVim's <leader>c (+code) LSP keymaps at the source: each one is
+      -- mirrored under <leader>l (+LSP), and <leader>c now closes the buffer (see
+      -- config/keymaps.lua). Disabling via the '*' server keys with {lhs,false} is
+      -- deterministic -- no LspAttach ordering race.
+      opts.servers["*"] = opts.servers["*"] or {}
+      opts.servers["*"].keys = opts.servers["*"].keys or {}
+      vim.list_extend(opts.servers["*"].keys, {
+        -- ca/cc are mode {n,x} in LazyVim; a bare {lhs,false} only disables "n",
+        -- so name the modes to also drop the visual-mode variants.
+        { "<leader>ca", false, mode = { "n", "x" } },
+        { "<leader>cc", false, mode = { "n", "x" } },
+        { "<leader>cA", false }, { "<leader>cC", false }, { "<leader>cr", false },
+        { "<leader>cR", false }, { "<leader>cl", false }, { "<leader>co", false },
+      })
+
       -- html also handles .jsp (matches lvim.lsp.manager("html", { filetypes = ... })).
       opts.servers.html = vim.tbl_deep_extend("force", opts.servers.html or {}, {
         filetypes = { "html", "jsp" },

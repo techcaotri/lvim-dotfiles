@@ -7,6 +7,25 @@
 -- and again on VeryLazy -- AFTER LazyVim's own keymaps -- so the user's bindings win
 -- over any overlapping LazyVim defaults.
 
+-- Reclaim <leader>c as "close buffer" (LunarVim behavior). The LazyVim +code
+-- group is removed: every <leader>c<x> sub-mapping is deleted so the group is
+-- gone and <leader>c is an instant close. All +code functions are mirrored under
+-- <leader>l (+LSP), so nothing is lost. Global/lazy-stub maps are cleared from
+-- apply() (which re-runs on VeryLazy, after LazyVim); buffer-local LSP maps (set
+-- by LazyVim on LspAttach) are cleared on LspAttach, deferred so we run after it.
+local function vacate_leader_c(bufnr)
+  local del_opts = bufnr and { buffer = bufnr } or nil
+  for _, mode in ipairs({ "n", "x", "v", "s", "o", "i" }) do
+    local maps = bufnr and vim.api.nvim_buf_get_keymap(bufnr, mode) or vim.api.nvim_get_keymap(mode)
+    for _, mp in ipairs(maps) do
+      local lhs = mp.lhs or "" -- leader is <Space>; a sub-item is " c" + >=1 more key
+      if lhs:sub(1, 2) == " c" and #lhs > 2 then
+        pcall(vim.keymap.del, mode, lhs, del_opts)
+      end
+    end
+  end
+end
+
 local function apply()
   local map = vim.keymap.set
   local function m(mode, lhs, rhs, desc, opts)
@@ -238,6 +257,28 @@ local function apply()
   end, "Toggle inlay hints")
   m("n", "<leader>lW", "<cmd>ClangdSwitchSourceHeader<CR>", "Switch header/source")
   m("n", "<leader>lor", vim.lsp.buf.rename, "Original LSP rename")
+  -- The LazyVim <leader>c (+code) group is removed (see vacate_leader_c below;
+  -- <leader>c now closes the buffer). Every function that lived under +code is
+  -- reachable here under +LSP. Already present before this block: cf->lf, cd->lD,
+  -- ca->la, cc(codelens)->ll, cl->li, cm(Mason)->lI, cr->lR, cs->ld/lS, cS->lr.
+  -- The rest are mirrored below (same sub-key as +code where the +l letter was
+  -- free); the user's own +code utilities (cc copy-lua, cm slime) move here too.
+  m({ "n", "x" }, "<leader>lF", function()
+    require("conform").format({ formatters = { "injected" }, timeout_ms = 3000 })
+  end, "Format Injected Langs")                          -- mirrors <leader>cF
+  m({ "n", "x" }, "<leader>lA", function()
+    vim.lsp.buf.code_action({ context = { only = { "source" }, diagnostics = {} } })
+  end, "Source Action")                                  -- mirrors <leader>cA
+  m("n", "<leader>lC", function() vim.lsp.codelens.refresh({ bufnr = 0 }) end,
+    "Refresh & Display CodeLens")                        -- mirrors <leader>cC
+  m("n", "<leader>lO", function()
+    vim.lsp.buf.code_action({ context = { only = { "source.organizeImports" }, diagnostics = {} }, apply = true })
+  end, "Organize Imports")                               -- mirrors <leader>co
+  m("n", "<leader>ln", function()
+    local ok = pcall(function() require("snacks").rename.rename_file() end)
+    if not ok then vim.lsp.buf.rename() end
+  end, "Rename File")                                    -- mirrors <leader>cR
+  m("n", "<leader>lc", ":<C-u>lua C()<Left><Left>", "Copy lua result", { silent = false }) -- moved from <leader>cc
   local saga = {
     O = { "outgoing_calls", "Outgoing calls" }, i = { "incoming_calls", "Incoming calls" },
     a = { "code_action", "Code action" }, d = { "peek_definition", "Peek definition" },
@@ -310,7 +351,13 @@ local function apply()
   m("n", "<leader>|", "<cmd>vsplit<CR>", "Split window vertically")
   m("n", "<leader>D", "<cmd>DogeGenerate doxygen_javadoc<CR>", "Doge: generate docs")
   m("n", "<leader><F5>", [[<cmd>let _s=@/<Bar>%s/\s\+$//e<Bar>let @/=_s<CR>]], "Delete trailing spaces")
-  m("n", "<leader>cc", ":<C-u>lua C()<Left><Left>", "Copy lua result", { silent = false })
+  -- <leader>c closes the buffer (LunarVim). Drop the LazyVim +code sub-mappings
+  -- first (their functions live under +LSP now) so <leader>c is a clean close.
+  vacate_leader_c()
+  m("n", "<leader>c", function()
+    local ok = pcall(function() require("snacks").bufdelete() end)
+    if not ok then vim.cmd("bdelete") end
+  end, "Close buffer")
   m("n", "<leader>Wt", "<cmd>ToggleWrapMode<CR>", "Toggle wrap")
   m("n", "<leader>Ws", "<cmd>SoftWrapMode<CR>", "Soft wrap")
   m("n", "<leader>Wh", "<cmd>HardWrapMode<CR>", "Hard wrap")
@@ -336,6 +383,7 @@ local function groups()
   pcall(function()
     require("which-key").add({
       { "<leader>b", group = "Buffers" },
+      { "<leader>c", desc = "Close buffer" }, -- replaces LazyVim's +code group (moved to +LSP)
       { "<leader>d", group = "Debug" },
       { "<leader>dB", group = "Breakpoints" },
       { "<leader>g", group = "Git" },
@@ -361,6 +409,20 @@ local function groups()
     })
   end)
 end
+
+-- Remove LazyVim's buffer-local <leader>c<x> LSP maps (Code Action, Source
+-- Action, Lsp Info, Rename, Codelens, ...) as each server attaches. Deferred via
+-- vim.schedule so we run after LazyVim's own LspAttach handler has set them.
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("lvim_vacate_leader_c", { clear = true }),
+  callback = function(args)
+    vim.schedule(function()
+      if vim.api.nvim_buf_is_valid(args.buf) then
+        vacate_leader_c(args.buf)
+      end
+    end)
+  end,
+})
 
 -- Apply now (deterministic) and again on VeryLazy (so we win over LazyVim defaults).
 apply()
