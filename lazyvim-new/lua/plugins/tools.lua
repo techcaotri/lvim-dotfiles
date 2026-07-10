@@ -81,6 +81,28 @@ return {
         return size
       end
 
+      -- Working directory for a newly-opened terminal. If the current file is
+      -- inside a detected project, use that project root (this is the same
+      -- detection project.nvim uses to auto-cd -- .git/CMakeLists.txt/
+      -- requirements.txt/... -- so the existing project behavior is preserved).
+      -- Otherwise fall back to the OPENING FILE'S OWN DIRECTORY instead of the
+      -- cwd (which is why a non-project file used to open the terminal in $HOME).
+      -- Non-file buffers (dashboard, another terminal, ...) fall back to cwd.
+      local function term_dir()
+        local fname = vim.api.nvim_buf_get_name(0)
+        if fname == "" or vim.bo.buftype ~= "" then
+          return vim.loop.cwd()
+        end
+        local ok, project = pcall(require, "project_nvim.project")
+        if ok then
+          local got, root = pcall(project.get_project_root)
+          if got and type(root) == "string" and root ~= "" then
+            return root
+          end
+        end
+        return vim.fn.fnamemodify(fname, ":p:h")
+      end
+
       local Terminal = require("toggleterm.terminal").Terminal
       local execs = {
         { key = "<M-h>", direction = "horizontal", size = 0.3, count = 101, desc = "Horizontal Terminal" },
@@ -90,8 +112,14 @@ return {
       for _, e in ipairs(execs) do
         local term
         local function toggle()
+          local dir = term_dir()
           if not term then
-            term = Terminal:new({ direction = e.direction, count = e.count, hidden = false })
+            term = Terminal:new({ direction = e.direction, count = e.count, hidden = false, dir = dir })
+          elseif not term:is_open() then
+            -- Re-opening a closed terminal from a different project/file: point it
+            -- at the current context. change_dir() no-ops if unchanged; guarded on
+            -- is_open() so a running command is never disturbed.
+            term:change_dir(dir)
           end
           term:toggle(e.size and dyn_size(e.direction, e.size) or nil, e.direction)
         end
