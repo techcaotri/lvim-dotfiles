@@ -118,3 +118,31 @@ function _G.C(...)
   print("Copied: " .. (string.len(output) > 50 and string.sub(output, 1, 50) .. "..." or output))
   return args[1]
 end
+
+-- Keep v:oldfiles fresh WITHIN the running session so the startup dashboard's
+-- "Recent Files" section AND the `r` oldfiles picker include files opened this
+-- session. Neovim only loads v:oldfiles from shada at startup and never refreshes
+-- it live (verified: opening buffers, and even :wshada + :rshada, do not update
+-- it). With a long-lived lvim-new server -- files opened via `tol-new --remote`
+-- into the same instance -- newly-opened files would otherwise never appear in
+-- recent files until a full restart. v:oldfiles is a mutable list, so we prepend
+-- each real file as it is opened/entered (most-recent first, de-duplicated). This
+-- only affects the in-session display; shada persistence on exit uses Neovim's
+-- own internal list and is unaffected.
+vim.api.nvim_create_autocmd({ "BufReadPost", "BufWinEnter" }, {
+  group = vim.api.nvim_create_augroup("lvim_recent_oldfiles", { clear = true }),
+  callback = function(args)
+    local buf = args.buf
+    if vim.bo[buf].buftype ~= "" then return end -- normal file buffers only
+    local f = vim.api.nvim_buf_get_name(buf)
+    if f == "" then return end
+    f = vim.fn.fnamemodify(f, ":p")
+    if vim.fn.filereadable(f) == 0 then return end
+    local old = vim.v.oldfiles or {}
+    for i = #old, 1, -1 do -- drop any existing entry so the file moves to the top
+      if old[i] == f then table.remove(old, i) end
+    end
+    table.insert(old, 1, f)
+    vim.v.oldfiles = old
+  end,
+})
