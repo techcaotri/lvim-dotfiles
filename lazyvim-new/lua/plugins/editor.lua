@@ -130,6 +130,16 @@ return {
   {
     "Pocco81/auto-save.nvim",
     event = { "InsertLeave", "TextChanged" },
+    -- NOTE: auto-save must not reformat the buffer. It writes on every debounced
+    -- TextChanged, and with LazyVim's format-on-save enabled a formatter (e.g.
+    -- JSON via jsonls/conform) would rewrite the whole buffer each time, adding
+    -- an extra undo state so `u`/<C-r> appear broken. We keep format-on-save
+    -- disabled globally (see config/options.lua: vim.g.autoformat = false, which
+    -- also matches old LunarVim's format_on_save=false default), so auto-save
+    -- only persists your raw edits and the undo history stays clean. This
+    -- plugin's `callbacks` cannot be used to work around it: utils/data.lua
+    -- caches the default opts table before setup replaces it, so user callbacks
+    -- never fire.
     opts = {
       trigger_events = { "InsertLeave", "TextChanged" },
       debounce_delay = 1000,

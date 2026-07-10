@@ -37,6 +37,16 @@ opt.sessionoptions:remove("folds")
 -- Prevent auto-continuation of // comments on newline after an inline comment.
 opt.formatoptions:append("/")
 
+-- Disable format-on-save. LazyVim enables it by default; old LunarVim shipped
+-- with format_on_save=false, so this restores that parity. It also fixes undo:
+-- auto-save.nvim writes on every debounced TextChanged, and format-on-save would
+-- reformat the whole buffer on each write (e.g. JSON via jsonls/conform) --
+-- injecting an extra undo state so `u`/<C-r> undo the invisible reformat instead
+-- of your edit. Format on demand instead: <leader>cf (LazyVim) or the <leader>lf
+-- formatter keymap. Set to true (or `vim.b.autoformat = true` per buffer) to opt
+-- back in.
+vim.g.autoformat = false
+
 -- Header author fields (alpertuna/vim-header)
 vim.g.header_field_author = "Tri Pham"
 vim.g.header_field_author_email = "techcaotri@gmail.com"
