@@ -93,14 +93,23 @@ return {
         if fname == "" or vim.bo.buftype ~= "" then
           return vim.loop.cwd()
         end
+        local fdir = vim.fn.fnamemodify(fname, ":p:h")
         local ok, project = pcall(require, "project_nvim.project")
         if ok then
           local got, root = pcall(project.get_project_root)
           if got and type(root) == "string" and root ~= "" then
-            return root
+            -- Reject $HOME as a "project root": many setups have markers like
+            -- package.json/.vscode directly in $HOME, so get_project_root() would
+            -- return $HOME for any file under it (that is exactly why the terminal
+            -- kept opening in $HOME). Only use a genuine project subdirectory;
+            -- otherwise fall through to the opening file's own directory.
+            local home = vim.loop.os_homedir()
+            if not (home and vim.fs.normalize(root) == vim.fs.normalize(home)) then
+              return root
+            end
           end
         end
-        return vim.fn.fnamemodify(fname, ":p:h")
+        return fdir
       end
 
       local Terminal = require("toggleterm.terminal").Terminal
