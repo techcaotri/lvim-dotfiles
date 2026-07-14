@@ -113,22 +113,159 @@ LVIM_NEW_NVIM="$(command -v nvim)" LVIM_NEW_VIMRUNTIME= ./setup_lvim.sh new
 LVIM_NEW_NVIM=/path/to/nvim LVIM_NEW_VIMRUNTIME=/path/to/runtime ./setup_lvim.sh new
 ```
 
-### 4. First run
+### 4. First run — plugins, Mason tools, native bits
 
-The first launch git-clones LazyVim + ~100 plugins and installs LSP servers,
-treesitter parsers and formatters. Give it a few minutes; some plugins build native
-bits (`avante` → `make`, `vscode-js-debug` → `npm`, `markdown-preview` → `npm`).
-Pre-install everything up front:
+The first launch git-clones LazyVim + ~130 plugins, ~36 treesitter parsers and the
+Mason tools. Give it a few minutes; some plugins build native bits (`avante` →
+`make`, `vscode-js-debug` → `npm`, `markdown-preview` → `npm`). Pre-install the
+plugins up front:
 
 ```bash
-lvim-new --headless '+Lazy! sync' +qa
+lvim-new --headless '+Lazy! sync' +qa      # ~130 plugins, a few minutes
+```
+
+#### 4a. Mason LSP servers — headless is NOT enough
+
+`:Lazy sync` installs only the Mason packages listed in `mason.nvim`'s
+`ensure_installed` (see `lua/plugins/lsp.lua`) — the formatters/linters/DAP bits
+(`stylua`, `shfmt`, `prettierd`, `clang-format`, `cpptools`, …).
+
+The **LSP servers** (`clangd`, `lua_ls`, `basedpyright`, `gopls`, `jdtls`, …) are
+installed by **`mason-lspconfig`**, which only loads once a real buffer opens. A
+headless run therefore leaves you with formatters but **no LSP servers at all**, and
+opening a file headlessly does not reliably trigger it either.
+
+Easiest fix — open `lvim-new` **interactively** once, open any source file, and let
+`:Mason` finish. To do it deterministically instead, have Neovim print the exact
+package list its own config wants, then install it:
+
+```bash
+# 1. what does this config want from Mason?
+lvim-new --headless -c 'lua
+  local map = require("mason-lspconfig.mappings").get_mason_map().lspconfig_to_package
+  local servers = require("lazyvim.util").opts("nvim-lspconfig").servers or {}
+  local pkgs = {}
+  for name, o in pairs(servers) do
+    if (type(o) ~= "table" or o.mason ~= false) and map[name] then pkgs[#pkgs+1] = map[name] end
+  end
+  table.sort(pkgs) print("WANT: " .. table.concat(pkgs, " "))' -c 'qa' 2>&1 | grep WANT
+
+# 2. install them (async -- keep Neovim alive while Mason works)
+lvim-new --headless -c 'MasonInstall clangd lua-language-server basedpyright pyright ruff \
+  gopls rust-analyzer json-lsp yaml-language-server jdtls css-lsp html-lsp marksman \
+  bash-language-server jinja-lsp neocmakelsp bacon-ls copilot-language-server' \
+  -c 'sleep 540' -c 'qa'
+
+# 3. verify
+ls ~/.local/share/lvim-lazyvim/mason/packages     # ~38 packages
+```
+
+A healthy setup ends up with ~38 Mason packages. Check that a server really attaches:
+
+```bash
+lvim-new --headless some_file.cpp -c 'lua vim.defer_fn(function()
+  local n = {} for _, c in ipairs(vim.lsp.get_clients({bufnr=0})) do n[#n+1] = c.name end
+  print("LSP: " .. table.concat(n, ",")) vim.cmd("qa") end, 12000)' 2>&1 | grep LSP
+# -> LSP: clangd
+```
+
+> Mason's async installs are killed if Neovim exits too early (you may see a
+> `java-test` warning). That is why the commands above hold the session open with
+> `sleep` instead of quitting immediately.
+
+#### 4b. blink.cmp's native fuzzy library
+
+blink.cmp downloads a prebuilt `libblink_cmp_fuzzy.so` on first start. It writes
+`target/release/version` = `v0.0.0` **before** downloading and rewrites it with the
+real tag **after** — so if Neovim is killed mid-download (easy to do with `--headless`
++ `qa`), you are left with a stale `.so.tmp`, `version` stuck at `v0.0.0`, and blink
+re-downloading on **every** start while silently falling back to the slow Lua matcher.
+
+Let one interactive start finish the download. To repair a half-finished one:
+
+```bash
+D=~/.local/share/lvim-lazyvim/lazy/blink.cmp/target/release
+sha256sum "$D"/libblink_cmp_fuzzy.so.tmp                  # compare with the .sha256 file
+mv "$D"/libblink_cmp_fuzzy.so.tmp "$D"/libblink_cmp_fuzzy.so
+git -C ~/.local/share/lvim-lazyvim/lazy/blink.cmp describe --tags --exact-match  # e.g. v1.10.2
+printf 'v1.10.2' > "$D"/version                           # stops the re-download loop
+
+# verify: prints RUST(native), not LUA(fallback)
+lvim-new --headless -c 'lua vim.defer_fn(function()
+  print("BLINK: " .. (pcall(require, "blink.cmp.fuzzy.rust") and "RUST(native)" or "LUA(fallback)"))
+  vim.cmd("qa") end, 5000)' 2>&1 | grep BLINK
+```
+
+Finally:
+
+```bash
 lvim-new '+checkhealth'
 ```
 
-> Mason installs can be interrupted if Neovim exits too early (you may see a
-> `java-test` warning). Re-run `lvim-new` interactively and let `:Mason` finish.
+### 5. Copilot needs Node >= 22
 
-### 5. tmux integration — `tol-new`
+`copilot.lua` refuses to start on Node < 22 (`Node.js version 22 or newer required
+but found 20.x`) — and the `node` on `PATH` is often an older nvm default.
+
+`lua/plugins/ai.lua` therefore resolves `copilot_node_command` itself: it globs for
+nvm-installed Nodes, keeps only `v22+`, and picks the newest. It scans **both** nvm
+layouts, because the two coexist on some machines and only one may hold the new Node:
+
+- `~/.nvm/versions/node/v*/bin/node` (stock nvm)
+- `~/.local/share/nvm/v*/bin/node` (XDG-style layout)
+- plus `$NVM_DIR` if set
+
+So you only need Node >= 22 **installed** somewhere nvm-ish; it does **not** have to be
+the `node` on `PATH`. Install one with `nvm install 22`, then verify what Copilot picked:
+
+```bash
+lvim-new --headless -c 'lua vim.defer_fn(function()
+  local o = require("lazy.core.plugin").values(
+    require("lazy.core.config").plugins["copilot.lua"], "opts", false) or {}
+  print("COPILOT_NODE: " .. (o.copilot_node_command or "(unset -> PATH node)"))
+  vim.cmd("qa") end, 6000)' 2>&1 | grep COPILOT_NODE
+# -> COPILOT_NODE: /home/you/.local/share/nvm/v22.17.1/bin/node
+```
+
+If it prints `(unset -> PATH node)`, no Node >= 22 was found in any of the scanned
+roots — install one, or add your root to the `patterns` list in `lua/plugins/ai.lua`.
+
+### 6. Bring over your LunarVim sessions
+
+Both editors use **possession.nvim** with the same JSON format, and the startup
+dashboard lists saved sessions — but the two configs have **separate** session dirs
+(they follow `stdpath("data")`, which `NVIM_APPNAME` isolates):
+
+| Editor | Sessions live in |
+|---|---|
+| LunarVim | `~/.local/share/lvim/possession/` |
+| `lvim-new` | `~/.local/share/lvim-lazyvim/possession/` |
+
+A plain copy is all it takes — no conversion:
+
+```bash
+mkdir -p ~/.local/share/lvim-lazyvim/possession
+cp ~/.local/share/lvim/possession/*.json ~/.local/share/lvim-lazyvim/possession/
+```
+
+The `"name"` inside each file must match its filename (it already does), so the
+sessions show up on the `lvim-new` dashboard and load with `:PossessionLoad <name>`.
+Verify what the dashboard will list:
+
+```bash
+lvim-new --headless -c 'lua vim.defer_fn(function()
+  local n = {} for _, s in ipairs(require("possession.query").as_list()) do n[#n+1] = s.name end
+  table.sort(n) print("SESSIONS(" .. #n .. "): " .. table.concat(n, ", ")) vim.cmd("qa") end, 6000)' \
+  2>&1 | grep SESSIONS
+```
+
+Copying is **one-way and non-destructive**: LunarVim keeps its own copies, and from
+here the two diverge — saving a session in `lvim-new` does not update LunarVim's.
+
+> The auto-saved scratch session (`tmp`) is rewritten every time `lvim-new` exits, so
+> don't be surprised when your copied `tmp.json` is overwritten by your next session.
+
+### 7. tmux integration — `tol-new`
 
 `~/.dotfiles/bin/tol-new` is the `lvim-new` twin of `tol`: it finds a **running
 `lvim-new` server inside tmux** and opens the file there; otherwise it starts
@@ -149,7 +286,7 @@ tol-new path/to/file.cpp      # open in the running lvim-new (must be inside tmu
 > `tol`/`tol-new` use `tmux list-panes` / `send-keys`, so they only do anything
 > meaningful **inside a tmux session**.
 
-### 6. Desktop entry — `lvim-new.desktop`
+### 8. Desktop entry — `lvim-new.desktop`
 
 `~/.dotfiles/apps/lvim-new.desktop` is a copy of `lvim.desktop` with
 `Name=LunarVim New` and `Exec=tol-new %F`. Link it into the user applications dir and
@@ -173,7 +310,7 @@ grep -c 'lvim-new.desktop' ~/.local/share/applications/mimeinfo.cache
 > pre-existing `.desktop` files that lack a `MimeType` key. That is unrelated — as long
 > as `desktop-file-validate` passes for `lvim-new.desktop`, it is registered.
 
-### 7. `mimeopen_bg` — make `lvim-new` the **second** option
+### 9. `mimeopen_bg` — make `lvim-new` the **second** option
 
 `~/.dotfiles/bin/mimeopen_bg` is a patched `mimeopen` (Perl) that opens the chosen app
 in the background. With `-a` it prints an "open with" menu:
@@ -225,7 +362,7 @@ grep -oP '^MimeType=\K.*' ~/.dotfiles/apps/lvim-new.desktop | tr ';' '\n' | grep
 # revert a type:  xdg-mime default lvim.desktop <mimetype>
 ```
 
-### 8. End-to-end check
+### 10. End-to-end check
 
 ```bash
 ./setup_lvim.sh status                      # launcher + symlinks + nvim version
@@ -234,6 +371,10 @@ nvim --version    | head -1                 # system still 0.11.x
 command -v tol-new mimeopen_bg              # both under ~/bin
 desktop-file-validate ~/.local/share/applications/lvim-new.desktop
 printf 'x\n' | mimeopen_bg -a some_file.cpp # 'LunarVim New' is option 2
+
+ls ~/.local/share/lvim-lazyvim/lazy     | wc -l   # ~130 plugins
+ls ~/.local/share/lvim-lazyvim/mason/packages | wc -l   # ~38 Mason packages (step 4a)
+ls ~/.local/share/lvim-lazyvim/possession         # your migrated sessions (step 6)
 ```
 
 Then, from a file manager, "Open With → **LunarVim New**" routes:
@@ -294,6 +435,11 @@ Extras (python, clangd, go, rust, typescript, json, yaml, markdown, cmake, java)
 | `module 'vim.uri' not found`, missing `syntax.vim` | `VIMRUNTIME` not set for the un-installed build. Re-run `./setup_lvim.sh new`. |
 | `lvim-new: command not found` | `~/.local/bin` not on `PATH`, or `setup_lvim.sh new` not run. |
 | `tol-new` does nothing | Not inside tmux, or no running `lvim-new`. Check `/tmp/tol-new.log`. |
-| "LunarVim New" missing from Open-With | Re-run the `ln -sf` + `update-desktop-database` in step 6. |
+| "LunarVim New" missing from Open-With | Re-run the `ln -sf` + `update-desktop-database` in step 8. |
 | `lvim-new` not option 2 in `mimeopen_bg` | The file's MIME type is not in `lvim-new.desktop`'s `MimeType=`. Add it, then re-run `update-desktop-database`. |
 | Undo/redo seem broken | Something re-enabled format-on-save; keep `vim.g.autoformat = false`. |
+| No LSP at all (no `clangd`/`lua_ls` in `:Mason`) | `:Lazy sync` alone never installs LSP servers — only `mason-lspconfig` does, and only once a buffer opens. See step 4a. |
+| `Node.js version 22 or newer required but found 20.x` | No Node >= 22 in the roots `lua/plugins/ai.lua` scans. Install one (`nvm install 22`) or add your nvm root there. See step 5. |
+| Completion feels slow; "Downloading pre-built binary" on every start | blink.cmp's download was interrupted; `version` is stuck at `v0.0.0` and it silently uses the Lua matcher. See step 4b. |
+| Dashboard shows no sessions | Sessions are per-`NVIM_APPNAME`. Copy them from `~/.local/share/lvim/possession/`. See step 6. |
+| `update-desktop-database` seems to do nothing | Don't pipe it into `head` — the SIGPIPE kills it before it writes `mimeinfo.cache`. Run it bare. |

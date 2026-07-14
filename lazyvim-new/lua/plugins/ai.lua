@@ -7,15 +7,30 @@ return {
     opts = function(_, opts)
       opts.suggestion = { enabled = true, auto_trigger = true }
       opts.panel = { enabled = true }
-      -- Copilot needs Node >= 22, but the default `node` on this machine is v20
-      -- (which makes Copilot throw a version error on every buffer). Point it at
-      -- the newest nvm-installed Node >= 22 if one exists.
-      local nodes = vim.fn.glob(vim.fn.expand("~") .. "/.nvm/versions/node/v*/bin/node", true, true)
-      local best
-      for _, n in ipairs(nodes) do
-        local major = tonumber(n:match("/v(%d+)%."))
-        if major and major >= 22 then
-          best = n
+      -- Copilot needs Node >= 22, but the `node` on PATH may be older (v20), which
+      -- makes Copilot throw a version error on every buffer. Point it at the newest
+      -- Node >= 22 we can find. nvm installs under either root depending on how it
+      -- was bootstrapped, so both are scanned.
+      local home = vim.fn.expand("~")
+      local patterns = {
+        home .. "/.nvm/versions/node/v*/bin/node", -- stock nvm ($NVM_DIR=~/.nvm)
+        home .. "/.local/share/nvm/v*/bin/node", -- XDG-style nvm layout
+      }
+      if vim.env.NVM_DIR then
+        table.insert(patterns, vim.env.NVM_DIR .. "/versions/node/v*/bin/node")
+        table.insert(patterns, vim.env.NVM_DIR .. "/v*/bin/node")
+      end
+      local best, best_rank
+      for _, pattern in ipairs(patterns) do
+        for _, node in ipairs(vim.fn.glob(pattern, true, true)) do
+          local major, minor, patch = node:match("/v(%d+)%.(%d+)%.(%d+)/")
+          if major and tonumber(major) >= 22 then
+            -- Rank numerically: a plain string/glob order would put v9 above v22.
+            local rank = tonumber(major) * 1e6 + tonumber(minor) * 1e3 + tonumber(patch)
+            if not best_rank or rank > best_rank then
+              best, best_rank = node, rank
+            end
+          end
         end
       end
       if best then
