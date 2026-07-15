@@ -31,6 +31,11 @@ return {
         ["<C-k>"] = { "select_prev", "fallback" },
         ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
         ["<C-e>"] = { "hide", "fallback" },
+        -- Keep Tab OFF the Copilot-accept path (Copilot is accepted with <M-l>).
+        -- Defining <Tab> here also stops LazyVim's blink config from splicing
+        -- ai_accept into it; Tab still jumps snippets, else falls through.
+        ["<Tab>"] = { "snippet_forward", "fallback" },
+        ["<S-Tab>"] = { "snippet_backward", "fallback" },
       },
     },
   },

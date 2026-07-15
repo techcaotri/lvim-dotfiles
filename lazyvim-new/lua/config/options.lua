@@ -37,6 +37,14 @@ opt.sessionoptions:remove("folds")
 -- Prevent auto-continuation of // comments on newline after an inline comment.
 opt.formatoptions:append("/")
 
+-- AI completion style: show Copilot as inline grey ghost text, NOT as items in the
+-- blink.cmp popup. LazyVim's default (vim.g.ai_cmp = true) routes Copilot through the
+-- completion menu; false switches copilot.lua to its native inline suggestion and
+-- drops the Copilot blink source. Accept keymap is set to <M-l> in plugins/ai.lua and
+-- Tab is kept off the accept path in plugins/coding.lua. Must be set before lazy
+-- evaluates the copilot extra, so it lives here in options.lua.
+vim.g.ai_cmp = false
+
 -- Disable format-on-save. LazyVim enables it by default; old LunarVim shipped
 -- with format_on_save=false, so this restores that parity. It also fixes undo:
 -- auto-save.nvim writes on every debounced TextChanged, and format-on-save would

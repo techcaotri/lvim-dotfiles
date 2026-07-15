@@ -5,8 +5,24 @@ return {
   {
     "zbirenbaum/copilot.lua",
     opts = function(_, opts)
-      opts.suggestion = { enabled = true, auto_trigger = true }
-      opts.panel = { enabled = true }
+      -- Inline grey ghost-text suggestions (not the completion popup -- see
+      -- vim.g.ai_cmp = false in config/options.lua). Accept with <M-l> (Alt+l);
+      -- LazyVim's extra disables copilot's accept key for its cmp integration, so
+      -- we set it back here. Cycle with <M-]>/<M-[>, dismiss with <C-]>.
+      opts.suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        hide_during_completion = true,
+        keymap = {
+          accept = "<M-l>",
+          accept_word = false,
+          accept_line = false,
+          next = "<M-]>",
+          prev = "<M-[>",
+          dismiss = "<C-]>",
+        },
+      }
+      opts.panel = { enabled = false }
       -- Copilot needs Node >= 22, but the `node` on PATH may be older (v20), which
       -- makes Copilot throw a version error on every buffer. Point it at the newest
       -- Node >= 22 we can find. nvm installs under either root depending on how it
