@@ -5,6 +5,9 @@ return {
     "folke/flash.nvim",
     opts = { modes = { search = { enabled = false } } },
     keys = {
+      -- Restore native `s` (substitute char) -- disable LazyVim's default `s`
+      -- flash-jump. Flash jump stays available on <leader>F below.
+      { "s", mode = { "n", "x", "o" }, false },
       { "<leader>F", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
       { "r", mode = "o", function() require("flash").remote() end, desc = "Flash remote" },
       { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Flash TS search" },
