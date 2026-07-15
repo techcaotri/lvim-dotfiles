@@ -351,6 +351,24 @@ local function apply()
   m("n", "<leader>|", "<cmd>vsplit<CR>", "Split window vertically")
   m("n", "<leader>D", "<cmd>DogeGenerate doxygen_javadoc<CR>", "Doge: generate docs")
   m("n", "<leader><F5>", [[<cmd>let _s=@/<Bar>%s/\s\+$//e<Bar>let @/=_s<CR>]], "Delete trailing spaces")
+  -- Ctrl+C: copy the whole file to the system clipboard (LunarVim's "Copy whole
+  -- file"), and briefly flash the ENTIRE buffer in the Visual highlight group so
+  -- it visibly looks like select-all then deselect (the plain yank highlight is
+  -- too faint/short to read as a selection).
+  m("n", "<C-c>", function()
+    vim.cmd("silent %y+")
+    local buf = vim.api.nvim_get_current_buf()
+    local ns = vim.api.nvim_create_namespace("lvim_copy_all_flash")
+    local last = vim.api.nvim_buf_line_count(buf)
+    local hl = vim.hl or vim.highlight
+    pcall(hl.range, buf, ns, "Visual", { 0, 0 }, { last - 1, 0 }, { regtype = "V", inclusive = true })
+    vim.defer_fn(function()
+      pcall(vim.api.nvim_buf_clear_namespace, buf, ns, 0, -1)
+    end, 250)
+    -- Bottom message like old LunarVim's native yank ('N lines yanked into "+').
+    -- We yanked silently to control the flash, so echo it ourselves.
+    vim.api.nvim_echo({ { ('%d lines yanked into "+'):format(last) } }, false, {})
+  end, "Copy whole file (+register, flash selection)")
   -- <leader>c closes the buffer (LunarVim). Drop the LazyVim +code sub-mappings
   -- first (their functions live under +LSP now) so <leader>c is a clean close.
   vacate_leader_c()
