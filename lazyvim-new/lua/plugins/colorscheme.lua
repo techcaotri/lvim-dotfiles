@@ -10,6 +10,15 @@ return {
     priority = 1000,
     opts = {
       flavour = "mocha",
+      -- Dashboard banner ("TP's LVim") in mocha's signature accent color.
+      -- mauve = #cba6f7 -- the dark-pink/mauve "master" accent of catppuccin
+      -- mocha. Alternatives if a different shade is wanted:
+      -- pink = #f5c2e7, maroon = #eba0ac.
+      custom_highlights = function(colors)
+        return {
+          SnacksDashboardHeader = { fg = colors.mauve },
+        }
+      end,
       integrations = {
         cmp = true,
         gitsigns = true,
