@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # setup_lvim.sh -- switch between the OLD LunarVim config and the NEW LazyVim
-# migration config (see docs/LunarVim_Plugins_Structure_Analysis_And_Brainstorming.md,
+# migration config (see docs/LunarVim_Plugins_Structure_Analysis_Brainstorming_Implementation.md,
 # Part II). The two configs run fully isolated via NVIM_APPNAME, so this script is
 # non-destructive and instantly reversible.
 #

@@ -4,7 +4,7 @@ This is the **new** Neovim configuration migrated from the LunarVim setup, built
 [LazyVim](https://www.lazyvim.org). It runs **in parallel** with the existing
 LunarVim install via `NVIM_APPNAME`, so nothing about `~/.config/lvim` (the `lvim`
 command) is touched. See
-`docs/LunarVim_Plugins_Structure_Analysis_And_Brainstorming.md` (Part II) for the
+`docs/LunarVim_Plugins_Structure_Analysis_Brainstorming_Implementation.md` (Part II) for the
 full design and rationale.
 
 - New editor: **`lvim-new`** (= `NVIM_APPNAME=lvim-lazyvim nvim`), runs on a locally

@@ -43,5 +43,5 @@ format-on-save is off), plus troubleshooting.
 
 ## Design / migration notes
 
-`docs/LunarVim_Plugins_Structure_Analysis_And_Brainstorming.md` (Part II) — the full
+`docs/LunarVim_Plugins_Structure_Analysis_Brainstorming_Implementation.md` (Part II) — the full
 analysis of the LunarVim setup and the rationale behind the LazyVim migration.
