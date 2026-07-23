@@ -97,10 +97,14 @@ From the repo root (`~/.dotfiles/lvim`):
 2. writes the launcher `~/.local/bin/lvim-new`, which is essentially:
 
    ```bash
-   exec env NVIM_APPNAME="lvim-lazyvim" \
-            VIMRUNTIME="$HOME/Dev/Playground_Terminal/neovim/runtime" \
-            "$HOME/Dev/Playground_Terminal/neovim/build/bin/nvim" "$@"
+   export NVIM_APPNAME="lvim-lazyvim"
+   export VIMRUNTIME="$HOME/Dev/Playground_Terminal/neovim/runtime"
+   exec -a lvim-new "$HOME/Dev/Playground_Terminal/neovim/build/bin/nvim" "$@"
    ```
+
+   `exec -a lvim-new` runs Neovim **under the `lvim-new` name**, so tmux
+   `pane_current_command` and `ps` show `lvim-new` instead of `nvim` (same trick
+   LunarVim uses for `lvim`) — that is what `tol-new` matches on.
 
 **Using a different Neovim** — override with env vars (the script falls back to `nvim`
 on `PATH` if the build is missing):
@@ -272,8 +276,8 @@ here the two diverge — saving a session in `lvim-new` does not update LunarVim
 `lvim-new` in the current pane. It differs from `tol` in exactly three ways:
 
 - looks for sockets `${XDG_RUNTIME_DIR}/lvim-lazyvim.*.0` (LunarVim uses `lvim.*.0`)
-- matches tmux panes whose command contains `nvim` (the `lvim-new` launcher execs
-  `nvim`, not `lvim`)
+- matches tmux panes whose command contains `lvim-new` (the `lvim-new` launcher
+  runs `exec -a lvim-new nvim …`, so its process title is `lvim-new`, not `nvim`)
 - drives `lvim-new --server … --remote …` and logs to `/tmp/tol-new.log`
 
 It is executable and already on `PATH` (via `~/bin` → `~/.dotfiles/bin`):
