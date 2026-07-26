@@ -26,6 +26,35 @@ local function vacate_leader_c(bufnr)
   end
 end
 
+-- Circular window navigation (LunarVim behaviour): <C-h>/<C-j>/<C-k>/<C-l> move
+-- between windows AND wrap around at the edges, so e.g. <C-l> from the rightmost
+-- buffer lands on the leftmost window (the file explorer), and <C-h> from the
+-- explorer lands on the rightmost buffer. Plain <C-w>h/l would just no-op at the
+-- edge; here we detect the no-op and jump to the opposite extreme instead.
+local function win_goto_extreme(dir)
+  -- Repeatedly step in `dir` until the focused window stops changing.
+  local win = vim.api.nvim_get_current_win()
+  while true do
+    vim.cmd("wincmd " .. dir)
+    local cur = vim.api.nvim_get_current_win()
+    if cur == win then
+      return
+    end
+    win = cur
+  end
+end
+
+local function win_move(dir, opposite)
+  return function()
+    local win = vim.api.nvim_get_current_win()
+    vim.cmd("wincmd " .. dir)
+    if vim.api.nvim_get_current_win() == win then
+      -- Already at the edge in `dir`; wrap to the opposite extreme.
+      win_goto_extreme(opposite)
+    end
+  end
+end
+
 local function apply()
   local map = vim.keymap.set
   local function m(mode, lhs, rhs, desc, opts)
@@ -58,6 +87,13 @@ local function apply()
   -- LunarVim core default keymaps not provided by LazyVim
   -- (from lunarvim/lua/lvim/keymappings.lua)
   -- =========================================================================
+  -- Window navigation (normal mode) -- circular: wraps around at the edges so
+  -- <C-l> from the rightmost buffer reaches the left file explorer, and <C-h>
+  -- from the explorer reaches the rightmost buffer (LunarVim "circle" behaviour).
+  m("n", "<C-h>", win_move("h", "l"), "Window left (wraps)")
+  m("n", "<C-j>", win_move("j", "k"), "Window down (wraps)")
+  m("n", "<C-k>", win_move("k", "j"), "Window up (wraps)")
+  m("n", "<C-l>", win_move("l", "h"), "Window right (wraps)")
   -- Window navigation from insert mode with Alt+arrows.
   m("i", "<A-Up>", "<C-\\><C-N><C-w>k", "Window up (from insert)", { noremap = true })
   m("i", "<A-Down>", "<C-\\><C-N><C-w>j", "Window down (from insert)", { noremap = true })
