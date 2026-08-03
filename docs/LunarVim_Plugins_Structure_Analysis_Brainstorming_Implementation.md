@@ -1456,6 +1456,8 @@ lazyvim-new/
   lua/plugins/lang.lua         typescript-tools, go, rust, flutter, quarto, cppman, ...
   lua/plugins/ai.lua           avante, copilot, img-clip
   lua/plugins/tools.lua        tmux, yanky, grug-far, translate, lf, toggleterm, possession
+  lua/custom/dir.lua           shared context_dir() + explorer_toggle(): one context-dir
+                               rule for the terminals AND <leader>e (project root / file dir)
   lua/custom/possession.lua    custom session-save prompt
   README.md                    quickstart + known differences
 setup_lvim.sh                  new/old/status switcher (repo root)
@@ -1562,7 +1564,7 @@ LunarVim default            | Reproduced with (LazyVim/native)
 <leader>c Close Buffer      | snacks.bufdelete (fallback :bd)
 <leader>f Find File         | Telescope find_files
 <leader>h No Highlight      | :nohlsearch
-<leader>e Explorer          | :Neotree toggle
+<leader>e Explorer          | nvim-tree toggle, rooted at the file's context dir (custom.dir.explorer_toggle)
 <leader>b* Buffers          | bufferline (Pick/Cycle/Close/Sort) + Telescope buffers
 <leader>d* Debug            | nvim-dap (toggle/continue/repl/session) + dap-ui
 <leader>g* Git              | gitsigns (hunks/blame/stage) + Telescope git_* + lazygit
@@ -1588,10 +1590,11 @@ Switch mechanism        | NVIM_APPNAME=lvim-lazyvim       | Full isolation; Luna
 Keymap loading          | apply() at init + on VeryLazy   | Beat LazyVim's cache-gated loader; user maps win
 Completion              | blink.cmp (LazyVim default)     | Modern default; nvim-cmp available via extras.coding.nvim-cmp
 TypeScript LSP          | typescript-tools.nvim           | The user's actual server (dropped LazyVim vtsls extra)
-File explorer           | nvim-tree (ported)              | Same plugin as LunarVim, settings preserved (LazyVim's snacks explorer replaced)
+File explorer           | nvim-tree (ported)              | Same plugin as LunarVim, settings preserved (LazyVim's snacks explorer replaced); <leader>e roots the tree at the file's context dir via custom/dir.lua, not the launch cwd (II.17)
+Explorer/terminal root  | shared custom/dir.lua           | One rule: <leader>e tree + M-h/M-v/M-i terminals root at the file's context dir (project root, else own dir; $HOME rejected), not nvim's launch cwd
 Dashboard               | snacks.dashboard (LazyVim)      | Functional equivalent of alpha
 Telescope display       | default (custom 2-col dropped)  | Cosmetic only; reduces migration risk
-Single-key leader maps  | w/q/'/' override LazyVim groups  | Matches LunarVim muscle memory (their actions); <leader>c reverted to LazyVim's Code group (II.16.1)
+Single-key leader maps  | w/q/'/' override LazyVim groups  | Matches LunarVim muscle memory (their actions); <leader>c later reclaimed for close-buffer with +code folded into +LSP (II.17, superseding II.16.1)
 lazy-lock.json          | gitignored in lazyvim-new/      | Generated per machine on first :Lazy sync
 ```
 
@@ -1632,7 +1635,7 @@ Keymaps applied (normal mode)           | 369-370 maps; 19/19 parity spot-checks
 User commands                           | :Redir, :RunNode present
 Switcher new / old / status             | all pass; lvim-new launcher verified
 Per-keymap command/module audit         | every keymap's command + function module resolves (see II.14.1)
-Functional smoke test                   | <leader>/ comments; <leader>e opens nvim-tree
+Functional smoke test                   | <leader>/ comments; <leader>e opens nvim-tree (rooted at the file's context dir)
 ```
 
 ### II.14.1 Per-keymap audit + fixes
@@ -1642,7 +1645,7 @@ target command exists and every function-keymap's module loads) surfaced and fix
 
 ```
 Keymap        | Problem                                          | Fix
-<leader>e     | :Neotree missing (LazyVim uses snacks explorer)  | added nvim-tree.lua; map -> :NvimTreeToggle
+<leader>e     | :Neotree missing (LazyVim uses snacks explorer)  | added nvim-tree.lua; map -> require("custom.dir").explorer_toggle() (roots the tree at the file's context dir -- project root, else own dir; $HOME rejected -- not the launch cwd)
 <leader>vc    | :VenvSelectCached only exists if auto-activate=off| call venv-selector cached-retrieve directly
 <leader>M     | :MarkdownPreviewToggle is buffer-local           | bind buffer-locally in markdown filetype
 <leader>lR    | custom.lsp.rename module was not ported          | ported (nui.nvim, 0.11 position_encoding)
@@ -1901,6 +1904,31 @@ lspconfig[srv].setup(cfg) -> vim.lsp.config(srv,cfg) + vim.lsp.enable(srv)
 vim.lsp.with + handlers[...] -> vim.lsp.buf.hover({border=...})
 range_formatting -> vim.lsp.buf.format({range=...})
 ```
+
+## II.17 Later UX refinements (2026-08-03)
+
+A second round of parity/UX fixes made after II.16, each verified interactively and
+headlessly against the built Neovim 0.12.4. Part III documents the durable ones in
+their subsystems; this table is the chronological record. Rows tagged **(supersedes ...)**
+revise an earlier entry.
+
+| # | Request / symptom | Change (files) | Part III |
+|---|---|---|---|
+| 1 | `<leader>e` file tree showed nvim's **launch cwd**, not the opening file's dir (e.g. `cd ~/Downloads; lvim-new ~/Dev/x.sh` -> tree at `~/Downloads`) | New shared `lua/custom/dir.lua` `context_dir()` (project root if in a real project, else the file's own dir; `$HOME` rejected). `<leader>e` -> `explorer_toggle()` opens nvim-tree rooted there (`keymaps.lua:180`, `explorer.lua:49`) | III.7.5c |
+| 2 | Terminals (`<M-h>`/`<M-v>`/`<M-i>`) opened in `$HOME` for non-project files | `term_dir()` now delegates to the **same** `context_dir()`; `$HOME` is not treated as a project root even though it holds `package.json`/`.vscode` (`tools.lua:89-90`) | III.7.5c |
+| 3 | `<leader>c` should **close the buffer** (LunarVim), not open a group **(supersedes II.16.1)** | `<leader>c` = `snacks.bufdelete`; LazyVim's `+code` group removed and every action mirrored under `<leader>l` (+LSP); the 8 LSP `<leader>c*` keys disabled at source via `servers["*"].keys = {lhs,false}` (`keymaps.lua`, `lsp.lua`) | III.7.5a, III.8.8 |
+| 4 | Undo/redo appeared broken on JSON and other formatted filetypes | `vim.g.autoformat = false`: auto-save.nvim + format-on-save was rewriting the whole buffer on every debounced save, stacking an extra undo state (`options.lua`) | III.7.5b |
+| 5 | Dashboard "Recent Files" was scoped to the project, and stale within a long-lived server | `r` action -> `LazyVim.pick("oldfiles", { root = false })`; `autocmds.lua` keeps `v:oldfiles` fresh in-session (`ui.lua`, `autocmds.lua`) | III.7.5d |
+| 6 | Copilot appeared in the blink.cmp **popup**, accepted with **Tab** | `vim.g.ai_cmp = false` -> native grey **ghost text**; accept `<M-l>`; panel off; blink `<Tab> = {snippet_forward, fallback}` keeps Tab off the accept path (`options.lua`, `ai.lua`, `coding.lua`) | III.9, III.12 |
+| 7 | `s` was hijacked by flash; wanted native `s` + flash on `S` | `editor.lua`: disable flash `s` (native substitute restored), `S` = normal flash **jump** (not treesitter); jump also on `<leader>F` | III.7.2 |
+| 8 | `Ctrl+C` = "copy whole file" with a **select-all flash**, like LunarVim | `keymaps.lua`: `:%y+`, then flash the whole buffer in the **Visual** highlight for 250 ms and echo `N lines yanked into "+` | III.7.2 |
+
+Verification for the two directory fixes (rows 1-2): from a launch cwd of
+`/tmp/dltest/downloads`, `lvim-new /tmp/dltest/dev/test.sh` then `<leader>e` roots the
+tree at `/tmp/dltest/dev`; opening a file under a `CMakeLists.txt` project roots it at
+the project; the terminals resolve the same directories; a second `<leader>e` still
+closes the tree; no load errors. The rule lives in exactly one place (`custom/dir.lua`),
+so terminal and explorer can never drift apart.
 
 # Part III — The `lvim-new` System: Design, Implementation, and Ubuntu Integration
 
@@ -3204,7 +3232,7 @@ flowchart TD
         Entry["Entry Point (init.lua, 13 L)"]
         CoreCfg["Core Modules<br/>config/{lazy,options,keymaps,autocmds}.lua (719 L)"]
         SpecFiles["Spec Overlay<br/>plugins/*.lua (12 files, 1380 L)"]
-        CustomMods["Custom Modules<br/>custom/possession.lua + custom/lsp/rename.lua (77 L)"]
+        CustomMods["Custom Modules<br/>custom/dir.lua + custom/possession.lua + custom/lsp/rename.lua (132 L)"]
     end
     subgraph LayerThree["Layer 3 - Plugins (131 installed under data/lazy)"]
         direction LR
@@ -3290,9 +3318,11 @@ clone does not reproduce today's 131 commits).
 The overlay has exactly one entry point and three module families. Nothing in
 `lua/plugins/` is `require`d by name; lazy.nvim discovers those files through the
 `{ import = "plugins" }` directive at `lua/config/lazy.lua:44` and evaluates each one
-for its returned spec table. Nothing in `lua/custom/` is a spec at all -- both
-modules are plain libraries, `require`d lazily from exactly two call sites in
-`lua/config/keymaps.lua`.
+for its returned spec table. Nothing in `lua/custom/` is a spec at all -- the three
+modules are plain libraries: `custom.possession` and `custom.lsp.rename` are `require`d
+from `lua/config/keymaps.lua`, and `custom.dir` (the shared context-dir helper) from
+`keymaps.lua` (`<leader>e`) plus the spec overlay (`tools.lua` `term_dir`, `explorer.lua`
+keys).
 
 ```mermaid
 %% Module map: who requires / imports whom.
@@ -3301,7 +3331,7 @@ flowchart TD
     LazyCfg["Bootstrap + Spec List (config/lazy.lua)"]
     LazySetup["lazy.setup{ spec }<br/>(config/lazy.lua:13-64)"]
     Options["Editor Deltas (config/options.lua)<br/>loaded by LazyVim M.load('options')"]
-    Keymaps["Keymaps + vacate_leader_c (config/keymaps.lua, 436 L)"]
+    Keymaps["Keymaps + vacate_leader_c (config/keymaps.lua, 492 L)"]
     Autocmds["Autocmds + :Redir / :RunNode / _G.C (config/autocmds.lua)"]
 
     subgraph SpecOverlay["Spec Overlay - lua/plugins/ (imported last)"]
@@ -3313,6 +3343,7 @@ flowchart TD
 
     subgraph CustomLib["Custom Modules - lua/custom/ (no specs)"]
         direction LR
+        DirMod["custom/dir.lua<br/>context_dir() + explorer_toggle()"]
         PossessionMod["custom/possession.lua<br/>M.possession_save()"]
         RenameMod["custom/lsp/rename.lua<br/>returns a function"]
     end
@@ -3325,6 +3356,8 @@ flowchart TD
     Init -->|"3. pcall require"| Autocmds
     Keymaps -->|"leader-Ps"| PossessionMod
     Keymaps -->|"leader-lR"| RenameMod
+    Keymaps -->|"leader-e"| DirMod
+    SpecOverlay -->|"tools.lua term_dir + explorer.lua keys<br/>require custom.dir"| DirMod
     SpecOverlay -->|"snacks dashboard reads<br/>possession.config.session_dir"| PossessionMod
 ```
 
@@ -3350,11 +3383,14 @@ them invisible from the file listing:
    if the `lazyvim.plugins` index is not 1 or if any `extras.` import sorts after
    `plugins`; this config's resolved module list satisfies it at (1, 17, 18).
 
-The two `custom/` modules are also worth reading as a deliberate *non*-pattern: they
-are the only user Lua that is neither a spec nor a core module. Both are reached
-through `pcall`-guarded call sites (`keymaps.lua:341` and `keymaps.lua:245-248`), so
-a broken or missing custom module degrades to a no-op or to `vim.lsp.buf.rename()`
-rather than breaking startup. They are covered in III.8 (rename) and III.11 (sessions).
+The three `custom/` modules are also worth reading as a deliberate *non*-pattern: they
+are the only user Lua that is neither a spec nor a core module. `custom.possession` and
+`custom.lsp.rename` are reached through `pcall`-guarded call sites, so a broken or
+missing module degrades to a no-op or to `vim.lsp.buf.rename()` rather than breaking
+startup (covered in III.11 and III.8). `custom.dir` is `require`d directly (not
+`pcall`-wrapped) from `keymaps.lua:180`, `tools.lua:90`, and `explorer.lua:49`, but it
+`pcall`-guards its *own* `nvim-tree.api` / `project_nvim` requires and falls back to
+`vim.loop.cwd()`, so it degrades safely too; it is covered in III.7.5(c).
 
 ### III.5.3 Directory tree
 
@@ -3392,8 +3428,9 @@ lazyvim-new/                     (= ~/.config/lvim-lazyvim via symlink)
                                  dap-python, vscode-js-debug (pinned + idempotent build).
       editor.lua                155 L. flash override + 17 editing plugins, incl. auto-save.nvim
                                  (the reason vim.g.autoformat is false).
-      explorer.lua              109 L. nvim-tree with a LunarVim-shaped on_attach; the config's
-                                 only file tree (no neo-tree, no snacks explorer keys).
+      explorer.lua              113 L. nvim-tree with a LunarVim-shaped on_attach; the config's
+                                 only file tree (no neo-tree). <leader>e opens it rooted at the
+                                 current buffer's context dir (custom/dir.lua), not the launch cwd.
       git.lua                    18 L. Thinnest file: diffview + fugitive + lazygit, cmd-gated.
       lang.lua                  183 L. 16 language plugins (typescript-tools instead of vtsls,
                                  rustaceanvim ^5, venv-selector main, go.nvim, cppman, ...).
@@ -3401,11 +3438,16 @@ lazyvim-new/                     (= ~/.config/lvim-lazyvim via symlink)
                                  <leader>c LSP keys via servers["*"].keys; adds ccls/cssls/
                                  jinja_lsp/cmake/qmlls; lspsaga + glance + outline.
       telescope.lua              99 L. Full telescope re-setup + 8 extensions.
-      tools.lua                 232 L. Largest file: toggleterm, possession (+venv hooks),
-                                 project.nvim, tmux, yanky, grug-far, translate, lf.
+      tools.lua                 210 L. Largest file: toggleterm, possession (+venv hooks),
+                                 project.nvim, tmux, yanky, grug-far, translate, lf. Terminal
+                                 cwd delegates to custom/dir.lua (shared with the explorer).
       ui.lua                    154 L. bufferline, noice (classic cmdline), snacks dashboard
                                  (possession session keys + de-scoped Recent Files).
     custom/
+      dir.lua                    55 L. Shared "context dir" helper: context_dir() (project root
+                                 if in a real project, else the file's own dir; $HOME rejected)
+                                 + explorer_toggle(). Used by tools.lua (terminals) and the
+                                 <leader>e explorer, so both root at the file, not the launch cwd.
       possession.lua             25 L. M.possession_save(): vim.ui.select basename/tmp/new-name
                                  -> :PossessionSave! <name>.
       lsp/
@@ -3427,13 +3469,14 @@ lazyvim-new/                     (= ~/.config/lvim-lazyvim via symlink)
 | `lua/plugins/colorscheme.lua` | 30 | Colorscheme pack on the rtp; force `catppuccin-mocha` | `opts` table on the `LazyVim/LazyVim` spec |
 | `lua/plugins/dap.lua` | 129 | C/C++ `cppdbg` adapter, F-key debug UX, `.vscode/launch.json` autoload, JS debug adapter | `config` function (replaces LazyVim's) |
 | `lua/plugins/editor.lua` | 155 | Editing/motion/marks/window plugins + auto-save.nvim; flash without `/`-integration | `opts` table, `init`, `config` (windows.nvim) |
-| `lua/plugins/explorer.lua` | 109 | nvim-tree as the sole file tree, with LunarVim's `on_attach` keys layered on the defaults | `opts` table + `keys` + `cmd` |
+| `lua/plugins/explorer.lua` | 113 | nvim-tree as the sole file tree, LunarVim's `on_attach` keys layered on the defaults; `<leader>e` roots the tree at the buffer's context dir | `opts` table + `keys` (fn) + `cmd` |
 | `lua/plugins/git.lua` | 18 | Additive git tooling: diffview, fugitive, lazygit (all `cmd`-gated stubs) | `cmd` only, no opts |
 | `lua/plugins/lang.lua` | 183 | Per-language plugins that Extras do not cover (or cover differently) | mixed: `opts`, `config`, `init`, `keys` |
 | `lua/plugins/lsp.lua` | 126 | Server overrides + extra servers, Mason tool list, conform mappings, LSP UI plugins | `opts` function x3, `{lhs,false}`, `mason = false` |
 | `lua/plugins/telescope.lua` | 99 | Telescope defaults/pickers/extensions (LunarVim layout + `<C-j>/<C-k>` history) | `opts` function **and** `config` function |
-| `lua/plugins/tools.lua` | 232 | Terminals, sessions, project detection, tmux, yank ring, search/replace, translate | `config` functions (toggleterm/possession/project) |
+| `lua/plugins/tools.lua` | 210 | Terminals, sessions, project detection, tmux, yank ring, search/replace, translate; terminal cwd via `custom.dir` | `config` functions (toggleterm/possession/project) |
 | `lua/plugins/ui.lua` | 154 | Bufferline, noice's classic cmdline, dashboard with possession sessions, rainbow delimiters | `opts` function (snacks), `opts` table, `init` |
+| `lua/custom/dir.lua` | 55 | Shared "context dir" of the current buffer (project root, else the file's own dir; `$HOME` rejected) + `explorer_toggle()`; used by the terminals and `<leader>e` | library module (`M.context_dir`, `M.explorer_toggle`) |
 | `lua/custom/possession.lua` | 25 | Session-save prompt: basename / `tmp` / new name -> `:PossessionSave!` | library module (`M.possession_save`) |
 | `lua/custom/lsp/rename.lua` | 52 | Floating nui rename box with graceful fallback to `vim.lsp.buf.rename()` | library module (returns a function) |
 
@@ -3843,17 +3886,17 @@ design choice in the files below:
 
 | File (`lua/plugins/`) | Declares / overrides | Mechanism | Notable deviation from stock LazyVim |
 |---|---|---|---|
-| **ai.lua** (84 L) | override `copilot.lua`; add `avante.nvim` (+ deps plenary, nui, telescope, nvim-cmp, copilot, img-clip, render-markdown) | copilot: **opts fn** (mutate + `return opts`); avante: **opts table** + `build = "make"`, `version = false`, `event = VeryLazy` | Inline suggestions ON (`suggestion.auto_trigger = true`, `panel.enabled = true`, ai.lua:8-9) -- LazyVim's copilot Extra leaves them off and defers to the blink-copilot source. Runtime **Node >= 22 discovery** sets `opts.copilot_node_command` (ai.lua:12-38). |
-| **coding.lua** (61 L) | override `nvim-treesitter`, `blink.cmp` (`optional = true`); **disable** `mini.pairs`; add `nvim-autopairs`, `nvim-treesitter/playground` | TS: **opts fn**; blink: **opts table**; mini.pairs: `enabled = false`; autopairs: opts table | The only hard-disable of a LazyVim core plugin in the whole config (coding.lua:40). blink keymaps remapped to LunarVim muscle memory: `<C-j>`/`<C-k>` select, `<C-Space>` show, `<C-e>` hide (coding.lua:26-36). TS indent off for yaml/python/dart. |
+| **ai.lua** (100 L) | override `copilot.lua`; add `avante.nvim` (+ deps plenary, nui, telescope, nvim-cmp, copilot, img-clip, render-markdown) | copilot: **opts fn** (mutate + `return opts`); avante: **opts table** + `build = "make"`, `version = false`, `event = VeryLazy` | Copilot shown as **native grey ghost text**, not as a blink.cmp item: `suggestion.enabled/auto_trigger = true`, `panel.enabled = false`, accept `<M-l>` (ai.lua). `vim.g.ai_cmp = false` (options.lua) is what drops the Copilot blink source; Tab is kept off the accept path (coding.lua). Runtime **Node >= 22 discovery** sets `opts.copilot_node_command`. See III.9/III.12. |
+| **coding.lua** (66 L) | override `nvim-treesitter`, `blink.cmp` (`optional = true`); **disable** `mini.pairs`; add `nvim-autopairs`, `nvim-treesitter/playground` | TS: **opts fn**; blink: **opts table**; mini.pairs: `enabled = false`; autopairs: opts table | The only hard-disable of a LazyVim core plugin in the whole config. blink keymaps remapped to LunarVim muscle memory: `<C-j>`/`<C-k>` select, `<C-Space>` show, `<C-e>` hide; `<Tab>` = `{snippet_forward, fallback}` -- defining it here stops LazyVim splicing `ai_accept` into `<Tab>`, so Copilot is accepted **only** by `<M-l>` (III.12). TS indent off for yaml/python/dart. |
 | **colorscheme.lua** (30 L) | `techcaotri/Colorschemes` (personal pack), `catppuccin/nvim`, re-opens the `LazyVim/LazyVim` spec | **opts tables**, `priority = 999 / 1000` | `opts.colorscheme = "catppuccin-mocha"` on the LazyVim spec itself (colorscheme.lua:24-29) -- the canonical idiom; stock default is tokyonight. |
 | **dap.lua** (129 L) | override `nvim-dap-virtual-text`, `nvim-dap`; add `nvim-dap-python`, `nvim-dap-vscode-js` (+ pinned `vscode-js-debug`) | virtual-text: **opts table**; nvim-dap: **`config` fn** (replaces LazyVim's); others: `config` fns | Adds the `cppdbg` adapter backed by Mason's `cpptools` (dap.lua:55-60), IDE-style F-key debug maps (F6-F10 + modifiers, dap.lua:93-105), emoji breakpoint signs, `.vscode/launch.json` autoload on `BufWritePost` **and** `SessionLoadPost` (dap.lua:114-126). |
-| **editor.lua** (155 L) | override `flash.nvim`; add 19 plugins (nvim-surround, cutlass, move, undotree, marks, vessel, windows, wrapping, trevJ, easy-align, visual-multi, matchup, matchquote, numbertoggle, suda, header, headerguard, highlight-undo, **auto-save**) | flash: **opts table + keys**; windows: **`config` fn**; several via **`init` + `vim.g.*`**; auto-save: opts table | `flash.modes.search.enabled = false` (editor.lua:4-13) -- flash does not hijack `/`. `nvim-surround` instead of LazyVim's `mini.surround`. cutlass moves cut to `m` so `d`/`c`/`x` stop clobbering the unnamed register. **auto-save.nvim is the reason `vim.g.autoformat = false` exists** (III.7.5). |
-| **explorer.lua** (109 L) | `nvim-tree.lua` (new) | **opts table** + module-local `on_attach` closure (explorer.lua:20-37) + `keys` + `cmd` | Fills the hole left by importing no explorer Extra. Root-following **off** (`sync_root_with_cwd = false`, `update_focused_file.update_root = false`, explorer.lua:51-52), `hijack_directories = false` (:53), `trash.cmd = "gio trash"` (:105). `on_attach` calls `default_on_attach(bufnr)` **first** (:27), then layers LunarVim's `l`/`o`/`<CR>`/`v`/`h`/`C`/`gtg`/`gtf` on top, so stock bindings survive. |
+| **editor.lua** (161 L) | override `flash.nvim`; add 19 plugins (nvim-surround, cutlass, move, undotree, marks, vessel, windows, wrapping, trevJ, easy-align, visual-multi, matchup, matchquote, numbertoggle, suda, header, headerguard, highlight-undo, **auto-save**) | flash: **opts table + keys**; windows: **`config` fn**; several via **`init` + `vim.g.*`**; auto-save: opts table | `flash.modes.search.enabled = false` -- flash does not hijack `/`. flash keys are LunarVim-shaped: `s` is **disabled** (native `s` = substitute restored), `S` = normal flash **jump** (not treesitter), jump also on `<leader>F`. `nvim-surround` instead of `mini.surround`. cutlass moves cut to `m` so `d`/`c`/`x` stop clobbering the unnamed register. **auto-save.nvim is the reason `vim.g.autoformat = false` exists** (III.7.5). |
+| **explorer.lua** (113 L) | `nvim-tree.lua` (new) | **opts table** + module-local `on_attach` closure (explorer.lua:20-37) + `keys` (fn) + `cmd` | Fills the hole left by importing no explorer Extra. Root-following **off** (`sync_root_with_cwd = false`, `update_focused_file.update_root = false`, explorer.lua:55-56), so `<leader>e` roots the tree via `custom.dir.explorer_toggle()` (context dir, not launch cwd -- III.7.5c). `hijack_directories = false`, `trash.cmd = "gio trash"`. `on_attach` calls `default_on_attach(bufnr)` **first** (:27), then layers LunarVim's `l`/`o`/`<CR>`/`v`/`h`/`C`/`gtg`/`gtf` on top, so stock bindings survive. |
 | **git.lua** (18 L) | add `diffview.nvim`, `vim-fugitive`, `lazygit.nvim` | **`cmd`-only lazy stubs**, zero opts | The thinnest file: purely additive, no LazyVim override. gitsigns and snacks-lazygit are kept; standalone `lazygit.nvim` remains because `<leader>gg` prefers `snacks.lazygit()` with a `:LazyGit` fallback (`config/keymaps.lua:197-200`). |
 | **lang.lua** (183 L) | 16 language plugins: typescript-tools, venv-selector, uv, neotest-python, go.nvim, **override** rustaceanvim, flutter-tools, quarto, vim-slime, cppman, treesitter-cpp-tools, ccls.nvim, nvim-jqx, markdown-preview, Hypersonic, vim-doge, plantuml-previewer | mixed: opts tables, **`config` fns** (typescript-tools, go.nvim), **`init`** (rustaceanvim, vim-slime, markdown-preview), `keys` | typescript-tools replaces LazyVim's `vtsls` (which is why `lang.typescript` is not imported). rustaceanvim pinned `version = "^5"`, keys installed via **`init` + a FileType autocmd** rather than `keys` (lang.lua:62-77) -- `<leader>lA`/`<leader>la` shadow the generic LSP maps inside rust buffers. |
 | **lsp.lua** (126 L) | override `nvim-lspconfig`, `mason.nvim`, `conform.nvim`; add `lspsaga`, `glance`, `outline` | **all three overrides are opts fns**; the additions are opts tables + `cmd`/`keys`/`event` | Disables LazyVim's 8 `<leader>c*` LSP keys *at the source* via `servers["*"].keys` (lsp.lua:41-48). Adds `ccls`, `cssls`, `jinja_lsp`, `cmake`, `qmlls` (`mason = false`); extends `bashls` to zsh and `html` to jsp; appends 9 Mason tools; maps `bash` -> shfmt. Detail in III.7.4. |
 | **telescope.lua** (99 L) | override `telescope.nvim` + 9 extension deps | **opts fn** (`vim.tbl_deep_extend("force", ...)`) **and** a `config` fn that calls `telescope.setup(opts)` then loads 8 extensions (telescope.lua:82-97) | LunarVim layout and key semantics: `layout_strategy = "horizontal"` (0.90 x 0.65, preview 0.4), `cache_picker = false`, `<C-j>`/`<C-k>` = **cycle history** (not move selection -- `<C-n>`/`<C-p>` do that), `find_files.hidden = true`, `buffers` opens in **normal mode** with `dd` delete. |
-| **tools.lua** (232 L) | tmux.nvim, **override** yanky, grug-far, translate, lf, toggleterm, bufferize, AnsiEsc, **possession.nvim**, **project.nvim** | yanky/grug-far/tmux: opts tables; toggleterm, possession, project: **`config` fns** | possession.nvim supplants LazyVim's `persistence.nvim` workflow (persistence stays installed but the dashboard never calls it). project.nvim auto-cds. toggleterm reimplements LunarVim's fractional exec-terminals with a custom `term_dir()` (III.7.5). possession hooks persist the active Python venv per session (tools.lua:161-188). |
+| **tools.lua** (210 L) | tmux.nvim, **override** yanky, grug-far, translate, lf, toggleterm, bufferize, AnsiEsc, **possession.nvim**, **project.nvim** | yanky/grug-far/tmux: opts tables; toggleterm, possession, project: **`config` fns** | possession.nvim supplants LazyVim's `persistence.nvim` workflow (persistence stays installed but the dashboard never calls it). project.nvim auto-cds. toggleterm reimplements LunarVim's fractional exec-terminals; their cwd (and the `<leader>e` explorer's root) both come from the shared `custom.dir.context_dir()` -- `term_dir()` is a one-line delegate (tools.lua:89-90, III.7.5c). possession hooks persist the active Python venv per session. |
 | **ui.lua** (154 L) | rainbow-delimiters, treesitter-context, **override** bufferline, colorizer, smear-cursor, visual-whitespace, **override** noice, **override** snacks | rainbow: **`init`** (`vim.g`); bufferline/noice: opts tables; snacks: **opts fn** that mutates `opts.dashboard.preset.keys` in place and returns nothing | noice's cmdline popup is **reverted to the classic bottom line** and `messages.enabled = false` (ui.lua:82-89). Dashboard injects possession sessions and de-scopes "Recent Files" from the project root (III.7.5). `bufferline.always_show_bufferline = true`, right-click = vertical split (ui.lua:31-41). |
 
 Read the "Mechanism" column as the primary key: it predicts the failure mode. An **opts table** can only add
@@ -3871,13 +3914,13 @@ mindmap
       cs1["catppuccin-mocha (forced via LazyVim opts)"]
       cs2["techcaotri/Colorschemes (personal pack, on rtp)"]
     Editor["editor.lua -- motions and text ops"]
-      ed1["flash.nvim (search hook OFF)"]
+      ed1["flash.nvim (search hook OFF; native s, S = flash jump)"]
       ed2["nvim-surround / cutlass / move.nvim"]
       ed3["marks.nvim / vessel.nvim / undotree / highlight-undo"]
       ed4["windows.nvim / wrapping.nvim / visual-multi / matchup"]
       ed5["auto-save.nvim -- root cause of autoformat=false"]
     Explorer["explorer.lua"]
-      ex1["nvim-tree (sole file tree -- no explorer Extra imported)"]
+      ex1["nvim-tree (sole file tree; <leader>e roots at the file's context dir via custom.dir)"]
     Telescope["telescope.lua -- the picker"]
       tp1["fzf / ui-select / smart_history / live_grep_args"]
       tp2["frecency / undo / file_browser / possession"]
@@ -3921,8 +3964,9 @@ mindmap
 The domains are not arbitrary: they are the boundaries along which the config was migrated from LunarVim,
 and each one has exactly one "load-bearing" plugin whose behaviour the rest of the config assumes.
 `explorer` assumes nvim-tree owns `<leader>e`; `tools` assumes possession owns sessions (the dashboard reads
-its session directory off disk, ui.lua:99-120) and that project.nvim owns root detection (toggleterm's
-`term_dir()` calls it, tools.lua:97); `coding` assumes nvim-autopairs -- not mini.pairs -- owns bracket
+its session directory off disk, ui.lua:99-120) and that project.nvim owns root detection (both the terminals
+and the explorer resolve it through `custom.dir.context_dir()`, which calls `get_project_root()` at
+dir.lua:29); `coding` assumes nvim-autopairs -- not mini.pairs -- owns bracket
 insertion; `lsp` assumes clangd is primary and ccls is a secondary call-hierarchy server. Those assumptions
 are what a future `:LazyExtras` toggle would break.
 
@@ -4067,36 +4111,60 @@ table before `setup()` replaces it, so user callbacks never fire. Turning format
 only clean fix. (Note the stale reference at options.lua:44-46 to `<leader>cf` as the on-demand format key:
 `vacate_leader_c()` deletes it. The working keys are `<leader>lf` and `<leader>lF`.)
 
-#### (c) Terminals open at the project root -- but `$HOME` is not a project root
+#### (c) Terminals *and* the file explorer open at the file's context dir -- `$HOME` is not a project root
 
-LunarVim's three exec-terminals (`<M-h>` horizontal 0.3, `<M-v>` vertical 0.4, `<M-i>` float; counts
-101/102/103, tools.lua:116-120, bound in **both `n` and `t` mode**, tools.lua:135) are reimplemented on
-toggleterm. The interesting part is `term_dir()` (tools.lua:91-113), which fixes the long-standing
-"Alt+i opens a terminal in `$HOME`" bug:
+Two features open a UI *at a directory*: the three exec-terminals (`<M-h>` horizontal 0.3, `<M-v>` vertical
+0.4, `<M-i>` float; counts 101/102/103, tools.lua:95-97, bound in **both `n` and `t` mode**, tools.lua:113)
+and the file explorer (`<leader>e`, nvim-tree). Both must open where the user is *working*, not where nvim
+was launched from. A single helper, [`lua/custom/dir.lua`](../lazyvim-new/lua/custom/dir.lua), decides that
+"context dir", and both consume it: `tools.lua`'s `term_dir()` is now a one-line delegate to
+`require("custom.dir").context_dir()` (tools.lua:89-90), and `explorer_toggle()` opens nvim-tree rooted
+there (dir.lua:43-53). The rule (`context_dir()`, dir.lua:20-38) fixes the long-standing
+"Alt+i opens a terminal in `$HOME`" bug *and* the "the tree shows my launch cwd, not the file's directory"
+bug in one place:
 
 ```mermaid
 flowchart TD
-    Toggle["<M-h> / <M-v> / <M-i> pressed<br/>(tools.lua:116-135)"] --> BufQ{"Current buffer is a<br/>real file buffer?<br/>(name ~= '' and buftype == '')"}
-    BufQ -- "no -- dashboard, terminal, ..." --> Cwd["return vim.loop.cwd()<br/>(tools.lua:93-95)"]
-    BufQ -- "yes" --> Proj["pcall project_nvim.project.get_project_root()<br/>(tools.lua:97-99)"]
+    subgraph Consumers["Two consumers, one rule"]
+      Term["<M-h> / <M-v> / <M-i> terminal<br/>term_dir() (tools.lua:89-90)"]
+      Expl["<leader>e explorer<br/>explorer_toggle() (dir.lua:43-53)"]
+    end
+    Consumers --> CtxDir["custom.dir.context_dir()<br/>(dir.lua:20-38)"]
+    CtxDir --> BufQ{"Current buffer is a<br/>real file buffer?<br/>(name ~= '' and buftype == '')"}
+    BufQ -- "no -- dashboard, tree, terminal, ..." --> Cwd["return vim.loop.cwd()<br/>(dir.lua:24)"]
+    BufQ -- "yes" --> Proj["pcall project_nvim.project.get_project_root()<br/>(dir.lua:29)"]
     Proj --> RootQ{"Got a non-empty root?"}
-    RootQ -- "no" --> FileDir["return the FILE'S OWN directory<br/>fnamemodify(name, ':p:h') -- tools.lua:112"]
-    RootQ -- "yes" --> HomeQ{"normalize(root) == normalize($HOME)?<br/>(tools.lua:106-107)"}
+    RootQ -- "no" --> FileDir["return the FILE'S OWN directory<br/>fnamemodify(name, ':p:h') -- dir.lua:37"]
+    RootQ -- "yes" --> HomeQ{"normalize(root) == normalize($HOME)?<br/>(dir.lua:32)"}
     HomeQ -- "yes -- REJECT" --> FileDir
-    HomeQ -- "no" --> UseRoot["return root (tools.lua:108)"]
+    HomeQ -- "no" --> UseRoot["return root (dir.lua:33)"]
 
-    Cwd --> Open["Terminal:new{ dir = dir } on first use#59;<br/>term:change_dir(dir) when re-opening a<br/>CLOSED terminal, so a running command<br/>is never disturbed (tools.lua:125-132)"]
-    FileDir --> Open
-    UseRoot --> Open
+    Cwd --> Use["terminal: Terminal:new{ dir } / change_dir (tools.lua:104-109)#59;<br/>explorer: api.tree.open{ path, find_file=true } (dir.lua:51)"]
+    FileDir --> Use
+    UseRoot --> Use
 
-    Why["WHY the $HOME rejection:<br/>project.nvim's pattern list includes<br/>package.json and .vscode (tools.lua:207-223).<br/>Those exist directly in $HOME on this box,<br/>so get_project_root() answered '$HOME' for<br/>EVERY file under it -- and every terminal<br/>opened in $HOME."]
+    Why["WHY the $HOME rejection:<br/>project.nvim's pattern list includes<br/>package.json and .vscode.<br/>Those exist directly in $HOME on this box,<br/>so get_project_root() answered '$HOME' for<br/>EVERY file under it -- so terminals AND the<br/>tree would open in $HOME."]
     HomeQ -.-> Why
 ```
 
 The rejection is a policy statement, not a hack: a "project root" that is the home directory carries no
-information, so the file's own directory is strictly more useful. Note that `dyn_size()` (tools.lua:73-82)
-converts the `<= 1` fractions into cells against the *current* window, so the 0.3/0.4 splits behave like
-LunarVim's regardless of window size.
+information, so the file's own directory is strictly more useful.
+
+**Why the explorer needed this at all.** nvim-tree runs with `sync_root_with_cwd = false` and
+`update_focused_file.update_root = false` (explorer.lua:55-56) -- deliberately, so the tree root does not
+chase whatever buffer is focused. The side effect is that a bare `:NvimTreeToggle` roots the tree at nvim's
+*launch* cwd. So `cd ~/Downloads; lvim-new ~/Dev/test.sh` then `<leader>e` used to show `~/Downloads`, not
+`~/Dev`. `explorer_toggle()` (dir.lua:43-53) fixes that without re-enabling root-chasing: on open it calls
+`api.tree.open({ path = context_dir(), find_file = true })` (dir.lua:51) -- rooting at `~/Dev` (or the
+project root) and revealing the file -- and on a second press it is a plain `api.tree.close()`. `<leader>e`
+binds to it in **both** `config/keymaps.lua:180` (the authoritative VeryLazy layer) and
+`plugins/explorer.lua:49` (the lazy-load-on-key trigger); `require("custom.dir")` also lazy-loads nvim-tree
+via lazy.nvim's require hook.
+
+Note that `dyn_size()` (tools.lua:73-82) converts the `<= 1` fractions into cells against the *current*
+window, so the 0.3/0.4 splits behave like LunarVim's regardless of window size, and `term:change_dir(dir)`
+(tools.lua:109) re-points a *closed* terminal at the current context on its next open, guarded so a running
+command is never disturbed.
 
 #### (d) Dashboard "Recent Files" is un-scoped
 
@@ -4810,18 +4878,19 @@ as a *fallback* source, so `<leader>lf` prefers conform and only falls back to
 
 LunarVim's completion stack was `hrsh7th/nvim-cmp` plus a hand-assembled source list. `lvim-new` runs LazyVim's default engine, **blink.cmp v1.10.2**, and nvim-cmp is not merely unused but explicitly disabled: `lazyvim-new/lazy-lock.json:10` pins `blink.cmp` to `78336bc8` on branch `main`, and the extra that installs it opens with `{ "hrsh7th/nvim-cmp", optional = true, enabled = false }` (`<data>/lazy/LazyVim/lua/lazyvim/plugins/extras/coding/blink.lua:10-13`, where `<data>` = `~/.local/share/lvim-lazyvim`).
 
-Nothing in this repo imports that extra. It is auto-selected: `lazyvim-new/lazyvim.json` carries an empty `extras` list, so LazyVim's default-engine resolver (`<data>/lazy/LazyVim/lua/lazyvim/config/init.lua:434`, the `cmp` entry of its `checks` table) picks `blink.cmp` and imports `lazyvim.plugins.extras.coding.blink` itself. The repo only *tunes* it — `lazyvim-new/lua/plugins/coding.lua:25-36` re-adds LunarVim's completion muscle memory on top of LazyVim's `preset = "enter"`:
+Nothing in this repo imports that extra. It is auto-selected: `lazyvim-new/lazyvim.json` carries an empty `extras` list, so LazyVim's default-engine resolver (`<data>/lazy/LazyVim/lua/lazyvim/config/init.lua:434`, the `cmp` entry of its `checks` table) picks `blink.cmp` and imports `lazyvim.plugins.extras.coding.blink` itself. The repo only *tunes* it — `lazyvim-new/lua/plugins/coding.lua:25-41` re-adds LunarVim's completion muscle memory on top of LazyVim's `preset = "enter"`, and pins `<Tab>`/`<S-Tab>` so they stay on snippet motion and off the Copilot-accept path:
 
 | Key | blink.cmp action | Origin |
 |-----|------------------|--------|
 | `<CR>` | accept | LazyVim preset `enter` (`extras/coding/blink.lua:103`) |
 | `<C-y>` | `select_and_accept` | LazyVim (`extras/coding/blink.lua:104`) |
-| `<Tab>` | snippet forward / `ai_nes` / `ai_accept` / fallback | LazyVim `config()` (`extras/coding/blink.lua:125-138`) |
+| `<Tab>` | `snippet_forward` / fallback | repo (`lazyvim-new/lua/plugins/coding.lua`) -- **overrides** LazyVim's super-tab: because the repo defines `<Tab>`, LazyVim's `config()` guard `if not opts.keymap["<Tab>"]` (`extras/coding/blink.lua:125-138`) does **not** splice `ai_nes`/`ai_accept` in, so `<Tab>` never accepts Copilot (that is `<M-l>`, III.12) |
+| `<S-Tab>` | `snippet_backward` / fallback | repo (`lazyvim-new/lua/plugins/coding.lua`) -- companion to `<Tab>`, also off the Copilot-accept path |
 | `<C-j>` / `<C-k>` | `select_next` / `select_prev` | repo, LunarVim parity (`lazyvim-new/lua/plugins/coding.lua:30-31`) |
 | `<C-Space>` | `show` / `show_documentation` / `hide_documentation` | repo (`lazyvim-new/lua/plugins/coding.lua:32`) |
 | `<C-e>` | `hide` / fallback | repo (`lazyvim-new/lua/plugins/coding.lua:33`) |
 
-Sources default to `{ "lsp", "path", "snippets", "buffer" }` (`extras/coding/blink.lua:81`); the Copilot extra appends a fifth provider `copilot` (module `blink-copilot`, `score_offset = 100`, `async = true`) at `<data>/lazy/LazyVim/lua/lazyvim/plugins/extras/ai/copilot.lua:108-124` — that is why `blink-copilot` appears in the lockfile at `lazyvim-new/lazy-lock.json:9`. Copilot's own Node-version problem is a separate story (see III.12). Cmdline completion is on for `:` only (`extras/coding/blink.lua:84-99`), documentation auto-shows after 200 ms (`:66-67`), and the menu is treesitter-highlighted for LSP items (`:62`).
+Sources are exactly the four defaults `{ "lsp", "path", "snippets", "buffer" }` (`extras/coding/blink.lua:81`). LazyVim's Copilot extra *would* append a fifth provider `copilot` (module `blink-copilot`, `score_offset = 100`, `async = true`) -- **but only when `vim.g.ai_cmp` is true**, and this config sets `vim.g.ai_cmp = false` (`options.lua`, III.12). So the whole `vim.g.ai_cmp and { ... }` spec block evaluates to `nil`: no `copilot` blink provider, and `blink-copilot` is never declared as a dependency. Copilot is instead shown as native ghost text (III.12). Correspondingly, blink's own `completion.ghost_text.enabled = vim.g.ai_cmp` (`extras/coding/blink.lua:70`) is **off**, so the popup does not draw a second inline preview competing with Copilot's. Cmdline completion is on for `:` only (`extras/coding/blink.lua:84-99`), documentation auto-shows after 200 ms, and the menu is treesitter-highlighted for LSP items. Copilot's own Node-version problem is a separate story (see III.12).
 
 ### III.9.1 Why the Rust library matters, and where it lives
 
@@ -5528,11 +5597,15 @@ repointed, by absolute path, at the newest Node >= 22 found anywhere on disk.
 ### III.12.2 The resolver
 
 `ai.lua:7-56` is an **`opts` function** on `zbirenbaum/copilot.lua` -- the same
-merge-and-return override mechanism used across this config (III.7). Before the Node
-logic it configures inline ghost-text suggestions (`opts.suggestion`, `ai.lua:12-24`,
-with `accept = <M-l>` restored because LazyVim's cmp integration unbinds it) and
-**disables the Copilot panel** (`opts.panel = { enabled = false }`, `ai.lua:25`). Then
-it resolves the Node binary:
+merge-and-return override mechanism used across this config (III.7). What selects the
+*display mode* is not here but in `options.lua`: **`vim.g.ai_cmp = false`** tells
+LazyVim's Copilot extra to skip the blink-cmp `copilot` source and leave copilot.lua's
+native inline suggestions on (III.9). This `opts` function then makes those suggestions
+explicit: before the Node logic it configures inline ghost-text suggestions
+(`opts.suggestion`, `ai.lua:12-24`, with `accept = <M-l>` restored because LazyVim's cmp
+integration unbinds it, plus `<M-]>`/`<M-[>` cycle and `<C-]>` dismiss) and **disables
+the Copilot panel** (`opts.panel = { enabled = false }`, `ai.lua:25`). Then it resolves
+the Node binary:
 
 ```mermaid
 %% The Copilot Node-resolution algorithm in lua/plugins/ai.lua.
@@ -6908,7 +6981,7 @@ flowchart TB
       Keymaps["Keymaps (config/keymaps.lua)"]
       Autocmds["Autocmds (config/autocmds.lua)"]
       PluginSpecs["Plugin Specs (lua/plugins/*.lua)"]
-      CustomMods["Custom Modules (custom/possession.lua, custom/lsp/rename.lua)"]
+      CustomMods["Custom Modules (custom/dir.lua, custom/possession.lua, custom/lsp/rename.lua)"]
     end
 
     subgraph Managers["Plugin + tooling managers"]
@@ -6996,6 +7069,7 @@ arrows into the `Store` subgraph are exactly the outputs enumerated in III.10.
 | config/keymaps.lua | lua module | Ported keymaps + `<leader>l` (+LSP) group | `vim.keymap.set` | `lazyvim-new/lua/config/keymaps.lua` |
 | config/autocmds.lua | lua module | autoread, flash toggle, `:Redir`, `:RunNode`, `_G.C()` | `vim.api.nvim_create_autocmd` | `lazyvim-new/lua/config/autocmds.lua` |
 | lua/plugins/*.lua | lua specs (12 files) | Per-domain plugin declarations + LazyVim overrides | spec `opts`/`keys`/`config` | `lazyvim-new/lua/plugins/` |
+| custom/dir.lua | lua module | Shared context dir (project root / file dir; `$HOME` rejected) + `explorer_toggle()` | `require` from keymaps (`<leader>e`), tools.lua (terminals), explorer.lua | `lazyvim-new/lua/custom/dir.lua` |
 | custom/possession.lua | lua module | Save-prompt helper for possession sessions | `require` from keymaps | `lazyvim-new/lua/custom/possession.lua` |
 | custom/lsp/rename.lua | lua module | LSP-aware file/symbol rename helper | `require` from LSP keymaps | `lazyvim-new/lua/custom/lsp/rename.lua` |
 | lazy.nvim | plugin | Clone/checkout plugins to lockfile SHA; run builds | `:Lazy sync` | `<data>/lazy/lazy.nvim` |
@@ -7031,9 +7105,10 @@ isolated. Each row names what breaks if the invariant is violated.
 | 6 | Sessions are copied, never symlinked, between editors | manual `cp` (III.11) | A shared session dir would let one editor's writes clobber the other's |
 | 7 | `<leader>l` mirrors the removed `+code` group | keymaps.lua | Muscle-memory LSP actions would silently disappear (III.7) |
 | 8 | Format-on-save stays off (`vim.g.autoformat=false`) | options.lua | auto-save.nvim + format-on-save corrupts undo history (III.7) |
+| 9 | The terminals and the explorer resolve their cwd through one shared rule | `custom/dir.lua` `context_dir()` (III.7.5c) | The tree and terminals drift apart, or open in the launch cwd / `$HOME` instead of the file's dir |
 
 Invariants 1-4 are the hard isolation guarantees (violating any one lets the new editor
-damage the old); 5-8 are the softer parity/UX guarantees that make the migration feel
+damage the old); 5-9 are the softer parity/UX guarantees that make the migration feel
 seamless. The triage tree in III.18 is organized around detecting violations of these.
 
 ---
@@ -7077,6 +7152,7 @@ flowchart TD
     Q2 -->|"tol-new does nothing"| TolFix["FIX: not inside tmux, or no running server.<br/>Check /tmp/tol-new.log (III.15)"]
 
     Q2 -->|"undo/redo broken"| UndoFix["FIX: format-on-save got re-enabled.<br/>Keep vim.g.autoformat = false (III.7)"]
+    Q2 -->|"file tree / terminal opens in<br/>$HOME or the launch cwd,<br/>not the file's dir"| DirFix["FIX: context_dir() fell through.<br/>Expected: project root, else file dir<br/>($HOME rejected). Check custom/dir.lua<br/>and that the buffer is a real file (III.7.5c)"]
 ```
 
 The tree encodes the same discipline the whole of Part III argues for: identify the
@@ -7110,6 +7186,7 @@ mindmap
     Config["Config / UX"]
       SessionsHidden["sessions per-NVIM_APPNAME<br/>dashboard empty"]
       UndoBroken["format-on-save re-enabled<br/>undo/redo appear broken"]
+      WrongDir["tree / terminal opens in<br/>launch cwd or $HOME<br/>(context_dir fell through)"]
 ```
 
 The mindmap is the triage tree re-sorted by *where the fault lives* rather than by
