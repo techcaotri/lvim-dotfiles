@@ -81,35 +81,13 @@ return {
         return size
       end
 
-      -- Working directory for a newly-opened terminal. If the current file is
-      -- inside a detected project, use that project root (this is the same
-      -- detection project.nvim uses to auto-cd -- .git/CMakeLists.txt/
-      -- requirements.txt/... -- so the existing project behavior is preserved).
-      -- Otherwise fall back to the OPENING FILE'S OWN DIRECTORY instead of the
-      -- cwd (which is why a non-project file used to open the terminal in $HOME).
-      -- Non-file buffers (dashboard, another terminal, ...) fall back to cwd.
+      -- Working directory for a newly-opened terminal: the opening file's context
+      -- dir -- project root if the file is in a real project, else the file's own
+      -- directory (never nvim's launch cwd, which is why non-project files used to
+      -- open the terminal in $HOME). Shared with the file explorer (<leader>e) so
+      -- both behave identically. See lua/custom/dir.lua.
       local function term_dir()
-        local fname = vim.api.nvim_buf_get_name(0)
-        if fname == "" or vim.bo.buftype ~= "" then
-          return vim.loop.cwd()
-        end
-        local fdir = vim.fn.fnamemodify(fname, ":p:h")
-        local ok, project = pcall(require, "project_nvim.project")
-        if ok then
-          local got, root = pcall(project.get_project_root)
-          if got and type(root) == "string" and root ~= "" then
-            -- Reject $HOME as a "project root": many setups have markers like
-            -- package.json/.vscode directly in $HOME, so get_project_root() would
-            -- return $HOME for any file under it (that is exactly why the terminal
-            -- kept opening in $HOME). Only use a genuine project subdirectory;
-            -- otherwise fall through to the opening file's own directory.
-            local home = vim.loop.os_homedir()
-            if not (home and vim.fs.normalize(root) == vim.fs.normalize(home)) then
-              return root
-            end
-          end
-        end
-        return fdir
+        return require("custom.dir").context_dir()
       end
 
       local Terminal = require("toggleterm.terminal").Terminal

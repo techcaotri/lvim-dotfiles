@@ -175,7 +175,9 @@ local function apply()
   -- with <leader>bd (or the bufferline mouse). LazyVim's <leader>c group is kept.
   m("n", "<leader>f", "<cmd>Telescope find_files<CR>", "Find File")
   m("n", "<leader>h", "<cmd>nohlsearch<CR>", "No Highlight")
-  m("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", "Explorer")
+  -- Explorer rooted at the opening file's context dir (project root, else the
+  -- file's own dir) rather than nvim's launch cwd -- see custom/dir.lua.
+  m("n", "<leader>e", function() require("custom.dir").explorer_toggle() end, "Explorer")
 
   -- =========================================================================
   -- <leader>b : Buffers (LunarVim defaults + user)

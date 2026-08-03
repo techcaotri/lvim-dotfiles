@@ -42,7 +42,11 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     cmd = { "NvimTreeToggle", "NvimTreeOpen", "NvimTreeFocus", "NvimTreeFindFileToggle", "NvimTreeClose" },
     keys = {
-      { "<leader>e", "<cmd>NvimTreeToggle<CR>", desc = "Explorer" },
+      -- Root the tree at the opening file's context dir (project root, else the
+      -- file's own dir), not nvim's launch cwd. See lua/custom/dir.lua. The
+      -- authoritative binding is in config/keymaps.lua (VeryLazy); this keeps the
+      -- lazy-load-on-key trigger consistent.
+      { "<leader>e", function() require("custom.dir").explorer_toggle() end, desc = "Explorer" },
     },
     opts = {
       on_attach = on_attach,
