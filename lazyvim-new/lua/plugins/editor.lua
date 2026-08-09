@@ -150,6 +150,11 @@ return {
       trigger_events = { "InsertLeave", "TextChanged" },
       debounce_delay = 1000,
       condition = function(buf)
+        -- auto-save's callback is debounced (vim.schedule'd ~1s later), so by the
+        -- time it fires the buffer may already be gone -- e.g. creating a file from
+        -- nvim-tree makes and then wipes a scratch buffer. Guard against a stale/
+        -- invalid id before touching vim.bo[buf] (was: "Invalid buffer id: N").
+        if not buf or not vim.api.nvim_buf_is_valid(buf) then return false end
         local ft = vim.bo[buf].filetype
         local excluded = { NvimTree = true, ["neo-tree"] = true, alpha = true, dashboard = true, startify = true }
         if excluded[ft] then return false end
