@@ -31,10 +31,13 @@ return {
         ["<C-k>"] = { "select_prev", "fallback" },
         ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
         ["<C-e>"] = { "hide", "fallback" },
-        -- Keep Tab OFF the Copilot-accept path (Copilot is accepted with <M-l>).
-        -- Defining <Tab> here also stops LazyVim's blink config from splicing
-        -- ai_accept into it; Tab still jumps snippets, else falls through.
-        ["<Tab>"] = { "snippet_forward", "fallback" },
+        -- <Tab>: accept the highlighted completion item when the blink popup is
+        -- open (select_and_accept picks the first item if none is selected), else
+        -- jump a snippet, else a normal Tab. It is deliberately NOT on the Copilot
+        -- accept path -- Copilot ghost text is accepted with <M-l> (see ai.lua).
+        -- Because we define <Tab>, LazyVim's blink config does not splice ai_accept
+        -- into it, so Tab never accepts Copilot.
+        ["<Tab>"] = { "select_and_accept", "snippet_forward", "fallback" },
         ["<S-Tab>"] = { "snippet_backward", "fallback" },
       },
     },
