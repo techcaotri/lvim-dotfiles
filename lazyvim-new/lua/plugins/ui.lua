@@ -73,7 +73,14 @@ return {
   -- Command line AND command output at the BOTTOM (classic), like LunarVim -- not
   -- noice's centered popup. LazyVim enables noice's cmdline popup + command_palette
   -- preset by default. We:
-  --   * route the cmdline input back to the classic bottom line (cmdline.view), and
+  --   * DISABLE noice's cmdline entirely (cmdline.enabled = false), so Neovim's
+  --     own bottom command line handles `:` input AND, crucially, input()/
+  --     inputsecret(). This is a hard fix for the `:SudaRead` -> "E439: Undo list
+  --     corrupt" crash on root files: suda sets a GLOBAL undolevels=-1 while it
+  --     reads, spanning the interactive sudo password prompt; when noice owns the
+  --     cmdline it runs its ext_cmdline buffer/redraw work on the event loop
+  --     during that inputsecret() wait, and the overlap corrupts the undo list.
+  --     A fully native cmdline keeps noice off that path. (Bisected to noice.)
   --   * let Neovim render messages / :command output natively on the bottom line
   --     (messages.enabled = false) instead of noice popups/splits.
   -- Search (/, ?) stays at the bottom. Notifications still go through snacks; noice
@@ -82,7 +89,7 @@ return {
   {
     "folke/noice.nvim",
     opts = {
-      cmdline = { view = "cmdline" },
+      cmdline = { enabled = false },
       messages = { enabled = false },
       presets = { command_palette = false, long_message_to_split = false },
     },
