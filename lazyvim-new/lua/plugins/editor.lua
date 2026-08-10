@@ -130,7 +130,26 @@ return {
   { "lambdalisue/suda.vim", cmd = { "SudaRead", "SudaWrite" } },
   { "alpertuna/vim-header", cmd = { "AddHeader", "AddMinHeader" } },
   { "drmikehenry/vim-headerguard", ft = { "c", "cpp" } },
-  { "tzachar/highlight-undo.nvim", event = "VeryLazy", opts = {} },
+  {
+    "tzachar/highlight-undo.nvim",
+    event = "VeryLazy",
+    opts = {
+      -- Do NOT attach the on_bytes change-tracker to special buffers -- most
+      -- importantly suda:// (buftype=acwrite). suda.vim's :SudaRead sets the
+      -- GLOBAL undolevels=-1 while it reads and rewrites the buffer (a window that
+      -- spans the interactive sudo password prompt for root-owned files); with
+      -- highlight-undo's tracker attached and detaching mid-change, Neovim ends
+      -- that window with "E439: Undo list corrupt". This plugin was left inactive
+      -- (setup commented out) in the old LunarVim config -- which is exactly why
+      -- :SudaRead crashed only after the LazyVim migration activated it.
+      ignore_cb = function(buf)
+        local ok, name = pcall(vim.api.nvim_buf_get_name, buf)
+        if ok and name:match("^suda://") then return true end
+        local bt = vim.bo[buf].buftype
+        return bt == "acwrite" or bt == "nofile" or bt == "prompt" or bt == "terminal"
+      end,
+    },
+  },
 
   -- Auto-save.
   {
@@ -155,6 +174,10 @@ return {
         -- nvim-tree makes and then wipes a scratch buffer. Guard against a stale/
         -- invalid id before touching vim.bo[buf] (was: "Invalid buffer id: N").
         if not buf or not vim.api.nvim_buf_is_valid(buf) then return false end
+        -- Only auto-save real, on-disk file buffers. Skip special buffers -- most
+        -- importantly suda:// (buftype=acwrite): auto-saving one would fire a
+        -- nested sudo write, and it interacts with suda's global undolevels toggle.
+        if vim.bo[buf].buftype ~= "" then return false end
         local ft = vim.bo[buf].filetype
         local excluded = { NvimTree = true, ["neo-tree"] = true, alpha = true, dashboard = true, startify = true }
         if excluded[ft] then return false end
