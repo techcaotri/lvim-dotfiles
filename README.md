@@ -45,3 +45,9 @@ format-on-save is off), plus troubleshooting.
 
 `docs/LunarVim_Plugins_Structure_Analysis_Brainstorming_Implementation.md` (Part II) — the full
 analysis of the LunarVim setup and the rationale behind the LazyVim migration.
+
+## Troubleshooting
+
+`docs/LunarVim-New_Problems_And_Solutions.md` — problems seen while using `lvim-new`,
+with root causes and fixes (e.g. `:SudaRead` `E439`, auto-save `Invalid buffer id`,
+Tab completion, undo/redo on JSON, terminal/tree working directory).
