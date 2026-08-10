@@ -1930,6 +1930,23 @@ the project; the terminals resolve the same directories; a second `<leader>e` st
 closes the tree; no load errors. The rule lives in exactly one place (`custom/dir.lua`),
 so terminal and explorer can never drift apart.
 
+## II.18 Runtime crash/UX fixes (2026-08-10)
+
+Three more issues found in use. Full symptom/investigation/root-cause/fix write-ups
+live in the dedicated troubleshooting record,
+`docs/LunarVim-New_Problems_And_Solutions.md`; this is the chronological pointer.
+
+| # | Symptom | Root cause | Fix (file) | Commit |
+|---|---|---|---|---|
+| 1 | Creating a file from the nvim-tree pane -> `Invalid buffer id: N` | auto-save's debounced `condition()` read `vim.bo[buf]` for a since-wiped scratch buffer | `nvim_buf_is_valid` guard (`editor.lua`) | `30e68a9` |
+| 2 | `Tab` did not accept the completion popup item | blink `<Tab>` had no accept command (it was kept off the Copilot path) | `<Tab> = {select_and_accept, snippet_forward, fallback}` (`coding.lua`) -- Copilot still on `<M-l>` | `6ad23a3` |
+| 3 | `:SudaRead` on a root file -> `E439: Undo list corrupt` | `noice`'s cmdline (`ext_cmdline`) runs event-loop work during suda's interactive `inputsecret()`, inside suda's global `undolevels = -1` window (bisected; see III.7.5e) | noice `cmdline.enabled = false` (`ui.lua`) | `e467f2e` |
+
+Row 3 is the most involved: it is a timing race (it vanishes under `-V9`), it needs
+the full config (a suda-only minimal config does not crash), and it was pinned down
+with a plugin bisect driven by a password-free repro harness. See the troubleshooting
+doc for the bisect chain and the harness.
+
 # Part III — The `lvim-new` System: Design, Implementation, and Ubuntu Integration
 
 > Part I analyzed the LunarVim setup; Part II brainstormed and planned the LazyVim
@@ -3897,7 +3914,7 @@ design choice in the files below:
 | **lsp.lua** (126 L) | override `nvim-lspconfig`, `mason.nvim`, `conform.nvim`; add `lspsaga`, `glance`, `outline` | **all three overrides are opts fns**; the additions are opts tables + `cmd`/`keys`/`event` | Disables LazyVim's 8 `<leader>c*` LSP keys *at the source* via `servers["*"].keys` (lsp.lua:41-48). Adds `ccls`, `cssls`, `jinja_lsp`, `cmake`, `qmlls` (`mason = false`); extends `bashls` to zsh and `html` to jsp; appends 9 Mason tools; maps `bash` -> shfmt. Detail in III.7.4. |
 | **telescope.lua** (99 L) | override `telescope.nvim` + 9 extension deps | **opts fn** (`vim.tbl_deep_extend("force", ...)`) **and** a `config` fn that calls `telescope.setup(opts)` then loads 8 extensions (telescope.lua:82-97) | LunarVim layout and key semantics: `layout_strategy = "horizontal"` (0.90 x 0.65, preview 0.4), `cache_picker = false`, `<C-j>`/`<C-k>` = **cycle history** (not move selection -- `<C-n>`/`<C-p>` do that), `find_files.hidden = true`, `buffers` opens in **normal mode** with `dd` delete. |
 | **tools.lua** (210 L) | tmux.nvim, **override** yanky, grug-far, translate, lf, toggleterm, bufferize, AnsiEsc, **possession.nvim**, **project.nvim** | yanky/grug-far/tmux: opts tables; toggleterm, possession, project: **`config` fns** | possession.nvim supplants LazyVim's `persistence.nvim` workflow (persistence stays installed but the dashboard never calls it). project.nvim auto-cds. toggleterm reimplements LunarVim's fractional exec-terminals; their cwd (and the `<leader>e` explorer's root) both come from the shared `custom.dir.context_dir()` -- `term_dir()` is a one-line delegate (tools.lua:89-90, III.7.5c). possession hooks persist the active Python venv per session. |
-| **ui.lua** (154 L) | rainbow-delimiters, treesitter-context, **override** bufferline, colorizer, smear-cursor, visual-whitespace, **override** noice, **override** snacks | rainbow: **`init`** (`vim.g`); bufferline/noice: opts tables; snacks: **opts fn** that mutates `opts.dashboard.preset.keys` in place and returns nothing | noice's cmdline popup is **reverted to the classic bottom line** and `messages.enabled = false` (ui.lua:82-89). Dashboard injects possession sessions and de-scopes "Recent Files" from the project root (III.7.5). `bufferline.always_show_bufferline = true`, right-click = vertical split (ui.lua:31-41). |
+| **ui.lua** (154 L) | rainbow-delimiters, treesitter-context, **override** bufferline, colorizer, smear-cursor, visual-whitespace, **override** noice, **override** snacks | rainbow: **`init`** (`vim.g`); bufferline/noice: opts tables; snacks: **opts fn** that mutates `opts.dashboard.preset.keys` in place and returns nothing | noice's **cmdline is disabled** (`cmdline.enabled = false`) so Neovim's native bottom command line handles `:` and, crucially, `input()`/`inputsecret()` -- fixing the `:SudaRead` -> E439 crash (III.7.5e); `messages.enabled = false`. Dashboard injects possession sessions and de-scopes "Recent Files" from the project root (III.7.5). `bufferline.always_show_bufferline = true`, right-click = vertical split. |
 
 Read the "Mechanism" column as the primary key: it predicts the failure mode. An **opts table** can only add
 or overwrite leaf keys. An **opts fn** can read what came before (which is why `lsp.lua`, `coding.lua`,
@@ -3928,7 +3945,7 @@ mindmap
       gt1["diffview / fugitive / lazygit"]
       gt2["gitsigns + snacks.lazygit kept from LazyVim"]
     UI["ui.lua"]
-      ui1["noice (classic bottom cmdline, messages off)"]
+      ui1["noice (cmdline OFF -> native bottom cmdline; messages off; hover kept)"]
       ui2["snacks dashboard (possession sessions + unscoped oldfiles)"]
       ui3["bufferline / treesitter-context / rainbow-delimiters"]
       ui4["colorizer / smear-cursor / visual-whitespace"]
@@ -4190,25 +4207,31 @@ when the server started.
 
 #### (e) Classic bottom cmdline, and `cmdheight = 0`
 
-`ui.lua:82-89` is a three-part retreat from noice's defaults:
+`ui.lua` is a retreat from noice's defaults:
 
 ```lua
 opts = {
-  cmdline = { view = "cmdline" },                                        -- ui.lua:84
-  messages = { enabled = false },                                        -- ui.lua:85
-  presets = { command_palette = false, long_message_to_split = false },  -- ui.lua:86
+  cmdline = { enabled = false },                                         -- noice OFF the cmdline
+  messages = { enabled = false },
+  presets = { command_palette = false, long_message_to_split = false },
 }
 ```
 
-1. `cmdline.view = "cmdline"` renders `:` input on the classic bottom line instead of noice's centred popup.
+1. `cmdline.enabled = false` hands the command line **fully back to Neovim** -- native bottom `:` input, and
+   crucially native `input()`/`inputsecret()`. (It was `cmdline.view = "cmdline"`, which kept noice owning the
+   cmdline while rendering at the bottom; that caused the `:SudaRead` -> `E439: Undo list corrupt` crash on
+   root files -- noice ran its `ext_cmdline` buffer/redraw work on the event loop during suda's interactive
+   `inputsecret()` prompt, inside suda's global `undolevels = -1` window. See
+   `docs/LunarVim-New_Problems_And_Solutions.md`, Issue 1. Disabling noice's cmdline removes it from that path
+   and is the fully native classic bottom cmdline anyway.)
 2. `messages.enabled = false` hands messages and `:command` output back to Neovim's native renderer, so
    `:!`, `:map`, `:messages` etc. behave exactly as in LunarVim rather than opening popups or splits.
 3. LSP hover/signature noice popups are **left on**, and notifications still route through snacks -- the
    retreat is scoped to the cmdline and message areas only.
 
 The pairing with `vim.opt.cmdheight = 0` (`lua/config/options.lua:26`, rationale at options.lua:21-25) is the
-point: with noice still owning the cmdline, `cmdheight = 1` leaves a permanently blank row beneath the
-statusline when idle. `cmdheight = 0` reclaims that row, and Neovim still raises the cmdline on demand.
+point: `cmdheight = 1` leaves a permanently blank row beneath the statusline when idle.
+`cmdheight = 0` reclaims that row, and Neovim still raises the cmdline on demand.
 Setting it back to `1` is the documented escape hatch if a persistent message line is preferred over the
 extra editing row.
 
@@ -7153,6 +7176,7 @@ flowchart TD
 
     Q2 -->|"undo/redo broken"| UndoFix["FIX: format-on-save got re-enabled.<br/>Keep vim.g.autoformat = false (III.7)"]
     Q2 -->|"file tree / terminal opens in<br/>$HOME or the launch cwd,<br/>not the file's dir"| DirFix["FIX: context_dir() fell through.<br/>Expected: project root, else file dir<br/>($HOME rejected). Check custom/dir.lua<br/>and that the buffer is a real file (III.7.5c)"]
+    Q2 -->|"':SudaRead' on a root file<br/>=> E439: Undo list corrupt"| SudaFix["FIX: noice's cmdline overlaps suda's<br/>global undolevels=-1 during inputsecret().<br/>Keep noice cmdline.enabled=false (III.7.5e).<br/>Fallback: sudo -v first / askpass"]
 ```
 
 The tree encodes the same discipline the whole of Part III argues for: identify the
@@ -7187,6 +7211,7 @@ mindmap
       SessionsHidden["sessions per-NVIM_APPNAME<br/>dashboard empty"]
       UndoBroken["format-on-save re-enabled<br/>undo/redo appear broken"]
       WrongDir["tree / terminal opens in<br/>launch cwd or $HOME<br/>(context_dir fell through)"]
+      SudaE439[":SudaRead E439 on root file<br/>(noice cmdline vs suda undolevels=-1)"]
 ```
 
 The mindmap is the triage tree re-sorted by *where the fault lives* rather than by

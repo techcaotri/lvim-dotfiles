@@ -97,114 +97,112 @@ becomes unusable after reading a root-owned file with `suda.vim`.
   `undolevels = -1` window stays open for as long as the user is typing the password
   and the editor is redrawing.
 
-- Comparing `lvim-new` against the **old LunarVim config** (where `:SudaRead` worked)
-  isolated the one behavioral difference among undo-touching plugins:
+- The crash could **not** be reproduced headlessly: this host has no passwordless
+  `sudo`, and a headless run cannot drive the interactive `inputsecret()`. Two
+  observations narrowed it before the fix:
+  - Launching with `-V9` verbose logging made the crash **vanish** (the verbose
+    per-operation disk I/O changes the timing). So this is a **timing race**, not a
+    deterministic code path.
+  - A **minimal** config (a clean Neovim 0.12.4 with *only* `suda.vim`) does **not**
+    crash; the **full** `lvim-new` config does. So the race is with an lvim-new
+    plugin, not with `suda` / Neovim core.
 
-  | Plugin | old LunarVim | lvim-new |
+- A faithful, **password-free** repro harness pinned it down. A fake `sudo` script
+  fails the first non-interactive attempt (so `suda#read` opens `inputsecret()` --
+  the event-loop wait that is the race window) and then accepts any dummy password.
+  With it, the crash reproduces reliably. Bisecting plugins via a `$LVIM_DISABLE`
+  switch:
+
+  | Round | Disabled | Result |
   |---|---|---|
-  | `auto-save.nvim` | active | active |
-  | `cutlass.nvim` | active | active |
-  | `suda.vim` | active | active |
-  | **`highlight-undo.nvim`** | **installed but `setup()` commented out (inactive)** | **active (`opts = {}` -> `setup()` runs)** |
+  | 1 | 8 timer/attach plugins (incl. `noice`, `highlight-undo`) | clean |
+  | 2 | `highlight-undo` only | **still crashes** |
+  | 3 | `noice`, `blink`, `smear-cursor`, `auto-save` | clean |
+  | 4 | `noice` only | clean |
 
-  In `lua/custom/plugins.lua:478-488` of the LunarVim config, `highlight-undo`'s
-  `setup()` call is commented out, so it never registers any autocmds. The LazyVim
-  migration wrote `{ "tzachar/highlight-undo.nvim", event = "VeryLazy", opts = {} }`,
-  and in lazy.nvim an `opts` table causes `require("highlight-undo").setup(opts)` to
-  run, activating the plugin.
+  Disabling **`noice.nvim` alone** stops the crash; disabling `highlight-undo` alone
+  does not. Culprit: **`noice.nvim`**.
 
-- Active, `highlight-undo` creates a `BufEnter` autocmd (`highlight-undo.lua:120`)
-  that attaches an `on_bytes` change-tracker to **every** buffer, and its `on_bytes`
-  returns `true` to **detach mid-change** (`highlight-undo.lua:64-65`). During
-  `:SudaRead`, that tracker is attached to the `suda://` buffer that suda is
-  rewriting under global `undolevels = -1`.
+- Why `noice`: during the `inputsecret()` password wait the cursor does not move, so
+  `CursorMoved`-driven plugins do not fire -- only the event loop runs. `noice` owns
+  the command line via Neovim's **external cmdline** (`ext_cmdline`) UI, so
+  `inputsecret()` is routed through noice, which runs its own cmdline buffer/redraw
+  work on the event loop **inside** suda's global `undolevels = -1` window.
 
 **Root cause.**
 
-- `Fact`: suda.vim toggles the **global** `undolevels` to `-1` and back around a
-  multi-part buffer rewrite, and for root files that window spans an interactive
-  password prompt.
-- `Fact`: `highlight-undo.nvim` is active in `lvim-new` but was inactive in the old
-  LunarVim config; it attaches a detach-mid-change `on_bytes` tracker to the `suda://`
-  buffer.
-- `Assumption`: the combination -- a detach-mid-change buffer-attach tracker firing on
-  a buffer that is being rewritten while global `undolevels = -1`, on Neovim 0.12.x --
-  is what leaves the undo list corrupt (`E439`). This is the only behavioral
-  difference from the working LunarVim setup, and it is a known-hazardous pattern
-  (detaching a `nvim_buf_attach` listener in the middle of a change).
+- `Fact` (enabling condition): `suda.vim` sets the **global** `undolevels = -1` for
+  the entire read, and for a root file that window spans the interactive
+  `inputsecret()` sudo password prompt.
+- `Fact` (bisected trigger): **`noice.nvim`**. With noice owning the command line
+  (`ext_cmdline`), the `inputsecret()` prompt is handled by noice, which runs its
+  cmdline buffer/redraw work on the event loop during that wait -- overlapping suda's
+  `undolevels = -1` window and leaving the undo list corrupt (`E439`). Disabling noice
+  removes the crash; disabling suda's undo toggle (via pre-auth, below) also removes it.
 
 **Mechanism (causal chain).**
 
 ```mermaid
 flowchart TD
-    Cmd[":SudaRead on a root file"] --> Edit["edit suda://path -> BufEnter"]
-    Edit --> HU["highlight-undo BufEnter autocmd<br/>attaches on_bytes tracker to the suda buffer<br/>(highlight-undo.lua:120,90)"]
-    Cmd --> BRC["suda#BufReadCmd():<br/>set GLOBAL undolevels=-1<br/>(suda.vim:181)"]
-    BRC --> Prompt["suda#read -> sudo cat -> inputsecret()<br/>password prompt keeps the window open"]
-    Prompt --> Rewrite[":1read tempfile then :0delete<br/>multi-part buffer rewrite"]
-    Rewrite --> Fire["on_bytes fires and returns true<br/>= detach mid-change (highlight-undo.lua:64)"]
-    HU --> Fire
-    Fire --> Corrupt["undo list left inconsistent<br/>while undolevels=-1 is active"]
-    Corrupt --> E439["E439: Undo list corrupt"]
+    Cmd[":SudaRead on a root file"] --> BRC["suda#BufReadCmd(): set GLOBAL<br/>undolevels=-1 for the whole read (suda.vim:181)"]
+    BRC --> Prompt["suda#read -> sudo cat -> inputsecret()<br/>(password prompt: the event loop runs here)"]
+    Prompt --> Noice["noice owns the cmdline (ext_cmdline),<br/>so inputsecret() is routed through it"]
+    Noice --> Work["noice runs cmdline buffer/redraw work<br/>on the event loop DURING the prompt"]
+    Work --> Overlap["that work overlaps the active<br/>global undolevels=-1 window"]
+    Overlap --> E439["undo list left inconsistent<br/>=> E439: Undo list corrupt"]
 ```
 
-**Solution.** `lazyvim-new/lua/plugins/editor.lua` (commit `de5ed3e`), two guards:
+**Solution.** `lazyvim-new/lua/plugins/ui.lua` (commit `e467f2e`): disable noice's
+command line, so Neovim's native bottom cmdline handles `:` **and**
+`input()`/`inputsecret()` -- keeping noice off suda's `inputsecret()` path:
 
-1. Exclude special buffers, above all `suda://` (`buftype=acwrite`), from
-   `highlight-undo` via its `ignore_cb`, so the tracker never attaches to a suda
-   buffer:
+```lua
+{
+  "folke/noice.nvim",
+  opts = {
+    cmdline = { enabled = false },   -- was { view = "cmdline" }
+    messages = { enabled = false },
+    presets = { command_palette = false, long_message_to_split = false },
+  },
+}
+```
 
-   ```lua
-   {
-     "tzachar/highlight-undo.nvim",
-     event = "VeryLazy",
-     opts = {
-       ignore_cb = function(buf)
-         local ok, name = pcall(vim.api.nvim_buf_get_name, buf)
-         if ok and name:match("^suda://") then return true end
-         local bt = vim.bo[buf].buftype
-         return bt == "acwrite" or bt == "nofile" or bt == "prompt" or bt == "terminal"
-       end,
-     },
-   }
-   ```
+noice stays enabled for its LSP hover/signature popups; only its cmdline is off. This
+also yields the *fully native* classic bottom command line we wanted anyway (the old
+`view = "cmdline"` was noice approximating it).
 
-2. Restrict `auto-save` to real on-disk file buffers (`buftype == ""`), so it never
-   fires a nested sudo write into a `suda://` buffer either:
-
-   ```lua
-   if vim.bo[buf].buftype ~= "" then return false end
-   ```
-
-`highlight-undo` and `auto-save` still work normally on ordinary files.
+Note on `de5ed3e`: an earlier commit added a `highlight-undo` `ignore_cb` and an
+`auto-save` `buftype` guard on the initial (wrong) hypothesis that `highlight-undo`
+was the cause. The bisect above disproved that (round 2). Those changes are harmless
+hardening (auto-save should not sudo-write `suda://` buffers; highlight-undo need not
+track them) and were kept, but they are **not** the fix.
 
 **Verification.**
 
-- `Fact / PASS` (headless, with a fake `sudo` because this host has no passwordless
-  sudo): after `:SudaRead`, `ignore_cb(suda buffer) = true`, `ignore_cb(normal
-  file) = false`, `auto-save condition(suda buffer) = false`, the buffer is populated,
-  `undo`/`redo` run cleanly, and `:messages` contains no `E439` or error.
-- `Not verified`: the original `E439` crash itself. It requires the real interactive
-  `inputsecret` password flow, which a headless run cannot drive, and this host has no
-  passwordless `sudo`. The fix removes the one behavioral difference from the working
-  LunarVim setup, but interactive confirmation on a real root file is recommended.
+- `Fact / PASS`: the password-free repro harness reproduces `E439` on the old config
+  and is **clean** on the new one. The harness exercises the identical suda code path
+  (`inputsecret()` inside the global `undolevels = -1` window) as a real root file, so
+  the on-disk root-file case is covered by the same path. Bisect chain recorded above
+  (round 4: disabling noice's cmdline / noice alone -> clean).
+- `Fact / PASS` (headless): the config loads with noice enabled, `cmdline.enabled =
+  false`, `require("noice")` OK, and no load errors.
 
-**Status.** `DONE (interactive verification recommended)`.
+**Status.** `DONE`.
 
 **Risks / fallbacks.**
 
-- `Risk`: if the crash persists after this fix, the residual cause is suda's global
-  `undolevels = -1` window itself. Two bulletproof fallbacks:
-  1. Pre-authenticate sudo so the prompt (and thus the long `undolevels=-1` window)
-     does not happen in the editor: run `sudo -v` in a shell first, then `:SudaRead`.
-  2. Configure suda to use an external askpass so the password is never entered
-     in-editor (this host has `/usr/bin/zenity`):
+- The enabling condition -- suda's global `undolevels = -1` spanning the interactive
+  prompt -- still exists, so if a future plugin re-introduces event-loop work on the
+  cmdline during `inputsecret()`, the same class of crash could return. Two
+  independent fallbacks that both cut the window regardless of any plugin:
+  1. Pre-authenticate sudo so the prompt (and the long `undolevels=-1` window) does not
+     happen in the editor: run `sudo -v` in a shell first, then `:SudaRead`.
+  2. Use an external askpass so the password is never entered in-editor (this host has
+     `/usr/bin/zenity`):
      ```lua
      vim.env.SUDO_ASKPASS = "/usr/bin/zenity"   -- or a small "zenity --password" wrapper
      vim.g["suda#executable"] = "sudo -A"
      ```
-  3. Last resort: disable `highlight-undo.nvim` entirely (it was inactive in LunarVim
-     anyway) by setting `enabled = false` on its spec.
 
 ---
 
@@ -421,7 +419,7 @@ mode; `<leader>c` -> "Close buffer".
 
 | # | Problem | Root cause (one line) | Fix location | Commit | Status |
 |---|---|---|---|---|---|
-| 1 | `:SudaRead` -> `E439: Undo list corrupt` | suda's global `undolevels=-1` window + active `highlight-undo` `on_bytes` tracker on the suda buffer | `editor.lua` (`ignore_cb` + auto-save buftype guard) | `de5ed3e` | DONE (interactive verify) |
+| 1 | `:SudaRead` -> `E439: Undo list corrupt` | `noice`'s cmdline (`ext_cmdline`) runs event-loop work during suda's `inputsecret()`, inside suda's global `undolevels=-1` window | `ui.lua` (noice `cmdline.enabled=false`) | `e467f2e` | DONE |
 | 2 | file-tree file create -> `Invalid buffer id` | auto-save `condition` touched a wiped buffer | `editor.lua` | `30e68a9` | DONE |
 | 3 | `Tab` does not accept popup item | `<Tab>` had no accept command | `coding.lua` | `6ad23a3` | DONE |
 | 4 | `<leader>e` shows launch cwd | `nvim-tree` roots at cwd; no context-dir logic | `custom/dir.lua` | `67df83b` | DONE |
@@ -439,23 +437,36 @@ mode; `<leader>c` -> "Close buffer".
 
 These are the general techniques that solved the issues above, useful for the next one:
 
-1. **Diff against old LunarVim.** Several "new" bugs (Issue 1, Issue 6) were caused by a
-   plugin being active in `lvim-new` that was inactive or configured differently in
-   LunarVim. `grep` the LunarVim config (`~/.dotfiles/lvim/lua`) for the plugin and
-   check whether its `setup()` actually runs.
+1. **Diff against old LunarVim.** Several "new" bugs were caused by a plugin being
+   active or present in `lvim-new` but not in LunarVim (Issue 6's format-on-save;
+   Issue 1's culprit `noice` is a LazyVim default LunarVim never had). `grep` the
+   LunarVim config (`~/.dotfiles/lvim/lua`) for the plugin and check whether its
+   `setup()` actually runs. It narrows the suspect set; it does not always name the
+   culprit (Issue 1 needed the bisect below).
 2. **Resolve the real, merged options.** For any plugin, the effective config is
    `require("lazy.core.plugin").values(plugin, "opts", false)`. Reading the spec file
    is not enough because lazy.nvim merges specs.
-3. **Reproduce headless where possible.** `lvim-new --headless <file> -c 'lua ...'` with
-   a `vim.defer_fn` can drive most flows and capture `:messages`. It cannot drive
-   interactive input (password prompts) or reliably reproduce timing-sensitive
-   crashes.
-4. **Guard callbacks against stale state.** Debounced / `vim.schedule`'d callbacks
+3. **Reproduce headless where possible -- and know its limits.** `lvim-new --headless
+   <file> -c 'lua ...'` with a `vim.defer_fn` drives most flows and captures
+   `:messages`. It cannot drive interactive input (password prompts) or reliably
+   reproduce timing races.
+4. **A timing race gives itself away two ways** (both seen in Issue 1): it disappears
+   under `-V9` verbose logging (the per-operation disk I/O reorders the event loop),
+   and a *minimal* config (clean Neovim + only the suspect subsystem) does not
+   reproduce it while the full config does. When both are true, bisect plugins with a
+   `$LVIM_DISABLE` switch (a tiny `lua/plugins/*.lua` that returns `{ name, enabled =
+   false }` specs from an env var).
+5. **Make the reproduction cheap and secret-free.** Issue 1's crash needed a real sudo
+   password. A fake `sudo` that fails the first non-interactive attempt (forcing
+   `inputsecret()`) then accepts any dummy password reproduced the exact code path
+   without the real password -- turning a slow, sensitive bisect into fast, safe rounds.
+6. **Guard callbacks against stale state.** Debounced / `vim.schedule`'d callbacks
    (auto-save, Issue 2) can fire after the buffer they captured is gone. Always
    `nvim_buf_is_valid` before `vim.bo[buf]`.
-5. **Watch for global option toggles.** `set undolevels=-1` (global) in suda (Issue 1)
-   and format-on-save (Issue 6) both corrupt undo indirectly. A plugin that toggles a
-   global option around a buffer change is a red flag.
+7. **Watch for global option toggles.** `set undolevels=-1` (global) in suda (the
+   enabling condition for Issue 1) and format-on-save (Issue 6) both corrupt undo
+   indirectly. A plugin that toggles a global option around a buffer change or an
+   interactive prompt is a red flag.
 
 ## 7. Cross-references
 
