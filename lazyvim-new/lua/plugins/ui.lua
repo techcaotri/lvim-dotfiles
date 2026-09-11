@@ -40,6 +40,37 @@ return {
     },
   },
 
+  -- LSP server names in the statusline (old LunarVim's components.lsp): "[clangd]"
+  -- (or "[clangd, eslint]") when clients are attached to the buffer, "LSP Inactive"
+  -- otherwise. LazyVim's default lualine has no LSP component at all, which is why
+  -- nothing showed. Inserted at the start of lualine_x (right after the
+  -- diagnostics/path), matching LunarVim's "diagnostics | lsp | ..." order; bold,
+  -- hidden on narrow windows (<=100 cols), like LunarVim's hide_in_width.
+  {
+    "nvim-lualine/lualine.nvim",
+    opts = function(_, opts)
+      table.insert(opts.sections.lualine_x, 1, {
+        function()
+          local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
+          if #buf_clients == 0 then
+            return "LSP Inactive"
+          end
+          local names = {}
+          for _, client in ipairs(buf_clients) do
+            if client.name ~= "copilot" then
+              table.insert(names, client.name)
+            end
+          end
+          return "[" .. table.concat(names, ", ") .. "]"
+        end,
+        color = { gui = "bold" },
+        cond = function()
+          return vim.o.columns > 100
+        end,
+      })
+    end,
+  },
+
   -- Inline color-code highlighting.
   {
     "NvChad/nvim-colorizer.lua",
