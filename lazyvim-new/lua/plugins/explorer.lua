@@ -74,6 +74,11 @@ return {
         show_on_dirs = false,
       },
       filters = {
+        -- Show entries ignored by .gitignore (nvim-tree hides them by default).
+        -- They render with the default "disabled" look: the NvimTreeGitIgnored*
+        -- highlight groups link to Comment (gray), applied to names because
+        -- highlight_git = "name" above.
+        git_ignored = false,
         custom = { "node_modules", "\\.cache" },
       },
       git = { enable = true, show_on_dirs = true, timeout = 400 },
