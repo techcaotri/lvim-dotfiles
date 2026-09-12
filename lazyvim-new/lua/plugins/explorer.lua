@@ -7,12 +7,14 @@
 
 -- Telescope scoped to the node under the cursor (LunarVim's start_telescope).
 local function start_telescope(telescope_mode)
-  local node = require("nvim-tree.lib").get_node_at_cursor()
+  -- lib.get_node_at_cursor no longer exists in current nvim-tree; the API
+  -- function is api.tree.get_node_under_cursor().
+  local node = require("nvim-tree.api").tree.get_node_under_cursor()
   if not node then
     return
   end
   local abspath = node.link_to or node.absolute_path
-  local is_folder = node.open ~= nil
+  local is_folder = node.nodes ~= nil
   local basedir = is_folder and abspath or vim.fn.fnamemodify(abspath, ":h")
   require("telescope.builtin")[telescope_mode]({ cwd = basedir })
 end
@@ -30,8 +32,47 @@ local function on_attach(bufnr)
   vim.keymap.set("n", "o", api.node.open.edit, opts("Open"))
   vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
   vim.keymap.set("n", "v", api.node.open.vertical, opts("Open: Vertical Split"))
-  vim.keymap.set("n", "h", api.node.navigate.parent_close, opts("Close Directory"))
+  -- h / <BS> ("Close Directory"): upstream's navigate.parent_close targets the
+  -- LAST GROUP NODE, so for a directory with a single child it closes the CHILD
+  -- (and only moves the cursor once the child is already closed) - the
+  -- directory itself never closes. Old LunarVim closed the directory under the
+  -- cursor. Restore that: close the dir itself when open; on files keep the
+  -- upstream cursor-to-parent move.
+  local function close_dir()
+    local node = api.tree.get_node_under_cursor()
+    if not node then
+      return
+    end
+    if node.nodes ~= nil and node.parent then -- a (non-root) directory
+      if node.open then
+        node.open = false
+        node.explorer.renderer:draw()
+      end
+      return
+    end
+    api.node.navigate.parent_close()
+  end
+  vim.keymap.set("n", "h", close_dir, opts("Close Directory"))
+  vim.keymap.set("n", "<BS>", close_dir, opts("Close Directory"))
   vim.keymap.set("n", "C", api.tree.change_root_to_node, opts("CD"))
+  -- P ("Parent Directory") changes the tree root to the parent directory of
+  -- the node under the cursor. Upstream's api.node.navigate.parent only MOVES
+  -- THE CURSOR to the parent entry (and does nothing visible at the top
+  -- level), which reads as broken. So: root becomes the node's parent
+  -- directory; for a top-level node fall back to the parent of the current
+  -- root (same as "-").
+  vim.keymap.set("n", "P", function()
+    local node = api.tree.get_node_under_cursor()
+    if not node then
+      return
+    end
+    local parent = node.parent
+    if parent and parent ~= node.explorer then
+      api.tree.change_root_to_node(parent)
+    else
+      api.tree.change_root_to_parent()
+    end
+  end, opts("Parent Directory"))
   vim.keymap.set("n", "gtg", function() start_telescope("live_grep") end, opts("Telescope Live Grep"))
   vim.keymap.set("n", "gtf", function() start_telescope("find_files") end, opts("Telescope Find File"))
 end
