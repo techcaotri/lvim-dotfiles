@@ -415,6 +415,188 @@ mode; `<leader>c` -> "Close buffer".
 
 ---
 
+### Issue 11: nvim-tree `P` (Parent Directory) does not change the tree root
+
+**Symptom.** In the left file tree, pressing `P` does not change the tree to the
+parent directory, even though `g?` help lists `P` as "Parent Directory".
+
+**Reproduction.** Open the file tree, move the cursor onto a file inside a
+subdirectory (e.g. `src/deep/main.c`), press `P`.
+
+**Investigation.** The `P` binding exists on the tree buffer and fires (verified
+by dumping `nvim_buf_get_keymap` on the tree buffer and by invoking the bound
+callback headlessly). The behavior difference is inside the action:
+`api.node.navigate.parent` (what upstream now binds to `P`) does not change the
+tree root at all - it only moves the cursor to the parent entry, and for a
+top-level node it just jumps to line 1 (`actions/moves/parent.lua`). The old
+LunarVim's nvim-tree used the same cursor-move semantics upstream, but the user's
+expectation from the help text, "Parent Directory", is a root change.
+
+**Root cause.** `Fact`: upstream's `P` action only moves the cursor; the tree
+root never changes, so from the user's point of view `P` "does nothing".
+
+**Mechanism.** `Explorer:get_node_at_cursor()` resolves the node, then
+`move()` takes `(node:get_parent_of_group() or node).parent`; when the parent is
+the explorer root (`not parent.parent`) it only runs `view.set_cursor({1, 0})`.
+
+**Solution.** `lazyvim-new/lua/plugins/explorer.lua` (commit `c39b334`): rebind `P`
+in the custom `on_attach` to change the root:
+
+```lua
+vim.keymap.set("n", "P", function()
+  local node = api.tree.get_node_under_cursor()
+  if not node then
+    return
+  end
+  local parent = node.parent
+  if parent and parent ~= node.explorer then
+    api.tree.change_root_to_node(parent)
+  else
+    api.tree.change_root_to_parent()
+  end
+end, opts("Parent Directory"))
+```
+
+Cursor on a deep file: the root becomes the file's directory. Cursor on a
+top-level node: the root becomes the parent of the current root (same effect as
+`-` "Up"), so `P` always visibly changes to a parent directory.
+
+**Verification.** `Fact / PASS` (headless, real `lvim-new` config, temp git repo
+`/tmp/nvt-suite` with `src/deep/main.c`): cursor on `main.c`, invoke the bound
+`P` callback; `core.get_explorer().absolute_path` changed
+`/tmp/nvt-suite` -> `/tmp/nvt-suite/src/deep`; a second `P` stepped to
+`.../src`; a third to `/tmp/nvt-suite`.
+
+**Status.** `DONE`.
+
+**Risks / fallbacks.** The top-level fallback goes up one level, which differs
+from upstream (no-op). If that turns out surprising, drop the fallback so `P`
+on a top-level entry is a no-op, keeping the deep-node case.
+
+---
+
+### Issue 12: nvim-tree `gtg` / `gtf` (Telescope) errors - removed lib API
+
+**Symptom.** In the file tree, `gtg` (Telescope live grep from the node) and
+`gtf` (Telescope find files from the node) error instead of opening Telescope.
+
+**Reproduction.** Open the tree, move the cursor onto a directory, press `gtg`
+or `gtf`.
+
+**Investigation.** The ported `start_telescope()` in `explorer.lua` called
+`require("nvim-tree.lib").get_node_at_cursor()`. In the pinned nvim-tree
+version `lib.get_node_at_cursor` no longer exists (the API moved); the current
+function is `api.tree.get_node_under_cursor()`. The folder detection
+`node.open ~= nil` also changed: directories have a `nodes` table, files do not.
+
+**Root cause.** `Fact`: upstream nvim-tree removed `lib.get_node_at_cursor`;
+the ported code called a nil function.
+
+**Solution.** `lazyvim-new/lua/plugins/explorer.lua` (commit `c39b334`):
+
+```lua
+local node = require("nvim-tree.api").tree.get_node_under_cursor()
+...
+local is_folder = node.nodes ~= nil
+```
+
+**Verification.** `Fact / PASS` (headless, real `lvim-new` config): cursor on
+`src`, invoke the bound `gtg` callback -> a Telescope prompt buffer opens;
+close it, invoke `gtf` -> a Telescope prompt buffer opens again.
+
+**Status.** `DONE`.
+
+---
+
+### Issue 13: nvim-tree `h` / `<BS>` do not close a single-child directory
+
+**Symptom.** With the cursor on an open directory that has exactly one child,
+`h` (and stock `<BS>`) do not close the directory; the cursor jumps instead.
+
+**Reproduction.** Expand `src` (whose only child is `deep`) in the tree, put the
+cursor on `src`, press `h` or `<BS>`.
+
+**Investigation.** The binding fires with the right node (`src`), but
+`api.node.navigate.parent_close` calls `dir:last_group_node()` first; for a
+directory with a single child that returns the child (`deep`), and the close
+then acts on the child (which is closed), so the directory itself never closes
+and the action falls through to a cursor move. With more than one child,
+`last_group_node()` returns the directory itself and the close works - which is
+why this only shows on single-child directories.
+
+**Root cause.** `Fact`: upstream's `last_group_node()` redirects the close to
+the single child.
+
+**Solution.** `lazyvim-new/lua/plugins/explorer.lua` (commit `c39b334`): rebind both
+`h` and `<BS>` to a local `close_dir()` that closes the directory itself when it
+is open, and keeps the upstream cursor-to-parent move for files:
+
+```lua
+local function close_dir()
+  local node = api.tree.get_node_under_cursor()
+  if not node then
+    return
+  end
+  if node.nodes ~= nil and node.parent then -- a (non-root) directory
+    if node.open then
+      node.open = false
+      node.explorer.renderer:draw()
+    end
+    return
+  end
+  api.node.navigate.parent_close()
+end
+```
+
+**Verification.** `Fact / PASS` (headless, real `lvim-new` config, single-child
+`src/`): after `<BS>` and again after `h`, the re-read `src.open` was `false`.
+
+**Status.** `DONE`.
+
+---
+
+### Issue 14: full nvim-tree keymap audit (`g?` inventory + functional pass)
+
+**Purpose.** After the three fixes above, verify every shortcut the tree's `g?`
+help lists. Done as a headless harness that drives the REAL bound callbacks
+(each part in a fresh Neovim process against a fresh temp git repo), with
+`vim.ui.input` / `vim.ui.select` stubbed so interactive prompts answer
+automatically.
+
+**Method.** The harness: (1) toggles `g?` and parses the rendered help into a
+key -> action -> description inventory, then checks every key is bound on the
+tree buffer; (2) invokes each bound callback with the cursor placed on the right
+node (polling `find_node_line` until the node is rendered) and asserts the
+observable effect: buffer/window/tab counts, tree root, node open state, filter
+state, filesystem changes, clipboard registers.
+
+**Results.** `Fact / PASS` - 69 checks passed, 0 failed (see below):
+
+| Area | Keys exercised | Result |
+|---|---|---|
+| Help | `g?` | opens 67-line reference; closes cleanly |
+| Inventory | all help keys | every key bound on the tree buffer |
+| Open | `<CR>` `o` `l` `v` `<C-v>` `<C-x>` `<C-t>` `<Tab>` `O` `<C-e>` | open in other window / vertical split / horizontal split / new tab / preview float / no window picker / replace tree buffer |
+| Tree nav | `<` `>` `K` `J` `<BS>` `h` `-` `C` `P` | siblings, first/last sibling, close dir, up, CD, parent directory |
+| Refresh | `R` `W` `E` | refresh repopulates; collapse-all closes; expand-all opens |
+| FS | `a` `r` `e` `<C-r>` `u` `c` `p` `x` `gp` `d` `D` | create / rename / rename basename / rename sub / rename full / copy+paste / cut+move / delete / trash (all with stubbed prompts, filesystem verified) |
+| Clipboard | `y` `Y` `gy` `ge` | name / relative path / absolute path / basename land in `"+` |
+| Filters | `H` `I` `B` `M` `U` `L` `f` `F` | all toggle state; live filter mechanism; `F` clears |
+| Search / info | `S` `<C-k>` | search focuses node; info popup window opens |
+| Marks | `m` | bookmark toggles on/off (mark count) |
+| Git / diag nav | `[c` `]c` `[e` `]e` | run without error (one unstaged file present) |
+| Telescope | `gtg` `gtf` | prompt buffer opens for both |
+| Close | `q` | tree window closes |
+| Binding-only | `s` `.` `bd` `bt` `bmv` `<Del>` `<2-LeftMouse>` `<2-RightMouse>` | bindings present (interactive/system actions not executed) |
+
+**Known limits.** `f` (live filter) opens an interactive overlay that cannot be
+typed into headlessly, so its binding is verified and the filter mechanism is
+tested through the explorer state instead. `s` (open in system app), `.` (run
+command) and the bookmark-bulk actions are destructive or launch external
+programs, so they are checked for presence only.
+
+---
+
 ## 5. Summary table
 
 | # | Problem | Root cause (one line) | Fix location | Commit | Status |
@@ -432,6 +614,10 @@ mode; `<leader>c` -> "Close buffer".
 | 10b | `s` hijacked by flash | LazyVim flash `s`/`S` | `editor.lua` | `0792fb2`, `a1ee7ea` | DONE |
 | 10c | no `Ctrl+C` copy-all flash | not ported | `keymaps.lua` | `a1ee7ea` | DONE |
 | 10d | window nav stops at edges | wrap not ported | `keymaps.lua` | `da4e49b` | DONE |
+| 11 | tree `P` does not change root | upstream `P` only moves the cursor | `explorer.lua` | `TBD` | DONE |
+| 12 | tree `gtg`/`gtf` error | `lib.get_node_at_cursor` removed upstream | `explorer.lua` | `TBD` | DONE |
+| 13 | tree `h`/`<BS>` do not close single-child dirs | `last_group_node()` redirects the close to the child | `explorer.lua` | `TBD` | DONE |
+| 14 | full `g?` keymap audit | n/a (verification) | n/a | n/a | DONE |
 
 ## 6. Diagnostic patterns that recurred
 
