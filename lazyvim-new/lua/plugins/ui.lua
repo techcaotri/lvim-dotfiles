@@ -61,7 +61,7 @@ return {
               table.insert(names, client.name)
             end
           end
-          return "[" .. table.concat(names, ", ") .. "]"
+          return "["..table.concat(names, ", ").."]"
         end,
         color = { gui = "bold" },
         cond = function()
